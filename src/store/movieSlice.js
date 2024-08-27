@@ -10,25 +10,10 @@ const movieSlice =createSlice({
         searchFilter: null,
         currentPage: 1,  
     pageSize: 3, 
+    ratings:{}
 },
 reducers:{
-    addToFavorites:(state,action)=>{
-        const movieId=action.payload
-        const movie =state.movie.find((m)=>m.id===movieId)
-        if(movie){
-            if(!state.favorites.includes(movieId)){
-                state.favorites.push(movieId)
-            }
-        }
-    },
-    removeFromFavorites:(state,action)=>{
-        const movieId=action.payload
-        const index=state.favorites.indexOf(movieId)
-
-        if(index!==-1){
-            state.favorites.splice(index,1)
-        }
-    },
+    
     filterByGenre:(state,action)=>{
         state.selectedGenre=action.payload
     },
@@ -54,10 +39,9 @@ reducers:{
         const isFavorite = action.payload.isFavorite;
   
         if (isFavorite) {
-          // Remove from favorites
           state.favorites = state.favorites.filter((id) => id !== movieId);
         } else {
-          // Add to favorites
+          
           state.favorites.push(movieId);
         }
         localStorage.setItem('favoriteMovies', JSON.stringify(state.favorites));
@@ -69,7 +53,12 @@ reducers:{
       selectCurrentPage:(state)=>state.movies.movie.currentPage,
       
       selectPageSize:(state)=>state.movies.movie.pageSize,
-      restPages:(state)=>{state.currentPage=1}
+      restPages:(state)=>{state.currentPage=1},
+      setRating:(state,action)=>{
+        const {movieId,rating}=action.payload
+        state.ratings[movieId]=rating
+        localStorage.setItem("movieRatings",JSON.stringify(state.ratings))
+      }
 }
 })
 
@@ -79,7 +68,7 @@ reducers:{
 
 
 
-export const {addToFavorites,removeFromFavorites,filterByGenre,filterByTitle,clearFilters,
+export const {filterByGenre,filterByTitle,clearFilters,
     setSearchFilter,clearGenre,toggleFavorite,setPage,selectCurrentPage,selectPageSize,
-    selectTotalItems,restPages}=movieSlice.actions
+    selectTotalItems,restPages,setRating}=movieSlice.actions
 export default movieSlice.reducer 

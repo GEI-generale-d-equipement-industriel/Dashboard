@@ -7,7 +7,7 @@ const movies = [
     actors: ["Timothée Chalamet", "Zendaya", "Oscar Isaac"],
     releaseDate: "2021-10-22",
     genre: "Science Fiction",
-    posterURL: "/dunePoster.JPG",
+    posterURL: "/dune.JPG",
     trailerURL:"https://www.youtube.com/watch?v=n9xhJrPXop4"
   },
   {

@@ -3,6 +3,9 @@ import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleFavorite } from '../store/movieSlice';
 import { HandThumbDownIcon, HandThumbUpIcon } from '@heroicons/react/20/solid';
+import MovieRating from './MovieRating';
+
+
 
 const MovieDetails = () => {
   const { id } = useParams();
@@ -38,7 +41,7 @@ const MovieDetails = () => {
     if (videoIdMatch) {
       return videoIdMatch[1];
     }
-    return ''; // Return an empty string if no video ID is found
+    return '';
   }
 
   const videoId = extractVideoId(movie.trailerURL);
@@ -77,7 +80,7 @@ const MovieDetails = () => {
                   <iframe
                     title="Movie Trailer"
                     width="100%"
-                    height="315" // Adjust the height as needed
+                    height="315" 
                     src={`https://www.youtube.com/embed/${videoId}`}
                     frameBorder="0"
                     allowFullScreen
@@ -97,9 +100,10 @@ const MovieDetails = () => {
                   <HandThumbUpIcon className="w-5 h-5" />
                 )}
               </button>
-              {/* <span className="ml-2 text-xl">
-                {favorites.includes(movie.id) ? 'Disliked' : 'Liked'}
-              </span> */}
+            </div>
+            <div className="mt-4">
+              <h3 className="text-2xl italic; leading-7 mt-4">Rating</h3>
+              <MovieRating movieId={movie.id} />
             </div>
           </div>
         </div>

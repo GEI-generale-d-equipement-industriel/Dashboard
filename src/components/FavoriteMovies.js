@@ -27,22 +27,24 @@ const FavoriteMovies = () => {
             <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:max-w-7xl lg:px-8">
                 <h2 className="text-3xl font-bold text-center text-gray-900">Related Movies</h2>
 
-                <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 4xl:grid-cols-4">
                     {favoriteMovies.map((movie) => (
                         <div
                             key={movie.title}
-                            className="group relative bg-gray-100 p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300 transform hover:scale-105"
+                            className="group relative bg-gray-100 p-4 rounded-lg shadow-md hover:shadow-lg transition duration-200 transform hover:scale-105"
                         >
                             <div
                                 className="w-full h-48 overflow-hidden rounded-md bg-gray-300"
                                 style={{ width: '100%', height: '80%' }}
                             >
+                                 <Link to={`/movie/${movie.id}`}>
                                 <img
                                     src={movie.posterURL}
                                     alt={movie.title}
                                     className="w-full h-full object-cover"
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
+                                </Link>
                             </div>
                             <div className="mt-4">
                                 <h3 className="text-lg font-semibold text-gray-900">
@@ -59,7 +61,7 @@ const FavoriteMovies = () => {
                                     onClick={() => handleLikeToggle(movie.id)}
                                     style={{ pointerEvents: 'auto', marginLeft: '130px', marginRight: 'auto', marginBottom: '180px' }}
                                 >
-                                    <HandThumbDownIcon className="w-5 h-5" /> {/* Always display the dislike icon */}
+                                    <HandThumbDownIcon className="w-5 h-5" /> 
                                 </button>
                             </div>
                         </div>

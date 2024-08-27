@@ -88,6 +88,7 @@ restFunc()
                 <ul
                     className={`${isGenreDropdownOpen ? 'block' : 'hidden'
                         } absolute space-y-2 bg-white text-gray-800 rounded-md mt-2 py-2 px-4`}
+                        style={{ zIndex: 10 }}
                 >
                     <li
                         onClick={() => handleGenreFilter('Action')}
