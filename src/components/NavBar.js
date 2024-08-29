@@ -1,147 +1,154 @@
-import { Link, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
+import { Layout, Input, Dropdown, Button, Checkbox, Menu } from 'antd';
+import { FilterOutlined, ClearOutlined, SearchOutlined } from '@ant-design/icons';
+import {
+  filterByInterest,
+  filterByName,
+  filterByAge,
+  filterBySex,
+  clearFilters,
+  restPages
+} from '../store/movieSlice';
 
-import { filterByGenre, filterByTitle, clearFilters, restPages } from '../store/movieSlice';
+const { Header } = Layout;
+const { Search } = Input;
 
 const Navbar = () => {
-    const dispatch = useDispatch();
-    const navigate = useNavigate()
-    const [searchTerm, setSearchTerm] = useState('');
-    const [isGenreDropdownOpen, setGenreDropdownOpen] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedInterest, setSelectedInterest] = useState([]);
+  const [selectedAge, setSelectedAge] = useState('');
+  const [selectedSex, setSelectedSex] = useState('');
 
-    const selectedGenre = useSelector((state) => state.movie.selectedGenre);
-    const rest=useSelector((state)=>state.movie.currentPage)
-   
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    dispatch(filterByName(value));
+  };
 
-    const handleSearch = (e) => {
-        const inputValue = e.target.value;
-        
-        setSearchTerm(inputValue);
+  const handleInterestChange = (value) => {
+    setSelectedInterest(value);
+    dispatch(filterByInterest(value));
+  };
 
-        
-        dispatch(filterByTitle(inputValue))
-    };
+  const handleAgeChange = (e) => {
+    const age = e.target.value;
+    setSelectedAge(age);
+    dispatch(filterByAge(age));
+  };
 
-    const handleGenreFilter = (genre) => {
-     
-        if (selectedGenre === genre) {
+  const handleSexChange = (e) => {
+    const sex = e.target.value;
+    console.log(sex);
+    
+    setSelectedSex(sex);
+    dispatch(filterBySex(sex));
+  };
 
-            dispatch(filterByGenre(""));
-        } else {
-            dispatch(filterByGenre(genre));
-        }
-        setGenreDropdownOpen(false);
-    };
+  const handleClearFilters = () => {
+    dispatch(clearFilters());
+    setSearchTerm('');
+    setSelectedInterest([]);
+    setSelectedAge('');
+    setSelectedSex('');
+    navigate('/');
+  };
 
-    const handleClearFilters = () => {
-        dispatch(clearFilters());
-        
-        setSearchTerm('');
-        navigate('/');
-    };
-    const restFunc=()=>dispatch(restPages())
-    const clearAll=()=>{
-handleClearFilters()
-restFunc()
-    }
+  const resetPage = () => dispatch(restPages());
 
+  const clearAll = () => {
+    handleClearFilters();
+    resetPage();
+  };
+
+  const menu = (
+    <Menu>
+      <Menu.ItemGroup title="Filter by Interest">
+        <Menu.Item key="interests">
+          <Checkbox.Group
+            options={['model', 'ugc', 'voiceOver']}
+            value={selectedInterest}
+            onChange={handleInterestChange}
+          />
+        </Menu.Item>
+      </Menu.ItemGroup>
+      <Menu.ItemGroup title="Filter by Age">
+        {['18-25', '26-35', '36-45', '46-60', '60+'].map((age) => (
+          <Menu.Item key={age}>
+            <Checkbox
+              value={age}
+              checked={selectedAge === age}
+              onChange={() => handleAgeChange({ target: { value: age } })}
+            >
+              {age}
+            </Checkbox>
+          </Menu.Item>
+        ))}
+      </Menu.ItemGroup>
+      <Menu.ItemGroup title="Filter by Gender">
+        {['male', 'female'].map((sex) => (
+          <Menu.Item key={sex}>
+            <Checkbox
+              value={sex}
+              checked={selectedSex === sex}
+              onChange={() => handleSexChange({ target: { value: sex } })}
+            >
+              {sex}
+            </Checkbox>
+          </Menu.Item>
+        ))}
+      </Menu.ItemGroup>
+    </Menu>
+  );
 
   return (
-    <div className="bg-gray-800 text-white py-4">
-    <div className="container mx-auto flex flex-col lg:flex-row items-center justify-between">
-        <div className="lg:flex-1">
-            <Link to="/" className="text-2xl font-bold hover:text-gray-400"
-                onClick={clearAll}>
-                Movie App
-            </Link>
-
-            <Link
-    to="/favorites"
-    className="text-2xl font-bold hover:text-gray-400 rounded-md ml-4"
-    style={{margin:"4rem"}}
-    onClick={handleClearFilters}
-  >
-    Favorites
-  </Link>
+    <Header className="bg-gray-800 text-white">
+      <div className="container mx-auto flex flex-col lg:flex-row items-center justify-between py-4">
+        <div className="flex items-center mb-4 lg:mb-0">
+          <Link to="/" className="text-2xl font-bold text-white hover:text-gray-400" onClick={clearAll}>
+            Candidate App
+          </Link>
+          <Link
+            to="/favorites"
+            className="text-lg font-bold text-white hover:text-gray-400 ml-6"
+            onClick={handleClearFilters}
+          >
+            Favorites
+          </Link>
         </div>
 
-        <div className="lg:space-x-2 mt-4 lg:mt-0">
-            <div className="relative">
-                <input
-                    type="text"
-                    className="bg-gray-700 text-white px-4 py-2 rounded-md"
-                    placeholder="Search for a movie..."
-                    value={searchTerm}
-                    onChange={handleSearch}
-                />
-
-            </div>
-            <div className="relative group">
-                <button
-                    className="bg-gray-700 px-4 py-2 rounded-md mt-4 lg:mt-0"
-                    style={{ marginTop: '0.8rem' }}
-                    onClick={() => setGenreDropdownOpen(!isGenreDropdownOpen)}
-                >
-                    Filter by Genre
-                </button>
-                <ul
-                    className={`${isGenreDropdownOpen ? 'block' : 'hidden'
-                        } absolute space-y-2 bg-white text-gray-800 rounded-md mt-2 py-2 px-4`}
-                        style={{ zIndex: 10 }}
-                >
-                    <li
-                        onClick={() => handleGenreFilter('Action')}
-                        className="cursor-pointer hover:text-blue-500"
-                    >
-                        Action
-                    </li>
-                    <li
-                        onClick={() => handleGenreFilter('Comedy')}
-                        className="cursor-pointer hover:text-blue-500"
-                    >
-                        Comedy
-                    </li>
-              <li
-                onClick={() => handleGenreFilter('Science Fiction')}
-                className="cursor-pointer hover:text-blue-500"
-              >
-                Science Fiction
-              </li>
-              <li
-                onClick={() => handleGenreFilter('Superhero')}
-                className="cursor-pointer hover:text-blue-500"
-              >
-                Superhero
-              </li>
-              <li
-                onClick={() => handleGenreFilter('Horror')}
-                className="cursor-pointer hover:text-blue-500"
-              >
-                Horror
-              </li>
-              <li
-                onClick={() => handleGenreFilter('Adventure')}
-                className="cursor-pointer hover:text-blue-500"
-              >
-                Adventure
-              </li>
-             
-            </ul>
-          </div>
-          {selectedGenre && (
-                        <button
-                            className="bg-red-600 px-4 py-2 rounded-md mt-4 lg:mt-0"
-                            style={{ marginTop: '0.8rem' }}
-                            onClick={handleClearFilters}
-                        >
-                            Clear Filters
-                        </button>
-                    )}
-                    
-                </div>
-            </div>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-4 space-y-4 lg:space-y-0">
+          <Search
+            placeholder="Search for a candidate..."
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+            enterButton
+            prefix={<SearchOutlined />}
+            className="bg-gray-700 text-white"
+            style={{ maxWidth: 300 }}
+          />
+          <Dropdown overlay={menu} trigger={['click']}>
+            <Button
+              className="bg-gray-700 text-white flex items-center space-x-2"
+              icon={<FilterOutlined />}
+            >
+              Filter
+            </Button>
+          </Dropdown>
+          {(selectedInterest.length > 0 || selectedAge || selectedSex) && (
+            <Button
+              className="bg-red-600 text-white flex items-center space-x-2"
+              icon={<ClearOutlined />}
+              onClick={handleClearFilters}
+            >
+              Clear Filters
+            </Button>
+          )}
         </div>
+      </div>
+    </Header>
   );
 };
 

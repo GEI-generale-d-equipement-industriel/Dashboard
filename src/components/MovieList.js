@@ -1,96 +1,98 @@
-import React,{useMemo} from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { toggleFavorite } from '../store/movieSlice';
-import { HandThumbDownIcon, HandThumbUpIcon } from '@heroicons/react/20/solid'
+import { Card, Button, Typography, Row, Col,Tag,Divider } from 'antd';
+// import { LikeOutlined, DislikeOutlined,UserAddOutlined } from '@ant-design/icons';
+import { IoIosAddCircleOutline,IoIosRemoveCircleOutline } from "react-icons/io";
+import { toggleFavorite, fetchCandidates } from '../store/movieSlice';
 import Pagination from './Pagination';
 
-function MovieList() {
-  const movies = useSelector((state) => state.movie.movies);
-  const selectedGenre = useSelector((state) => state.movie.selectedGenre);
-  const searchFilter = useSelector((state) => state.movie.searchFilter);
-  const favorites = useSelector((state) => state.movie.favorites);
+const { Meta } = Card;
+const { Title } = Typography; 
+
+function CandidateList() {
+  // const candidates = useSelector((state) => state.candidates.candidates);
+  // const selectedInterest = useSelector((state) => state.candidates.selectedInterest);
+  // const searchFilter = useSelector((state) => state.candidates.searchFilter);
+  const favorites = useSelector((state) => state.candidates.favorites);
+  const filteredCandidates = useSelector(state => state.candidates.filteredCandidates);
+
   const dispatch = useDispatch();
 
-  const filteredMovies = movies.filter((movie) => {
-    const genreMatch = !selectedGenre || movie.genre.includes(selectedGenre);
-    const titleMatch = !searchFilter || movie.title.toLowerCase().includes(searchFilter.toLowerCase());
-    return genreMatch && titleMatch;
-  });
+  useEffect(() => {
+    dispatch(fetchCandidates());
+  }, [dispatch]);
 
-  const handleLikeToggle = (movieId) => {
-    const isFavorite = favorites.includes(movieId);
-    dispatch(toggleFavorite({ movieId, isFavorite }));
-    const updatedFavorites = isFavorite
-      ? favorites.filter((id) => id !== movieId)
-      : [...favorites, movieId];
-    localStorage.setItem('favoriteMovies', JSON.stringify(updatedFavorites));
+  const handleLikeToggle = (candidateId) => {
+    dispatch(toggleFavorite(candidateId));
   };
 
-  const pageSize = useSelector((state) => state.movie.pageSize);
-  const currentPage = useSelector((state) => state.movie.currentPage);
+  const pageSize = useSelector((state) => state.candidates.pageSize);
+  const currentPage = useSelector((state) => state.candidates.currentPage);
 
-  const moviesForCurrentPage = useMemo(() => {
+  const candidatesForCurrentPage = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    return filteredMovies.slice(startIndex, endIndex);
-  }, [filteredMovies, currentPage, pageSize]);
+    return filteredCandidates.slice(startIndex, endIndex);
+  }, [filteredCandidates, currentPage, pageSize]);
 
   return (
-    <div className="bg-gray-300">
-      <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:max-w-7xl lg:px-8"
-      style={{marginLeft: 'auto', marginRight: 'auto'}}>
-        <h2 className="text-3xl font-bold text-center text-gray-900">Related Movies</h2>
+    <div className="bg-gray-100 min-h-screen py-6">
+      <div className="container mx-auto px-4">
+        <Title level={2} className="text-center mb-8">Related Candidates</Title>
 
-        <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 4xl:grid-cols-4">
-          {moviesForCurrentPage.map((movie) => (
-            <div
-              key={movie.title}
-              className="group relative bg-gray-100 p-4 rounded-lg shadow-md hover:shadow-lg transition duration-200 transform hover:scale-105"
-            >
-              <div
-                className="w-full h-48 overflow-hidden rounded-md bg-gray-300"
-                style={{ width: '100%', height: '80%' }}
-              >
-                <Link to={`/movie/${movie.id}`} className="hover:text-blue-600">
-                <img
-                  src={movie.posterURL}
-                  alt={movie.title}
-                  className="w-full h-full object-cover"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                </Link>
-              </div>
-              <div className="mt-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  <Link to={`/movie/${movie.id}`} className="hover:text-blue-600">
-                    {movie.title}
+        <Row gutter={[16, 24]}>
+          {candidatesForCurrentPage.map((candidate) => (
+            <Col span={12} md={8} lg={6} key={candidate._id}>
+              <Card
+                cover={
+                  <Link to={`/candidate/${candidate._id}`}>
+                    <img
+                      alt={`${candidate.name}`}
+                      src={`http://192.168.1.114:5000/api/files/${candidate.files.find(file => file.contentType.startsWith('image/'))._id}`}
+                      className="w-full h-48 object-cover"
+                    />
                   </Link>
-                </h3>
-                <p className="mt-1 text-sm text-gray-500">{movie.genre}</p>
-              </div>
-              <div className="flex justify-between mt-4">
-                <p className="text-sm font-medium text-gray-700">{movie.releaseDate}</p>
-                <button
-                className={`bg-slate-600 text-white py-2 px-4 rounded-full hover:bg-slate-700 transform transition duration-300 ease-in-out hover:scale-110`}
-                onClick={() => handleLikeToggle(movie.id)}
-                style={{ pointerEvents: 'auto', marginLeft: '130px', marginRight: 'auto',marginBottom:"180px"}}
+                }
+                actions={[
+                  <Button
+                    key="toggle-favorite"
+                    type="text"
+                    icon={favorites.includes(candidate._id) ? <IoIosRemoveCircleOutline /> : <IoIosAddCircleOutline />}
+                    onClick={() => handleLikeToggle(candidate._id)}
+                  >
+                    {favorites.includes(candidate._id) ? 'Remove From Favorites' : 'Add To Favorites'}
+                  </Button>
+                ]}
+                className="shadow-lg rounded-lg"
               >
-                {favorites.includes(movie.id) ? (
-                  <HandThumbDownIcon className="w-5 h-5" />
-                ) : (
-                  <HandThumbUpIcon className="w-5 h-5" />
-                )}
-              </button>
-             
-              </div>
-            </div>
+                <Meta
+                  title={<Link to={`/candidate/${candidate._id}`}>{candidate.firstName+" " +candidate.name}</Link>}
+
+                  description={
+                  <div>
+                    <Divider orientation='left'>
+                    
+                    </Divider>
+                    {candidate.interest.split(',').map((interest,index)=>(
+                      <Tag color='gold' key={index}>
+                        {interest.trim()}
+                      </Tag>
+                    ))}
+                  </div>
+                  }
+                />
+                <div className="mt-2 flex justify-between">
+                  <p className="text-sm font-medium text-gray-700 capitalize">{candidate.gender}</p>
+                </div>
+              </Card>
+            </Col>
           ))}
-        </div>
+        </Row>
       </div>
-      <Pagination totalItems={filteredMovies.length} />
+      <Pagination totalItems={filteredCandidates.length} />
     </div>
   );
-};
+}
 
-export default MovieList
+export default CandidateList;
