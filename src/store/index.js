@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import candidateReducer from "./movieSlice"
+import candidateReducer from "./candidatesSlice"
 
 
 const store =configureStore({

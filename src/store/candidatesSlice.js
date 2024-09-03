@@ -1,12 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-
+const url ="http://localhost:5000"
 // Thunk to fetch candidates from API
 export const fetchCandidates = createAsyncThunk(
   "candidates/fetchCandidates",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get("http://192.168.1.114:5000/api/candidates");
+      const response = await axios.get(`${url}/api/candidates`);
       return response.data;
     } catch (error) {
       console.error("API request failed", error);  // Log the error
@@ -15,6 +15,7 @@ export const fetchCandidates = createAsyncThunk(
   }
 );
 
+
 const candidateSlice = createSlice({
   name: "candidates",
   initialState: {
@@ -22,7 +23,7 @@ const candidateSlice = createSlice({
     filteredCandidates: [],
     favorites: JSON.parse(localStorage.getItem("favoriteCandidates")) || [],
     selectedInterests: [],
-    selectedAgeRange: "",
+    selectedAgeRange: [],
     selectedSex: "",
     searchTerm: "",
     currentPage: 1,
@@ -46,9 +47,9 @@ const candidateSlice = createSlice({
         selectedInterests = action.payload.split(',').map(interest => interest.trim());
       }
     
-      console.log(selectedInterests, 'selectedInterests'); // Debugging output
+      
       state.selectedInterests = selectedInterests; // Use the correct state property
-      console.log(state.selectedInterests, 'updated state.selectedInterests'); // Ensure state is updated
+
       applyFilters(state);
     },
     
@@ -73,6 +74,10 @@ const candidateSlice = createSlice({
     },
     setPage: (state, action) => {
       state.currentPage = action.payload;
+    },
+    setPageSize: (state, action) => {
+      state.pageSize = action.payload;
+      state.currentPage = 1; // Reset to the first page when page size changes
     },
     toggleFavorite: (state, action) => {
       const candidateId = action.payload;
@@ -110,39 +115,45 @@ const applyFilters = (state) => {
   let filteredCandidates = state.candidates;
 
   if (state.searchTerm) {
-    filteredCandidates = filteredCandidates.filter(candidate =>
-      candidate.name.toLowerCase().includes(state.searchTerm.toLowerCase())
+    filteredCandidates = filteredCandidates.filter(candidate =>{  
+      return (candidate.name.toLowerCase().includes(state.searchTerm.toLowerCase()) ||candidate.firstName.toLowerCase().includes(state.searchTerm.toLowerCase()))}
     );
   }
 
-   if (state.selectedInterests.length > 0) {
+  if (state.selectedInterests.length > 0) {
     filteredCandidates = filteredCandidates.filter(candidate => {
-      return state.selectedInterests.every(interest => {
-        // Ensure the candidate's interests contain all selected interests
-        console.log(candidate.interest);
-        
-        return candidate.interest.includes(interest);
+      const candidateInterests = candidate.interest.split(',').map(interest => interest.trim());
+
+      // Ensure all selected interests are exactly matched in candidate's interests
+      return candidateInterests.length === state.selectedInterests.length && 
+             state.selectedInterests.every(interest =>
+               candidateInterests.includes(interest)
+             );
+    });
+  }
+
+  if (state.selectedAgeRange.length > 0) {
+    filteredCandidates = filteredCandidates.filter(candidate => {
+      const currentYear = new Date().getFullYear();
+      const age = currentYear - candidate.birthYear;
+  
+      return state.selectedAgeRange.some(range => {
+        const [minAge, maxAge] = range.split('-').map(Number);
+        return minAge <= age && (maxAge ? age <= maxAge : true);
       });
     });
   }
 
-  if (state.selectedAgeRange) {
-    const [minAge, maxAge] = state.selectedAgeRange.split('-').map(Number);
-    const currentYear = new Date().getFullYear();
-    filteredCandidates = filteredCandidates.filter(candidate => {
-      const age = currentYear - candidate.birthYear;
-      return (minAge <= age && (maxAge ? age <= maxAge : true));
-    });
-  }
-
   if (state.selectedSex) {
+    
+    
     filteredCandidates = filteredCandidates.filter(candidate =>
-      candidate.gender === state.selectedSex
+      candidate.gender.includes(state.selectedSex)
     );
   }
 
   state.filteredCandidates = filteredCandidates;
-  console.log(state.filteredCandidates, 'filteredCandidates');
+  
 };
 
 export const {
@@ -153,6 +164,7 @@ export const {
   clearFilters,
   restPages,
   setPage,
+  setPageSize,
   toggleFavorite
 } = candidateSlice.actions;
 
