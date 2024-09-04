@@ -1,28 +1,20 @@
 import React, { useState } from 'react';
-import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-} from '@ant-design/icons';
 import { Layout, Menu, theme } from 'antd';
 import FiltersSidebar from '../components/FiltersSidebar';
-
+import { Link, useLocation } from 'react-router-dom';
 const { Header, Content, Sider } = Layout;
 
 const AppLayout = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInterest, setSelectedInterest] = useState([]);
-  const [selectedAge, setSelectedAge] = useState([]);
+  const [selectedAge, setSelectedAge] = useState([0, 60]);
   const [selectedSex, setSelectedSex] = useState([]);
 
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
-
-  const toggleCollapse = () => {
-    setCollapsed(!collapsed);
-  };
-
+  const location = useLocation();
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Header
@@ -40,63 +32,67 @@ const AppLayout = ({ children }) => {
           className="logo"
           style={{
             width: 120,
-            height: 120,
-            margin: '16px 24px 16px 0',
+            height: 124,
+            marginRight: '24px',
           }}
         >
+            <Link to="/">
           <img
             src="/assets/GEI.png"
             alt="logo"
             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
           />
+          </Link>
         </div>
         <Menu
-          theme="dark"
-          mode="horizontal"
-          defaultSelectedKeys={['2']}
-          items={['1', '2', '3'].map((key) => ({
-            key,
-            label: `nav ${key}`,
-          }))}
-          style={{
-            flex: 1,
-            minWidth: 0,
-          }}
-        />
+        theme="dark"
+        mode="horizontal"
+        
+        style={{
+          flex: 1,
+          minWidth: 0,
+        }}
+      >
+        <Menu.Item key="1">
+          <Link to="/">Home</Link>
+        </Menu.Item>
+        <Menu.Item key="2">
+          <Link to="/favorites">Favorites</Link>
+        </Menu.Item>
+      </Menu>
+        
       </Header>
       <Layout style={{ marginTop: 64 }}>
-        <Sider
-          
-          collapsed={collapsed}
-          onCollapse={toggleCollapse}
-          trigger={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-          width={220}
-          style={{
-            background: colorBgContainer,
-            position: 'fixed',
-            height: '100vh',
-            overflow: 'auto',
-            top: 64,
-            left: 0,
-            zIndex: 100,
-          }}
-        >
-          <FiltersSidebar
-            collapsed={collapsed}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            selectedInterest={selectedInterest}
-            setSelectedInterest={setSelectedInterest}
-            selectedAge={selectedAge}
-            setSelectedAge={setSelectedAge}
-            selectedSex={selectedSex}
-            setSelectedSex={setSelectedSex}
-          />
-        </Sider>
+      {location.pathname === '/' && ( // Render Sider only on the "/" path
+          <Sider
+            width={304}
+            className="shadow-lg"
+            style={{
+              backgroundColor: "#f1f5f9",
+              position: 'fixed',
+              height: 'calc(100vh - 64px)',
+              overflow: 'auto',
+              top: 64,
+              left: 0,
+              zIndex: 100,
+              padding: '16px',
+            }}
+          >
+            <FiltersSidebar
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              selectedInterest={selectedInterest}
+              setSelectedInterest={setSelectedInterest}
+              selectedAge={selectedAge}
+              setSelectedAge={setSelectedAge}
+              selectedSex={selectedSex}
+              setSelectedSex={setSelectedSex}
+            />
+          </Sider>
+        )}
         <Layout
           style={{
-            marginLeft: collapsed ? 80 : 200,
-            transition: 'margin-left 0.2s',
+            marginLeft: location.pathname === '/' ? 280 : 0, // Adjust margin based on whether Sider is rendered
             padding: '0 24px 24px',
           }}
         >

@@ -57,7 +57,7 @@ function CandidateList() {
 
 
   return (
-    <div className="bg-gray-100 min-h-screen py-6">
+    <div className="bg-slate-100 min-h-screen py-6">
       <div className="container mx-auto px-4">
         <Title level={2} className="text-center mb-8">Related Candidates</Title>
 

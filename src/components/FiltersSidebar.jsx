@@ -1,7 +1,7 @@
-import React from 'react';
-import { Menu, Button, Checkbox, Input } from 'antd';
-import { ClearOutlined, SearchOutlined } from '@ant-design/icons';
-import { useDispatch } from 'react-redux';
+import React, { useState } from 'react';
+import { Button, Checkbox, Input, Slider, Divider } from 'antd';
+import { ClearOutlined, SearchOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   filterByInterest,
   filterByName,
@@ -12,143 +12,159 @@ import {
 } from '../store/candidatesSlice';
 
 const interests = ['Modèle pour shooting en studio', 'Créateur UGC', 'Voix-off'];
-const ages = ['18-25', '26-35', '36-45', '46-60', '60+'];
 const sexes = ['Homme', 'Femme'];
 
-const FiltersSidebar = ({
-  searchTerm,
-  setSearchTerm,
-  selectedInterest,
-  setSelectedInterest,
-  selectedAge,
-  setSelectedAge,
-  selectedSex,
-  setSelectedSex,
-}) => {
+const FiltersSidebar = () => {
   const dispatch = useDispatch();
 
+  const { searchTerm, selectedInterests, selectedAgeRange, selectedSex } = useSelector(
+    (state) => state.candidates
+  );
+
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [isInterestVisible, setIsInterestVisible] = useState(false);
+  const [isAgeVisible, setIsAgeVisible] = useState(false);
+  const [isSexVisible, setIsSexVisible] = useState(false);
+
   const handleSearch = (value) => {
-    setSearchTerm(value);
     dispatch(filterByName(value));
   };
 
-  const handleInterestChange = (value) => {
-    setSelectedInterest(value);
-    dispatch(filterByInterest(value));
+  const handleInterestChange = (interest) => {
+    dispatch(filterByInterest(interest));
   };
 
-  const handleAgeChange = (age) => {
-    setSelectedAge(age);
-    dispatch(filterByAge(age));
+  const handleAgeChange = (ageRange) => {
+    dispatch(filterByAge(ageRange));
   };
 
   const handleSexChange = (sex) => {
-    setSelectedSex(sex);
     dispatch(filterBySex(sex));
   };
 
   const handleClearFilters = () => {
     dispatch(clearFilters());
-    setSearchTerm('');
-    setSelectedInterest([]);
-    setSelectedAge([]);
-    setSelectedSex([]);
+    dispatch(restPages());
   };
-
-  const resetPage = () => dispatch(restPages());
-
-  const clearAll = () => {
-    handleClearFilters();
-    resetPage();
-  };
-
+  const isFilterActive = 
+  searchTerm || 
+  selectedInterests.length > 0 || 
+  selectedAgeRange[0] !== 0 || 
+  selectedAgeRange[1] !== 60 || 
+  selectedSex.length > 0;
   return (
-    <Menu
-  mode="inline"
-  style={{
-    padding: '10px',
-    borderRight: 0,
-  }}
->
-  <Menu.Item key="1" style={{ marginBottom: '20px' }}>
-    <h4>Search</h4>
-    <Input.Search
-      placeholder="Search for a candidate..."
-      value={searchTerm}
-      onChange={(e) => handleSearch(e.target.value)}
-      enterButton
-      prefix={<SearchOutlined />}
-      style={{ width: '100%' }}
-    />
-  </Menu.Item>
-
-  <Menu.Item key="2" style={{ marginBottom: '20px' }}>
-    <h4>Interest</h4>
-    {interests.map((interest) => (
-      <Checkbox
-        key={interest}
-        checked={selectedInterest.includes(interest)}
-        onChange={(e) => {
-          const checked = e.target.checked;
-          const newInterests = checked
-            ? [...selectedInterest, interest]
-            : selectedInterest.filter((i) => i !== interest);
-          handleInterestChange(newInterests);
-        }}
-        style={{ display: 'block', marginBottom: '5px' }}
+    <div className="p-4 bg-white h-full overflow-auto rounded font-mono border rounded shadow-xl">
+    <span className="p-4 font-mono text-xl text-center block mb-4 border-b">Filters</span>
+    {isFilterActive && (
+      <div
+        className={`transition-opacity duration-300 mb-6 ${isFilterActive ? 'opacity-100' : 'opacity-0'}`}
       >
-        {interest}
-      </Checkbox>
-    ))}
-  </Menu.Item>
+        <Button
+          onClick={handleClearFilters}
+          icon={<ClearOutlined className="text-sm" />}
+          danger
+          className="w-full rounded"
+        >
+          Clear All Filters
+        </Button>
+        <Divider />
+      </div>
+    )}
 
-  <Menu.Item key="3" style={{ marginBottom: '20px' }}>
-    <h4>Age</h4>
-    {ages.map((age) => (
-      <Checkbox
-        key={age}
-        checked={selectedAge.includes(age)}
-        onChange={(e) => {
-          const checked = e.target.checked;
-          const newAges = checked
-            ? [...selectedAge, age]
-            : selectedAge.filter((a) => a !== age);
-          handleAgeChange(newAges);
-        }}
-        style={{ display: 'block', marginBottom: '5px' }}
+    <div className="mb-6">
+      <h4
+        className="text-lg font-semibold font-mono text-gray-700 mb-3 flex justify-center items-center hover:text-blue-500 cursor-pointer border-b pb-2"
+        onClick={() => setIsSearchVisible(!isSearchVisible)}
       >
-        {age}
-      </Checkbox>
-    ))}
-  </Menu.Item>
-
-  <Menu.Item key="4" style={{ marginBottom: '20px' }}>
-    <h4>Sex</h4>
-    {sexes.map((sex) => (
-      <Checkbox
-        key={sex}
-        checked={selectedSex.includes(sex)}
-        onChange={(e) => {
-          const checked = e.target.checked;
-          const newSexes = checked
-            ? [...selectedSex, sex]
-            : selectedSex.filter((s) => s !== sex);
-          handleSexChange(newSexes);
-        }}
-        style={{ display: 'block', marginBottom: '5px' }}
+        Search {isSearchVisible ? <UpOutlined className="text-sm ml-2" /> : <DownOutlined className="text-sm ml-2" />}
+      </h4>
+      {isSearchVisible && (
+        <Input.Search
+          placeholder="Search for a candidate..."
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+          enterButton
+          prefix={<SearchOutlined className="text-sm" />}
+          className="rounded"
+        />
+      )}
+    </div>
+    
+    <div className="mb-6">
+      <h4
+        className="text-lg font-semibold font-mono text-gray-700 mb-3 flex justify-center items-center hover:text-blue-500 cursor-pointer border-b pb-2"
+        onClick={() => setIsInterestVisible(!isInterestVisible)}
       >
-        {sex}
-      </Checkbox>
-    ))}
-  </Menu.Item>
-
-  <Menu.Item key="5">
-    <Button onClick={clearAll} icon={<ClearOutlined />} danger>
-      Clear All Filters
-    </Button>
-  </Menu.Item>
-</Menu>
-
+        Interest {isInterestVisible ? <UpOutlined className="text-sm ml-2" /> : <DownOutlined className="text-sm ml-2" />}
+      </h4>
+      {isInterestVisible && interests.map((interest) => (
+        <Checkbox
+          key={interest}
+          checked={selectedInterests?.includes(interest)}
+          onChange={(e) => {
+            const isChecked = e.target.checked;
+            const updatedInterests = isChecked
+              ? [...selectedInterests, interest]
+              : selectedInterests.filter((i) => i !== interest);
+            handleInterestChange(updatedInterests);
+          }}
+          className="flex mb-2 text-sm font-semibold font-mono text-gray-700"
+        >
+          {interest}
+        </Checkbox>
+      ))}
+    </div>
+    
+    <div className="mb-6">
+      <h4
+        className="text-lg font-semibold font-mono text-gray-700 mb-3 flex justify-center items-center hover:text-blue-500 cursor-pointer border-b pb-2"
+        onClick={() => setIsAgeVisible(!isAgeVisible)}
+      >
+        Age {isAgeVisible ? <UpOutlined className="text-sm ml-2" /> : <DownOutlined className="text-sm ml-2" />}
+      </h4>
+      {isAgeVisible && (
+        <>
+          <Slider
+            range
+            min={0}
+            max={60}
+            value={selectedAgeRange}
+            onChange={handleAgeChange}
+            className="mb-4"
+          />
+          <div className="flex justify-between text-gray-600">
+            <span>{selectedAgeRange[0]}</span>
+            <span>{selectedAgeRange[1]}</span>
+          </div>
+        </>
+      )}
+    </div>
+    
+    <div className="mb-6">
+      <h4
+        className="text-lg font-semibold font-mono text-gray-700 mb-3 flex justify-center items-center hover:text-blue-500 cursor-pointer border-b pb-2"
+        onClick={() => setIsSexVisible(!isSexVisible)}
+      >
+        Sex {isSexVisible ? <UpOutlined className="text-sm ml-2" /> : <DownOutlined className="text-sm ml-2" />}
+      </h4>
+      {isSexVisible && sexes.map((sex) => (
+        <Checkbox
+          key={sex}
+          checked={selectedSex?.includes(sex)}
+          onChange={(e) => {
+            const isChecked = e.target.checked;
+            const updatedSex = isChecked
+              ? [...selectedSex, sex]
+              : selectedSex.filter((s) => s !== sex);
+            handleSexChange(updatedSex);
+          }}
+          className="flex mb-2 text-sm font-semibold font-mono text-gray-700"
+        >
+          {sex}
+        </Checkbox>
+      ))}
+    </div>
+  </div>
   );
 };
 
