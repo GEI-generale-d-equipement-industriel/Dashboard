@@ -9,7 +9,8 @@ import { Button, Card, Typography, Divider, Col, Row, Tag } from 'antd';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import BmiIndicateur from './BmiIndicateur';
-const url = "http://localhost:5000";
+import axios from 'axios';
+const url = "http://localhost:3002";
 
 const { Meta } = Card;
 const { Title, Text } = Typography;
@@ -25,18 +26,26 @@ const CandidateDetails = () => {
   const handleLikeToggle = (candidateId) => {
     dispatch(toggleFavorite(candidateId));
   };
+  const selectCandidate=async()=>{
+   try{const res=await axios.get(`${url}/candidates/${id}`)
+  
+    setCandidate(res.data)
+  }catch(error){
+    console.error(error)
+  }
+   
+   
 
+  }
   useEffect(() => {
-    const selectedCandidate = candidates.find((c) => c._id === id);
-    if (selectedCandidate) {
-      setCandidate(selectedCandidate);
-    }
-  }, [id, candidates]);
+    selectCandidate()
+    
+  }, [id]);
 
   if (!candidate) {
     return <div className="text-center mt-8 text-xl">Loading...</div>;
   }
-console.log(candidate);
+// console.log(candidate);
 
   // Carousel settings
   const settings = {
@@ -114,7 +123,7 @@ console.log(candidate);
     }
 
     return (
-      <a key={file._id} href={`${url}/api/files/${file._id}`} download className="text-blue-500 hover:underline">
+      <a key={file._id} href={`${url}/files/download/${file._id}`} download className="text-blue-500 hover:underline">
         {file.filename} (Download)
       </a>
     );
@@ -132,7 +141,7 @@ console.log(candidate);
                   {images.map((file) => (
                     <div key={file._id} className="w-full flex items-center justify-center">
                       <img
-                        src={`${url}/api/files/${file._id}`}
+                        src={`${url}/files/download/${file._id}`}
                         alt={`${candidate.name} ${candidate.firstName}`}
                         className="object-contain"
                         style={{ width: '100%', height: 'auto' }}
@@ -144,7 +153,7 @@ console.log(candidate);
                 images.length === 1 && (
                   <div className="w-full flex items-center justify-center">
                     <img
-                      src={`${url}/api/files/${images[0]._id}`}
+                      src={`${url}/files/download/${images[0]._id}`}
                       alt={`${candidate.name} ${candidate.firstName}`}
                       className="object-contain"
                       style={{ width: '100%', height: 'auto' }}

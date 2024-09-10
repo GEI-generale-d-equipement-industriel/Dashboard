@@ -6,6 +6,17 @@
 @import "~slick-carousel/slick/slick.css";
 @import "~slick-carousel/slick/slick-theme.css";
 
+
+/* In your global CSS file */
+.blur-background {
+  filter: blur(18px); /* Adjust the blur level */
+  transition: filter 0.3s ease-in-out;
+}
+
+.content {
+  padding: 20px;
+}
+
 .custom-icon {
   @apply text-gray-600 text-sm;
 }

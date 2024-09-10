@@ -20,3 +20,34 @@
                         </div>
                       )}
                     </div>
+                    {
+  "_id": {
+    "$oid": "66d5904bfeeafd921050c26d"
+  },
+  "name": "Chamli",
+  "firstName": "Mariem",
+  "gender": "Femme",
+  "birthYear": 1989,
+  "height": 1.65,
+  "weight": 72.5,
+  "eyeColor": "Marron foncé",
+  "hairColor": "Noir",
+  "phone": "90535587",
+  "interest": "Voix-off",
+  "socialMedia": [
+    {
+      "type": "Instagram",
+      "link": ""
+    },
+    {
+      "type": "TikTok",
+      "link": ""
+    }
+  ],
+  "files": [
+    {
+      "filename": "https://drive.google.com/file/d/1cMqmsLp1LVMPsrOoxtE3gjtU5uGjA5GA/view?usp=drive_link",
+      "contentType": "application/octet-stream"
+    }
+  ]
+}

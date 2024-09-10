@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Checkbox, Input, Slider, Divider } from 'antd';
-import { ClearOutlined, SearchOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
+import { ClearOutlined, SearchOutlined, DownOutlined, UpOutlined,CaretDownOutlined,CaretUpOutlined  } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   filterByInterest,
@@ -73,10 +73,10 @@ const FiltersSidebar = () => {
 
     <div className="mb-6">
       <h4
-        className="text-lg font-semibold font-mono text-gray-700 mb-3 flex justify-center items-center hover:text-blue-500 cursor-pointer border-b pb-2"
+        className="text-lg font-semibold font-mono text-gray-700 mb-3 flex hover:text-blue-500 cursor-pointer border-b pb-2"
         onClick={() => setIsSearchVisible(!isSearchVisible)}
       >
-        Search {isSearchVisible ? <UpOutlined className="text-sm ml-2" /> : <DownOutlined className="text-sm ml-2" />}
+        Search {isSearchVisible ? <CaretUpOutlined className="text-sm ml-2" /> : <CaretDownOutlined className="text-sm ml-2" />}
       </h4>
       {isSearchVisible && (
         <Input.Search
@@ -92,10 +92,10 @@ const FiltersSidebar = () => {
     
     <div className="mb-6">
       <h4
-        className="text-lg font-semibold font-mono text-gray-700 mb-3 flex justify-center items-center hover:text-blue-500 cursor-pointer border-b pb-2"
+        className="text-lg font-semibold font-mono text-gray-700 mb-3 flex  hover:text-blue-500 cursor-pointer border-b pb-2"
         onClick={() => setIsInterestVisible(!isInterestVisible)}
       >
-        Interest {isInterestVisible ? <UpOutlined className="text-sm ml-2" /> : <DownOutlined className="text-sm ml-2" />}
+        Interest {isInterestVisible ? <CaretUpOutlined className="text-sm ml-2" /> : <CaretDownOutlined className="text-sm ml-2" />}
       </h4>
       {isInterestVisible && interests.map((interest) => (
         <Checkbox
@@ -117,10 +117,10 @@ const FiltersSidebar = () => {
     
     <div className="mb-6">
       <h4
-        className="text-lg font-semibold font-mono text-gray-700 mb-3 flex justify-center items-center hover:text-blue-500 cursor-pointer border-b pb-2"
+        className="text-lg font-semibold font-mono text-gray-700 mb-3 flex  hover:text-blue-500 cursor-pointer border-b pb-2"
         onClick={() => setIsAgeVisible(!isAgeVisible)}
       >
-        Age {isAgeVisible ? <UpOutlined className="text-sm ml-2" /> : <DownOutlined className="text-sm ml-2" />}
+        Age {isAgeVisible ? <CaretUpOutlined className="text-sm ml-2" /> : <CaretDownOutlined className="text-sm ml-2" />}
       </h4>
       {isAgeVisible && (
         <>
@@ -142,10 +142,10 @@ const FiltersSidebar = () => {
     
     <div className="mb-6">
       <h4
-        className="text-lg font-semibold font-mono text-gray-700 mb-3 flex justify-center items-center hover:text-blue-500 cursor-pointer border-b pb-2"
+        className="text-lg font-semibold font-mono text-gray-700 mb-3 flex  hover:text-blue-500 cursor-pointer border-b pb-2"
         onClick={() => setIsSexVisible(!isSexVisible)}
       >
-        Sex {isSexVisible ? <UpOutlined className="text-sm ml-2" /> : <DownOutlined className="text-sm ml-2" />}
+        Sex {isSexVisible ? <CaretUpOutlined className="text-sm ml-2" /> : <CaretDownOutlined className="text-sm ml-2" />}
       </h4>
       {isSexVisible && sexes.map((sex) => (
         <Checkbox

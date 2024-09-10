@@ -1,13 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-const url = "http://localhost:5000";
+const url = "http://localhost:3002";
 
 // Thunk to fetch candidates from API
 export const fetchCandidates = createAsyncThunk(
   "candidates/fetchCandidates",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${url}/api/candidates`);
+      const response = await axios.get(`${url}/candidates`);
       return response.data;
     } catch (error) {
       console.error("API request failed", error); // Log the error
@@ -39,16 +39,9 @@ const candidateSlice = createSlice({
     },
 
     filterByInterest: (state, action) => {
-      let selectedInterests = [];
-
-      if (Array.isArray(action.payload)) {
-        selectedInterests = action.payload.map((interest) => interest.trim());
-      } else if (typeof action.payload === "string") {
-        selectedInterests = action.payload.split(",").map((interest) => interest.trim());
-      }
-
-      state.selectedInterests = selectedInterests;
-
+      state.selectedInterests = Array.isArray(action.payload)
+        ? action.payload.map((interest) => interest.trim())
+        : action.payload.split(",").map((interest) => interest.trim());
       applyFilters(state);
     },
 
@@ -67,7 +60,7 @@ const candidateSlice = createSlice({
       state.selectedAgeRange = [0, 60]; // Reset to default range
       state.selectedSex = "";
       state.searchTerm = "";
-      state.filteredCandidates = state.candidates;
+      applyFilters(state); // Reapply with cleared filters
     },
 
     restPages: (state) => {
@@ -105,7 +98,7 @@ const candidateSlice = createSlice({
       .addCase(fetchCandidates.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.candidates = action.payload;
-        state.filteredCandidates = action.payload; // Set filtered candidates to all initially
+         state.filteredCandidates = action.payload; // Set filtered candidates to all initially
       })
       .addCase(fetchCandidates.rejected, (state, action) => {
         state.status = "failed";
