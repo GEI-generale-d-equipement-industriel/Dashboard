@@ -1,29 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Drawer, Button, Grid } from 'antd';
 import { MenuOutlined } from '@ant-design/icons';
 import FiltersSidebar from '../components/FiltersSidebar';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import LoginModal from '../pages/Login.page'; // Assume this is the modal component
+import { useSelector,useDispatch } from 'react-redux';
+import { removeAuthData } from '../store/authSlice';
 
 const { Header, Content, Sider } = Layout;
 const { useBreakpoint } = Grid;
 
 const AppLayout = ({ children }) => {
+
+  const token = useSelector((state)=>state.auth.token)
+
   const [collapsed, setCollapsed] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const screens = useBreakpoint(); // Detect screen size
-
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInterest, setSelectedInterest] = useState([]);
   const [selectedAge, setSelectedAge] = useState([0, 60]);
   const [selectedSex, setSelectedSex] = useState([]);
-
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch=useDispatch()
+
 
   const toggleDrawer = () => {
     setDrawerVisible(!drawerVisible);
   };
+  const handleLogout = () => {
+    dispatch(removeAuthData()); // Dispatch the removeToken action
+      // Redirect to the login page
+  };
+  // Check if the user is authenticated
+  useEffect(() => {
+     
+    if (token) {
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+    }
+    setLoading(false); // Authentication check is complete
+  }, [token]);
 
-  return (
+  // Render the layout if authenticated, otherwise show the login modal
+  if (loading) {
+    return null; // Or you can display a loading spinner here
+  }
+
+  return isAuthenticated ? (
     <Layout style={{ minHeight: '100vh' }}>
       <Header
         style={{
@@ -44,7 +73,7 @@ const AppLayout = ({ children }) => {
             marginRight: '24px',
           }}
         >
-          <Link to="/">
+          <Link to="/candidates">
             <img
               src="/assets/GEI.png"
               alt="logo"
@@ -54,12 +83,19 @@ const AppLayout = ({ children }) => {
         </div>
         <Menu theme="dark" mode="horizontal" style={{ flex: 1, minWidth: 0 }}>
           <Menu.Item key="1">
-            <Link to="/">Home</Link>
+            <Link to="/candidates">Home</Link>
           </Menu.Item>
           <Menu.Item key="2">
             <Link to="/favorites">Favorites</Link>
           </Menu.Item>
         </Menu>
+        <Button
+          type="primary"
+          style={{ marginLeft: 'auto' }}
+          onClick={handleLogout}
+        >
+          Logout
+        </Button>
         {!screens.lg && (
           <Button
             type="primary"
@@ -70,7 +106,7 @@ const AppLayout = ({ children }) => {
         )}
       </Header>
       <Layout style={{ marginTop: 64 }}>
-        {location.pathname === '/' && screens.lg && (
+        {location.pathname === '/candidates' && screens.lg && (
           <Sider
             width={304}
             className="shadow-lg"
@@ -119,7 +155,7 @@ const AppLayout = ({ children }) => {
 
         <Layout
           style={{
-            marginLeft: screens.lg&&location.pathname==="/" ? 280 : 0,
+            marginLeft: screens.lg && location.pathname === '/candidates' ? 280 : 0,
             padding: '0 24px 24px',
           }}
         >
@@ -136,6 +172,8 @@ const AppLayout = ({ children }) => {
         </Layout>
       </Layout>
     </Layout>
+  ) : (
+    <LoginModal /> // Render the login modal if not authenticated
   );
 };
 

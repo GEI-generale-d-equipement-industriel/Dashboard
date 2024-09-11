@@ -1,50 +1,52 @@
-import React, { useMemo, useEffect,useState,useCallback } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { gapi } from 'gapi-script';
-import { Card, Button, Typography, Row, Col,Tag,Divider,Skeleton } from 'antd';
-// import { LikeOutlined, DislikeOutlined,UserAddOutlined } from '@ant-design/icons';
-import { IoIosAddCircleOutline,IoIosRemoveCircleOutline } from "react-icons/io";
-import { toggleFavorite, fetchCandidates } from '../store/candidatesSlice';
+import { Card, Button, Typography, Row, Col, Tag, Divider, Skeleton, notification } from 'antd';
+import { IoIosAddCircleOutline, IoIosRemoveCircleOutline } from "react-icons/io";
+import { fetchCandidates } from '../store/candidatesSlice';
+import { toggleFavorite } from '../services/api/favoritesService';
 import Pagination from './Pagination';
-import { initClient,fetchDriveFiles } from '../googleApi';
+
 const { Meta } = Card;
 const { Title } = Typography; 
-const url ="http://localhost:3002"
+const url = "http://localhost:3002";
+
 function CandidateList() {
-  // const candidates = useSelector((state) => state.candidates.candidates);
-  // const selectedInterest = useSelector((state) => state.candidates.selectedInterest);
-  // const searchFilter = useSelector((state) => state.candidates.searchFilter);
-  const favorites = useSelector((state) => state.candidates.favorites);
-  const filteredCandidates = useSelector(state => state.candidates.filteredCandidates);
-  const status = useSelector(state => state.candidates.status);
-  
+  const [notificationApi, contextHolder] = notification.useNotification();
+  const favorites = useSelector((state) => state.favorites.favorites);
+  const filteredCandidates = useSelector((state) => state.candidates.filteredCandidates);
+  const status = useSelector((state) => state.candidates.status);
+  const userId = useSelector((state) => state.auth.id);
   const dispatch = useDispatch();
-  const [authInstance, setAuthInstance] = useState(null);
-  const [driveFiles,setDriveFiles]=useState([])
-  const folderId="1H8QYPuP5U07cq1j035G4bIEBWnO2HJM2"
-// const urlApi=process.env.PUBLIC_URL
-
-  const initializeGoogleAPI = useCallback(async () => {
-    try {
-      const authInstance = await initClient();
-      setAuthInstance(authInstance);
-      const response=await fetchDriveFiles(folderId)
-
-      
-      setDriveFiles(response.result.files)
-    } catch (error) {
-      console.error('Error initializing Google API:', error);
-    }
-  }, [folderId]);
 
   useEffect(() => {
-    // initializeGoogleAPI();
     dispatch(fetchCandidates());
   }, [dispatch]);
 
-  const handleLikeToggle = (candidateId) => {
-    dispatch(toggleFavorite(candidateId));
+  const handleLikeToggle = async (candidateId) => {
+    try {
+      // Call the toggleFavorite function
+      await dispatch(toggleFavorite(userId, candidateId))
+      
+      // Show notification
+      const isFavorite = favoriteIds.includes(candidateId);
+      notificationApi.success({
+        message: isFavorite ? 'Removed from Favorites' : 'Added to Favorites',
+        description: isFavorite 
+          ? 'This candidate has been removed from your favorites list.' 
+          : 'This candidate has been added to your favorites list.',
+        placement: 'topRight',
+        duration: 2,
+      });
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+      notificationApi.error({
+        message: 'Action Failed',
+        description: 'There was an error while updating favorites. Please try again.',
+        placement: 'topRight',
+        duration: 2,
+      });
+    }
   };
 
   const pageSize = useSelector((state) => state.candidates.pageSize);
@@ -56,21 +58,22 @@ function CandidateList() {
     return filteredCandidates.slice(startIndex, endIndex);
   }, [filteredCandidates, currentPage, pageSize]);
 
-console.log(status);
+  // Ensure favorites is an array
+  const favoriteIds = Array.isArray(favorites) ? favorites.map(fav => fav._id || fav) : [];
 
   return (
     <div className="bg-slate-100 min-h-screen py-6">
-      
+      {contextHolder} {/* Place the notification container here */}
       <div className="container mx-auto px-4">
-      <div className="text-sm text-gray-700 flex items-center mb-4 sm:mb-0">
-        Showing <span className="font-medium ml-1">{(currentPage - 1) * pageSize + 1}{'   '}</span> to{' '}
-        <span className="font-medium ml-1">{Math.min(currentPage * pageSize, filteredCandidates.length)}</span>{' '} of{' '}
-        <span className="font-medium ml-1">{filteredCandidates.length}</span> results
-      </div>
-        <Title level={2} className="text-gray-500 text-center mb-8 underline decoration-1 ">Candidates List </Title>
+        <div className="text-sm text-gray-700 flex items-center mb-4 sm:mb-0">
+          Showing <span className="font-medium ml-1">{(currentPage - 1) * pageSize + 1}</span> to{' '}
+          <span className="font-medium ml-1">{Math.min(currentPage * pageSize, filteredCandidates.length)}</span> of{' '}
+          <span className="font-medium ml-1">{filteredCandidates.length}</span> results
+        </div>
+        <Title level={2} className="text-gray-500 text-center mb-8 underline decoration-1">Candidates List</Title>
 
         <Row gutter={[16, 24]}>
-        {status === 'loading' ? (
+          {status === 'loading' ? (
             [...Array(pageSize)].map((_, index) => (
               <Col span={12} md={8} lg={6} key={index}>
                 <Skeleton active>
@@ -95,21 +98,21 @@ console.log(status);
                     <Button
                       key="toggle-favorite"
                       type="text"
-                      icon={favorites.includes(candidate._id) ? <IoIosRemoveCircleOutline /> : <IoIosAddCircleOutline />}
+                      icon={favoriteIds.includes(candidate._id) ? <IoIosRemoveCircleOutline /> : <IoIosAddCircleOutline />}
                       onClick={() => handleLikeToggle(candidate._id)}
                     >
-                      {favorites.includes(candidate._id) ? 'Remove From Favorites' : 'Add To Favorites'}
+                      {favoriteIds.includes(candidate._id) ? 'Remove From Favorites' : 'Add To Favorites'}
                     </Button>
                   ]}
-                  className="shadow-lg rounded-lg" 
+                  className="shadow-lg rounded-lg"
                 >
                   <Meta
                     title={<Link to={`/candidate/${candidate._id}`}>{candidate.firstName + " " + candidate.name}</Link>}
                     description={
                       <div>
-                        <Divider orientation='left'></Divider>
+                        <Divider orientation="left"></Divider>
                         {candidate.interest.split(',').map((interest, index) => (
-                          <Tag color='gold' key={index}>
+                          <Tag color="gold" key={index}>
                             {interest.trim()}
                           </Tag>
                         ))}
@@ -126,8 +129,8 @@ console.log(status);
         </Row>
       </div>
       <div className="mt-6">
-          <Pagination totalItems={filteredCandidates.length} />
-        </div>
+        <Pagination totalItems={filteredCandidates.length} />
+      </div>
     </div>
   );
 }

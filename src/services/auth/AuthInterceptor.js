@@ -1,8 +1,8 @@
 import axios from 'axios';
-
+import store from '../../store/index'
 const apiUrl = "http://localhost:3002";
 
-class AuthInterceptor {
+class AuthInterceptor {  
     constructor() {
         this.axiosInstance = axios.create({
             baseURL: apiUrl,
@@ -14,7 +14,7 @@ class AuthInterceptor {
         this.axiosInstance.interceptors.request.use(
             (config) => {
                 // Add the token to headers if it exists
-                const token = localStorage.getItem("token");
+                const token = store.getState().auth.token;
                 if (token) {
                     config.headers.Authorization = `Bearer ${token}`;
                 }

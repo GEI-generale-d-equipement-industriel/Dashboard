@@ -1,14 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-const url = "http://localhost:3002";
+import AuthInterceptor from "../services/auth/AuthInterceptor";
+
 
 // Thunk to fetch candidates from API
 export const fetchCandidates = createAsyncThunk(
   "candidates/fetchCandidates",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${url}/candidates`);
-      return response.data;
+      const axiosInstance = AuthInterceptor.getInstance();
+      const response = await axiosInstance.get('/candidates');
+      return response;
     } catch (error) {
       console.error("API request failed", error); // Log the error
       return rejectWithValue(error.response.data);

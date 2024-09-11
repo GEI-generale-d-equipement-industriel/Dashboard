@@ -3,12 +3,15 @@ import React, { useState } from 'react';
 import { Form, Input, Button, Typography, notification, Modal } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import AuthInterceptor from '../services/auth/AuthInterceptor';
+import { setAuthData } from '../store/authSlice';
+import { useDispatch } from 'react-redux';
 const { Title } = Typography;
 
 const LoginModal = () => {
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(true);
   const navigate = useNavigate();
+  const dispatch=useDispatch()
   const api = AuthInterceptor.getInstance();
 
   const onFinish = async (values) => {
@@ -18,19 +21,28 @@ const LoginModal = () => {
         username: values.username,
         password: values.password,
       });
-      console.log(response);
+      const token = response?.access_token;
+    const id = response?.id;
 
-      localStorage.setItem('access_token', response.access_token);
+    if (token && id) {
+      // Dispatch both the token and id to the Redux store
+      dispatch(setAuthData({ token, id }));
+      
+      // Navigate to the candidates page
+      navigate('/candidates');
+      
       notification.success({
         message: 'Login Successful',
         description: 'You have successfully logged in.',
       });
 
-      // Close modal
+      // Close the modal
       setIsModalVisible(false);
-
-      // Navigate to a new route after login
-      navigate('/dashboard');
+    } else {
+      // Handle missing token or ID
+      throw new Error("Invalid response data");
+    }
+      
     } catch (error) {
       console.log(error);
       notification.error({
@@ -56,6 +68,7 @@ const LoginModal = () => {
         onCancel={() => setIsModalVisible(false)}
         closable={false}
         centered
+        maskClosable={false}
       >
         <div className="w-full max-w-md p-8">
           <Title level={2} className="text-center mb-6">Login</Title>

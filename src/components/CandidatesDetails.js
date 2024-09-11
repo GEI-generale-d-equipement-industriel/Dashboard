@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { toggleFavorite } from '../store/candidatesSlice';
+// import { toggleFavorite } from '../store/candidatesSlice';
+import { toggleFavorite } from '../services/api/favoritesService';
+// import { toggleFavoriteWithAPI } from '../store/favoritesSlice';
 import { TikTokOutlined, InstagramOutlined, FacebookOutlined, GoogleOutlined } from '@ant-design/icons';
 import { IoIosAddCircleOutline, IoIosRemoveCircleOutline } from 'react-icons/io';
 import Slider from 'react-slick';
@@ -10,32 +12,40 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import BmiIndicateur from './BmiIndicateur';
 import axios from 'axios';
+import AuthInterceptor from '../services/auth/AuthInterceptor';
 const url = "http://localhost:3002";
 
 const { Meta } = Card;
 const { Title, Text } = Typography;
 
 const CandidateDetails = () => {
+  
   const { id } = useParams();
   const candidates = useSelector((state) => state.candidates.candidates);
-  const favorites = useSelector((state) => state.candidates.favorites);
+  const favorites = useSelector((state) => state.favorites.favorites);
+  const userId=useSelector((state)=>state.auth.id)
   const dispatch = useDispatch();
-
+  const api=AuthInterceptor.getInstance()
   const [candidate, setCandidate] = useState(null);
+console.log(candidate);
 
   const handleLikeToggle = (candidateId) => {
-    dispatch(toggleFavorite(candidateId));
+    console.log("clicked");
+    if (id) {
+      console.log(id,'the id ');
+      
+      
+      dispatch(toggleFavorite(userId, candidateId));
+    }
   };
+
+
   const selectCandidate=async()=>{
-   try{const res=await axios.get(`${url}/candidates/${id}`)
-  
-    setCandidate(res.data)
+   try{const res=await api.get(`/candidates/${id}`)
+    setCandidate(res)
   }catch(error){
     console.error(error)
   }
-   
-   
-
   }
   useEffect(() => {
     selectCandidate()
@@ -170,11 +180,12 @@ const CandidateDetails = () => {
                 <Button
                   key="toggle-favorite"
                   type="primary"
-                  icon={favorites.includes(candidate._id) ? <IoIosRemoveCircleOutline /> : <IoIosAddCircleOutline />}
+                  // icon={favorites.includes(candidate._id) ? <IoIosRemoveCircleOutline /> : <IoIosAddCircleOutline />}
                   onClick={() => handleLikeToggle(candidate._id)}
-                  className={`w-full ${favorites.includes(candidate._id) ? 'bg-red-500' : 'bg-green-500'} text-white`}
+                  // className={`w-full ${favorites.includes(candidate._id) ? 'bg-red-500' : 'bg-green-500'} text-white`}
                 >
-                  {favorites.includes(candidate._id) ? 'Remove from Favorites' : 'Add to Favorites'}
+                  {/* {favorites.includes(candidate._id) ? 'Remove from Favorites' : 'Add to Favorites'} */}
+                  press 
                 </Button>
               ]}
             >

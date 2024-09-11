@@ -19,7 +19,7 @@ function App() {
     <BrowserRouter>
     <AppLayout>
       <Routes>
-        <Route path="/" element={<LoginForm />} />
+        {/* <Route path="/" element={<LoginForm />} /> */}
         <Route path="/candidates" element={<MovieList />} />
         <Route path="/candidate/:id" element={<MovieDetails />} />
         <Route path="/favorites" element={<FavoriteCandidates />} />
