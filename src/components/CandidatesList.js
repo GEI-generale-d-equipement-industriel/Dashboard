@@ -60,7 +60,7 @@ function CandidateList() {
 
   // Ensure favorites is an array
   const favoriteIds = Array.isArray(favorites) ? favorites.map(fav => fav._id || fav) : [];
-
+  const tagColors = [  'orange', 'red','purple',  'gold',];
   return (
     <div className="bg-slate-100 min-h-screen py-6">
       {contextHolder} {/* Place the notification container here */}
@@ -110,12 +110,14 @@ function CandidateList() {
                     title={<Link to={`/candidate/${candidate._id}`}>{candidate.firstName + " " + candidate.name}</Link>}
                     description={
                       <div>
+                        {/* //{console.log(candidate.interest)
+                          } */}
                         <Divider orientation="left"></Divider>
-                        {candidate.interest.split(',').map((interest, index) => (
-                          <Tag color="gold" key={index}>
-                            {interest.trim()}
-                          </Tag>
-                        ))}
+                        {candidate.interest.flatMap(interest => interest.split(',')).map((interest, index) => (
+  <Tag color={tagColors[index % tagColors.length]} key={index}>
+    {interest.trim()}
+  </Tag>
+))}
                       </div>
                     }
                   />

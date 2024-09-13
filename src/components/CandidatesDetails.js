@@ -1,61 +1,70 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-// import { toggleFavorite } from '../store/candidatesSlice';
-import { toggleFavorite } from '../services/api/favoritesService';
-// import { toggleFavoriteWithAPI } from '../store/favoritesSlice';
+import { toggleFavorite } from '../services/api/favoritesService'; // Update this import if necessary
 import { TikTokOutlined, InstagramOutlined, FacebookOutlined, GoogleOutlined } from '@ant-design/icons';
 import { IoIosAddCircleOutline, IoIosRemoveCircleOutline } from 'react-icons/io';
 import Slider from 'react-slick';
-import { Button, Card, Typography, Divider, Col, Row, Tag } from 'antd';
+import { Button, Card, Typography, Divider, Col, Row, Tag, notification } from 'antd';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import BmiIndicateur from './BmiIndicateur';
 import axios from 'axios';
 import AuthInterceptor from '../services/auth/AuthInterceptor';
-const url = "http://localhost:3002";
 
 const { Meta } = Card;
 const { Title, Text } = Typography;
+const url = "http://localhost:3002";
 
 const CandidateDetails = () => {
-  
   const { id } = useParams();
   const candidates = useSelector((state) => state.candidates.candidates);
   const favorites = useSelector((state) => state.favorites.favorites);
-  const userId=useSelector((state)=>state.auth.id)
+  const userId = useSelector((state) => state.auth.id);
   const dispatch = useDispatch();
-  const api=AuthInterceptor.getInstance()
+  const api = AuthInterceptor.getInstance();
   const [candidate, setCandidate] = useState(null);
-console.log(candidate);
+  const [notificationApi, contextHolder] = notification.useNotification();
 
-  const handleLikeToggle = (candidateId) => {
-    console.log("clicked");
-    if (id) {
-      console.log(id,'the id ');
-      
-      
-      dispatch(toggleFavorite(userId, candidateId));
+  useEffect(() => {
+    const selectCandidate = async () => {
+      try {
+        const res = await api.get(`/candidates/${id}`);
+        setCandidate(res);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    selectCandidate();
+  }, [id]);
+
+  const handleLikeToggle = async (candidateId) => {
+    try {
+      await dispatch(toggleFavorite(userId, candidateId)).unwrap();
+      const isFavorite = favorites.some(c => c._id === candidateId);
+
+      notificationApi.info({
+        message: isFavorite ? 'Removed from Favorites' : 'Added to Favorites',
+        description: isFavorite 
+          ? 'This candidate has been removed from your favorites list.' 
+          : 'This candidate has been added to your favorites list.',
+        placement: 'topRight',
+        duration: 2,
+      });
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+      notificationApi.error({
+        message: 'Action Failed',
+        description: 'There was an error while updating favorites. Please try again.',
+        placement: 'topRight',
+        duration: 2,
+      });
     }
   };
-
-
-  const selectCandidate=async()=>{
-   try{const res=await api.get(`/candidates/${id}`)
-    setCandidate(res)
-  }catch(error){
-    console.error(error)
-  }
-  }
-  useEffect(() => {
-    selectCandidate()
-    
-  }, [id]);
 
   if (!candidate) {
     return <div className="text-center mt-8 text-xl">Loading...</div>;
   }
-// console.log(candidate);
 
   // Carousel settings
   const settings = {
@@ -78,22 +87,8 @@ console.log(candidate);
   const videoFiles = candidate.files.filter(file => file.contentType === 'video/mp4');
   const audioFiles = candidate.files.filter(file => file.contentType === 'audio/wav');
 
-  let socialMedia = candidate?.socialMedia;
-  if (socialMedia) {
-    try {
-      socialMedia = socialMedia.map(sm => {
-        if (typeof sm === 'string') {
-          return JSON.parse(sm);
-        }
-        return sm;
-      });
-    } catch (error) {
-      console.error("Error parsing social media data: ", error);
-      socialMedia = [];
-    }
-  } else {
-    socialMedia = [];
-  }
+  let socialMedia = candidate?.socialMedia || [];
+  socialMedia = socialMedia.map(sm => typeof sm === 'string' ? JSON.parse(sm) : sm);
 
   const renderFileLinks = (file) => {
     if (file.filename.includes("drive.google.com")) {
@@ -138,9 +133,10 @@ console.log(candidate);
       </a>
     );
   };
-
+  const tagColors = ['blue', 'green', 'orange', 'purple', 'red', 'gold'];
   return (
     <div className="container mx-auto px-4 py-6">
+      {contextHolder} {/* Place the notification container here */}
       <div className="bg-white shadow-lg rounded-lg p-6">
         <Title level={2} className="text-center mb-6 border-b-2 border-gray-300 pb-3">{candidate.name} {candidate.firstName}</Title>
         <Row gutter={16}>
@@ -180,12 +176,10 @@ console.log(candidate);
                 <Button
                   key="toggle-favorite"
                   type="primary"
-                  // icon={favorites.includes(candidate._id) ? <IoIosRemoveCircleOutline /> : <IoIosAddCircleOutline />}
+                  icon={favorites.some(c => c._id === candidate._id) ? <IoIosRemoveCircleOutline /> : <IoIosAddCircleOutline />}
                   onClick={() => handleLikeToggle(candidate._id)}
-                  // className={`w-full ${favorites.includes(candidate._id) ? 'bg-red-500' : 'bg-green-500'} text-white`}
                 >
-                  {/* {favorites.includes(candidate._id) ? 'Remove from Favorites' : 'Add to Favorites'} */}
-                  press 
+                  {favorites.some(c => c._id === candidate._id) ? 'Remove from Favorites' : 'Add to Favorites'}
                 </Button>
               ]}
             >
@@ -204,32 +198,31 @@ console.log(candidate);
                     <BmiIndicateur bmi={(candidate.weight / (candidate.height ** 2)).toFixed(2)} />
                     <Text strong>Interests:</Text> 
                     <div className="mt-2">
-                      {candidate.interest.split(',').map((interest, index) => (
-                        <Tag color="blue" key={index} className="mr-1 mb-1">
-                          {interest.trim()}
-                        </Tag>
-                      ))}
+                    {candidate.interest.flatMap(interest => interest.split(',')).map((interest, index) => (
+  <Tag color={tagColors[index % tagColors.length]} key={index} className="mr-1 mb-1">
+    {interest.trim()}
+  </Tag>
+))}
                     </div>
                     {socialMedia.length > 0 && <Divider orientation="left">Social Media</Divider>}
                     <div className="mt-2">
-                      
-                      {socialMedia &&  socialMedia.map((sm, index) => (
-                         <Tag 
-                         color="cyan" 
-                         key={index} 
-                         className={`mr-1 mb-1 ${!sm.link ? 'cursor-not-allowed text-gray-400' : 'cursor-pointer'}`} // Apply Tailwind classes conditionally
-                         icon={iconMap[sm.type]}
-                       >
-                         <a
-                           href={sm.link || '#'}
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           className={`ml-2 ${!sm.link ? 'pointer-events-none' : ''}`} // Disable pointer events if no link
-                           onClick={e => !sm.link && e.preventDefault()} // Prevent clicking when no link
-                         >
-                           {sm.type}
-                         </a>
-                       </Tag>
+                      {socialMedia.map((sm, index) => (
+                        <Tag 
+                          color="cyan" 
+                          key={index} 
+                          className={`mr-1 mb-1 ${!sm.link ? 'cursor-not-allowed text-gray-400' : 'cursor-pointer'}`} 
+                          icon={iconMap[sm.type]}
+                        >
+                          <a
+                            href={sm.link || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`ml-2 ${!sm.link ? 'pointer-events-none' : ''}`}
+                            onClick={e => !sm.link && e.preventDefault()}
+                          >
+                            {sm.type}
+                          </a>
+                        </Tag>
                       ))}
                     </div>
                     {(videoFiles.length > 0 || audioFiles.length > 0) && <Divider orientation="left">Files</Divider>}
