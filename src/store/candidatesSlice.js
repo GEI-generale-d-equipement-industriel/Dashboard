@@ -12,7 +12,7 @@ export const fetchCandidates = createAsyncThunk(
       return response;
     } catch (error) {
       console.error("API request failed", error); // Log the error
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || 'Server Error');
     }
   }
 );
@@ -25,7 +25,7 @@ const candidateSlice = createSlice({
     favorites: JSON.parse(localStorage.getItem("favoriteCandidates")) || [],
     selectedInterests: [],
     selectedAgeRange: [0, 60], // Adjusted to handle a range as an array [min, max]
-    selectedSex: "",
+    selectedSex: [],
     searchTerm: "",
     currentPage: 1,
     pageSize: 8,
@@ -40,9 +40,7 @@ const candidateSlice = createSlice({
     },
 
     filterByInterest: (state, action) => {
-      state.selectedInterests = Array.isArray(action.payload)
-        ? action.payload.map((interest) => interest.trim())
-        : action.payload.split(",").map((interest) => interest.trim());
+      state.selectedInterests = action.payload;
       applyFilters(state);
     },
 
@@ -57,11 +55,11 @@ const candidateSlice = createSlice({
     },
 
     clearFilters: (state) => {
+      state.searchTerm = '';
       state.selectedInterests = [];
-      state.selectedAgeRange = [0, 60]; // Reset to default range
-      state.selectedSex = "";
-      state.searchTerm = "";
-      applyFilters(state); // Reapply with cleared filters
+      state.selectedAgeRange = [0, 60];
+      state.selectedSex = [];
+      applyFilters(state);
     },
 
     restPages: (state) => {
@@ -110,40 +108,53 @@ const candidateSlice = createSlice({
 
 // Apply all filters based on current state
 const applyFilters = (state) => {
-  let filteredCandidates = state.candidates;
+  let filteredCandidates = [...state.candidates];
 
+  // Search Term Filter
   if (state.searchTerm) {
+    const searchTermLower = state.searchTerm.toLowerCase();
     filteredCandidates = filteredCandidates.filter((candidate) => {
-      return (
-        candidate.name.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
-        candidate.firstName.toLowerCase().includes(state.searchTerm.toLowerCase())
+      const fullName = `${candidate.firstName} ${candidate.name}`.toLowerCase();
+      return fullName.includes(searchTermLower);
+    });
+  }
+
+  // Interest Filter
+  if (state.selectedInterests.length > 0) {
+    const selectedInterestsLower = state.selectedInterests.map((interest) =>
+      interest.trim().toLowerCase()
+    );
+  
+    filteredCandidates = filteredCandidates.filter((candidate) => {
+      const candidateInterests = candidate.interest
+        .split(',')
+        .map((interest) => interest.trim().toLowerCase());
+  
+      return selectedInterestsLower.some((interest) =>
+        candidateInterests.includes(interest)
       );
     });
   }
 
-  if (state.selectedInterests.length > 0) {
-    filteredCandidates = filteredCandidates.filter((candidate) => {
-      const candidateInterests = candidate.interest.split(",").map((interest) => interest.trim());
-
-      // Ensure all selected interests are exactly matched in candidate's interests
-      return candidateInterests.length === state.selectedInterests.length &&
-        state.selectedInterests.every((interest) => candidateInterests.includes(interest));
-    });
-  }
-
+  // Age Filter
   if (state.selectedAgeRange.length === 2) {
     const [minAge, maxAge] = state.selectedAgeRange;
     filteredCandidates = filteredCandidates.filter((candidate) => {
+      if (!candidate.birthYear) return false;
       const currentYear = new Date().getFullYear();
       const age = currentYear - candidate.birthYear;
       return age >= minAge && age <= maxAge;
     });
   }
 
-  if (state.selectedSex) {
-    filteredCandidates = filteredCandidates.filter((candidate) =>
-      candidate.gender.includes(state.selectedSex)
-    );
+  // Sex Filter
+  if (state.selectedSex.length > 0) {
+    const selectedGenders = state.selectedSex.map((sex) => sex.trim().toLowerCase());
+  
+    filteredCandidates = filteredCandidates.filter((candidate) => {
+      const candidateGender = candidate.gender.trim().toLowerCase();
+      return selectedGenders.includes(candidateGender);
+    });
   }
 
   state.filteredCandidates = filteredCandidates;

@@ -1,31 +1,75 @@
+// App.js
 import React from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import MovieList from './components/CandidatesList';
-import MovieDetails from './components/CandidatesDetails';
-import Navbar from './components/NavBar';
-import FavoriteCandidates from './components/FavoriteCandidates';
-import LoginForm from './pages/Login.page';
+import { BrowserRouter, Routes, Route,Navigate } from 'react-router-dom';
 import AppLayout from './Layout/AppLayout';
-// const AppLayout = ({ children }) => (
-//   <div className="flex flex-col min-h-screen">
-//     <Navbar />
-//     <div className="flex-grow p-4">
-//       {children}
-//     </div>
-//   </div>
-// );
+import CandidatesList from './components/CandidatesList';
+import CandidatesDetails from './components/CandidatesDetails';
+import FavoriteCandidates from './components/FavoriteCandidates';
+import LoginPage from './pages/Login.page';
+import PrivateRoute from './components/PrivateRoute';
+
+
 function App() {
+  // const Navigate=useNavigation()
   return (
     <BrowserRouter>
-    <AppLayout>
       <Routes>
-        {/* <Route path="/" element={<LoginForm />} /> */}
-        <Route path="/candidates" element={<MovieList />} />
-        <Route path="/candidate/:id" element={<MovieDetails />} />
-        <Route path="/favorites" element={<FavoriteCandidates />} />
+        {/* Public Route */}
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* Protected Routes */}
+        <Route
+          path="/"
+          element={
+            <PrivateRoute
+              element={() => (
+                <AppLayout>
+                  <CandidatesList />
+                </AppLayout>
+              )}
+            />
+          }
+        />
+        <Route
+          path="/candidates"
+          element={
+            <PrivateRoute
+              element={() => (
+                <AppLayout>
+                  <CandidatesList />
+                </AppLayout>
+              )}
+            />
+          }
+        />
+        <Route
+          path="/candidate/:id"
+          element={
+            <PrivateRoute
+              element={() => (
+                <AppLayout>
+                  <CandidatesDetails />
+                </AppLayout>
+              )}
+            />
+          }
+        />
+        <Route
+          path="/favorites"
+          element={
+            <PrivateRoute
+              element={() => (
+                <AppLayout>
+                  <FavoriteCandidates />
+                </AppLayout>
+              )}
+            />
+          }
+        />
+        {/* Redirect unknown routes to login or a 404 page */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
-    </AppLayout>
-  </BrowserRouter>
+    </BrowserRouter>
   );
 }
 

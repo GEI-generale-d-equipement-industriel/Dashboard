@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useCallback,useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Card, Button, Typography, Row, Col, notification, Skeleton, Divider, Tag } from 'antd';
 import { IoIosRemoveCircleOutline } from "react-icons/io";
+import CandidateCard from './CandidateCard';
 import { fetchFavorites } from '../store/favoritesSlice'; // Import the thunk
 import * as XLSX from 'xlsx';
 import { toggleFavorite } from '../services/api/favoritesService';
@@ -16,7 +17,7 @@ const FavoriteCandidates = () => {
   const dispatch = useDispatch();
   const favoriteCandidates = useSelector((state) => state.favorites.favorites);
   const status = useSelector((state) => state.favorites.status);
-    
+  const [fileLinks, setFileLinks] = useState({});
     
   useEffect(() => {
     if (userId) {
@@ -24,30 +25,41 @@ const FavoriteCandidates = () => {
     }
   }, [userId, dispatch]);
 
-  const handleLikeToggle = async (candidateId) => {
-    try {
-      await dispatch(toggleFavorite(userId, candidateId ));
-      
-      // Show notification on success
-      const isFavorite = favoriteCandidates.some(candidate => candidate._id === candidateId);
-      notificationApi.success({
-        message: isFavorite ? 'Removed from Favorites' : 'Added to Favorites',
-        description: isFavorite 
-          ? 'This candidate has been removed from your favorites list.' 
-          : 'This candidate has been added to your favorites list.',
-        placement: 'topRight',
-        duration: 2,
-      });
-    } catch (error) {
-      console.error('Failed to toggle favorite:', error);
-      notificationApi.error({
-        message: 'Action Failed',
-        description: 'There was an error while updating favorites. Please try again.',
-        placement: 'topRight',
-        duration: 2,
-      });
-    }
-  };
+  const favoriteIds = useMemo(() => {
+    return Array.isArray(favoriteCandidates)
+      ? favoriteCandidates.map((fav) => fav._id || fav)
+      : [];
+  }, [favoriteCandidates]);
+
+
+  const handleLikeToggle = useCallback(
+    async (candidateId) => {
+      try {
+        await dispatch(toggleFavorite(candidateId));
+
+        // Show notification on success
+        const isFavorite = favoriteIds.includes(candidateId);
+        notificationApi.success({
+          message: isFavorite ? 'Removed from Favorites' : 'Added to Favorites',
+          description: isFavorite
+            ? 'This candidate has been removed from your favorites list.'
+            : 'This candidate has been added to your favorites list.',
+          placement: 'topRight',
+          duration: 2,
+        });
+      } catch (error) {
+        console.error('Failed to toggle favorite:', error);
+        notificationApi.error({
+          message: 'Action Failed',
+          description:
+            'There was an error while updating favorites. Please try again.',
+          placement: 'topRight',
+          duration: 2,
+        });
+      }
+    },
+    [dispatch, favoriteIds, notificationApi]
+  );
 
   const downloadXLSX = () => {
     const worksheetData = [
@@ -100,63 +112,34 @@ const FavoriteCandidates = () => {
         </div>
 
         <Row gutter={[16, 24]}>
-          {status === 'loading' ? (
-            [...Array(6)].map((_, index) => (
-              <Col span={12} md={8} lg={6} key={index}>
-                <Skeleton active>
-                  <Card loading={true} />
-                </Skeleton>
-              </Col>
-            ))
-          ) : (
-            Array.isArray(favoriteCandidates) &&favoriteCandidates?.map((candidate) => (
-              <Col span={12} md={8} lg={6} key={candidate._id}>
-                <Card
-                  cover={
-                    <Link to={`/candidates/${candidate._id}`}>
-                      <img
-                        alt={`${candidate.name}`}
-                        src={`${url}/files/download/${candidate?.files?.find(file => file?.contentType?.startsWith('image/'))?._id}`}
-                        className="w-full h-48 object-cover"
-                      />
-                    </Link>
-                  }
-                  actions={[
-                    <Button
-                      key="remove-favorite"
-                      type="text"
-                      icon={<IoIosRemoveCircleOutline />}
-                      onClick={() => handleLikeToggle(candidate._id)}
-                    >
-                      Remove From Favorites
-                    </Button>
-                  ]}
-                  className="shadow-lg rounded-lg"
-                >
-                  <Meta
-                    title={<Link to={`/candidate/${candidate._id}`}>{candidate.firstName + " " + candidate.name}</Link>}
-                    description={
-                      <div>
-                        <Divider orientation="left"></Divider>
-                        {candidate.interest.split(',').map((interest, index) => (
-                          <Tag color="gold" key={index}>
-                            {interest.trim()}
-                          </Tag>
-                        ))}
-                      </div>
-                    }
-                  />
-                  <div className="mt-2 flex justify-between">
-                    <p className="text-sm font-medium text-gray-700 capitalize">{candidate.gender}</p>
-                  </div>
-                </Card>
-              </Col>
-            ))
-          )}
+        {status === 'loading' ? (
+  [...Array(6)].map((_, index) => (
+    <Col xs={24} sm={12} md={8} lg={6} key={index}>
+      <Skeleton active>
+        <CandidateCard loading />
+      </Skeleton>
+    </Col>
+  ))
+) : favoriteCandidates.length > 0 ? (
+  favoriteCandidates.map((candidate) => (
+    <Col xs={24} sm={12} md={8} lg={6} key={candidate._id}>
+      <CandidateCard
+        candidate={candidate}
+        isFavorite={true}
+        onToggleFavorite={handleLikeToggle}
+        tagColors={['orange', 'red', 'purple', 'gold']}
+      />
+    </Col>
+  ))
+) : (
+  <div className="text-center w-full">
+    <p>No favorite candidates found.</p>
+  </div>
+)}
         </Row>
       </div>
     </div>
   );
 };
 
-export default FavoriteCandidates;
+export default React.memo(FavoriteCandidates);
