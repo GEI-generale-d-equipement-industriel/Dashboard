@@ -7,6 +7,7 @@ import CandidateCard from './CandidateCard';
 import { fetchFavorites } from '../store/favoritesSlice'; // Import the thunk
 import * as XLSX from 'xlsx';
 import { toggleFavorite } from '../services/api/favoritesService';
+import useFetchFileLinks from '../Hooks/useFetchFileLinks';
 const { Meta } = Card;
 const { Title } = Typography;
 const url = "http://localhost:3002";
@@ -17,8 +18,10 @@ const FavoriteCandidates = () => {
   const dispatch = useDispatch();
   const favoriteCandidates = useSelector((state) => state.favorites.favorites);
   const status = useSelector((state) => state.favorites.status);
-  const [fileLinks, setFileLinks] = useState({});
-    
+  // const [fileLinks, setFileLinks] = useState({});
+  const fileLinks=useFetchFileLinks(favoriteCandidates)
+  console.log("===>",fileLinks);
+  
   useEffect(() => {
     if (userId) {
       dispatch(fetchFavorites(userId));
@@ -126,6 +129,7 @@ const FavoriteCandidates = () => {
       <CandidateCard
         candidate={candidate}
         isFavorite={true}
+        fileLink={fileLinks[candidate._id]?.fileStreamUrl}
         onToggleFavorite={handleLikeToggle}
         tagColors={['orange', 'red', 'purple', 'gold']}
       />

@@ -12,7 +12,8 @@ const isValidGoogleDriveUrl = (url) => {
 const useFetchFileLinks = (candidates) => {
   const [fileLinks, setFileLinks] = useState({});
   const url = 'http://localhost:3002'; // Adjust as needed
-
+  console.log(candidates,'from the hook');
+  
   useEffect(() => {
     const fetchFileLinks = async () => {
       try {

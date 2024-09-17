@@ -15,6 +15,7 @@ import {
   clearFilters,
   restPages,
 } from '../store/candidatesSlice';
+import "../styles/FilterSidebar.css"
 import {debounce} from "lodash"
 const interests = ['Modèle pour shooting en studio', 'Créateur UGC', 'Voix-off'];
 const sexes = ['Homme', 'Femme'];
@@ -67,17 +68,16 @@ const FiltersSidebar = () => {
     selectedSex.length > 0;
 
   return (
-    <div className="p-4 bg-white h-full overflow-auto rounded font-mono border rounded shadow-xl">
-      <span className="p-4 font-mono text-xl text-center block mb-4 border-b">
-        Filters
-      </span>
+    <div className="filters-sidebar">
+      <h2 className="filters-title">Filters</h2>
+
       {isFilterActive && (
-        <div className="transition-opacity duration-300 mb-6">
+        <div className="clear-filters-container">
           <Button
             onClick={handleClearFilters}
-            icon={<ClearOutlined className="text-sm" />}
+            icon={<ClearOutlined />}
             danger
-            className="w-full rounded"
+            className="clear-filters-button"
           >
             Clear All Filters
           </Button>
@@ -86,16 +86,16 @@ const FiltersSidebar = () => {
       )}
 
       {/* Search Filter */}
-      <div className="mb-6">
+      <div className="filter-section">
         <h4
-          className="text-lg font-semibold font-mono text-gray-700 mb-3 flex hover:text-blue-500 cursor-pointer border-b pb-2"
+          className="filter-title"
           onClick={() => setIsSearchVisible(!isSearchVisible)}
         >
           Search{' '}
           {isSearchVisible ? (
-            <CaretUpOutlined className="text-sm ml-2" />
+            <CaretUpOutlined className="caret-icon" />
           ) : (
-            <CaretDownOutlined className="text-sm ml-2" />
+            <CaretDownOutlined className="caret-icon" />
           )}
         </h4>
         {isSearchVisible && (
@@ -104,22 +104,22 @@ const FiltersSidebar = () => {
             value={searchTerm}
             onChange={handleSearch}
             enterButton
-            className="rounded"
+            className="search-input"
           />
         )}
       </div>
 
       {/* Interest Filter */}
-      <div className="mb-6">
+      <div className="filter-section">
         <h4
-          className="text-lg font-semibold font-mono text-gray-700 mb-3 flex hover:text-blue-500 cursor-pointer border-b pb-2"
+          className="filter-title"
           onClick={() => setIsInterestVisible(!isInterestVisible)}
         >
           Interest{' '}
           {isInterestVisible ? (
-            <CaretUpOutlined className="text-sm ml-2" />
+            <CaretUpOutlined className="caret-icon" />
           ) : (
-            <CaretDownOutlined className="text-sm ml-2" />
+            <CaretDownOutlined className="caret-icon" />
           )}
         </h4>
         {isInterestVisible && (
@@ -127,22 +127,22 @@ const FiltersSidebar = () => {
             options={interests}
             value={selectedInterests}
             onChange={handleInterestChange}
-            className="flex flex-col"
+            className="checkbox-group"
           />
         )}
       </div>
 
       {/* Age Filter */}
-      <div className="mb-6">
+      <div className="filter-section">
         <h4
-          className="text-lg font-semibold font-mono text-gray-700 mb-3 flex hover:text-blue-500 cursor-pointer border-b pb-2"
+          className="filter-title"
           onClick={() => setIsAgeVisible(!isAgeVisible)}
         >
           Age{' '}
           {isAgeVisible ? (
-            <CaretUpOutlined className="text-sm ml-2" />
+            <CaretUpOutlined className="caret-icon" />
           ) : (
-            <CaretDownOutlined className="text-sm ml-2" />
+            <CaretDownOutlined className="caret-icon" />
           )}
         </h4>
         {isAgeVisible && (
@@ -153,9 +153,9 @@ const FiltersSidebar = () => {
               max={60}
               value={selectedAgeRange}
               onChange={handleAgeChange}
-              className="mb-4"
+              className="age-slider"
             />
-            <div className="flex justify-between text-gray-600">
+            <div className="age-range">
               <span>{selectedAgeRange[0]}</span>
               <span>{selectedAgeRange[1]}</span>
             </div>
@@ -164,16 +164,16 @@ const FiltersSidebar = () => {
       </div>
 
       {/* Sex Filter */}
-      <div className="mb-6">
+      <div className="filter-section">
         <h4
-          className="text-lg font-semibold font-mono text-gray-700 mb-3 flex hover:text-blue-500 cursor-pointer border-b pb-2"
+          className="filter-title"
           onClick={() => setIsSexVisible(!isSexVisible)}
         >
           Sex{' '}
           {isSexVisible ? (
-            <CaretUpOutlined className="text-sm ml-2" />
+            <CaretUpOutlined className="caret-icon" />
           ) : (
-            <CaretDownOutlined className="text-sm ml-2" />
+            <CaretDownOutlined className="caret-icon" />
           )}
         </h4>
         {isSexVisible && (
@@ -181,7 +181,7 @@ const FiltersSidebar = () => {
             options={sexes}
             value={selectedSex}
             onChange={handleSexChange}
-            className="flex flex-col"
+            className="checkbox-group"
           />
         )}
       </div>

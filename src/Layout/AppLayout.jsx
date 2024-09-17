@@ -6,6 +6,7 @@ import FiltersSidebar from '../components/FiltersSidebar';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { removeAuthData } from '../store/authSlice';
+import '../styles/AppLayout.css'
 
 const { Header, Content, Sider } = Layout;
 const { useBreakpoint } = Grid;
@@ -27,7 +28,7 @@ const AppLayout = ({ children }) => {
   };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout className="min-h-screen">
       {/* Header */}
       <Header
         style={{
@@ -60,19 +61,29 @@ const AppLayout = ({ children }) => {
 
         {/* Navigation Menu */}
         <Menu  mode="horizontal" style={{ flex: 1, minWidth: 0,backgroundColor: 'transparent', 
-            borderBottom: 'none', }}>
-          <Menu.Item key="1">
-            <Link to="/candidates">Home</Link>
+            borderBottom: 'none', }}theme="dark"
+            className="custom-menu">
+          <Menu.Item key="1" style={{ fontFamily: 'Libre Franklin, sans-serif', fontWeight: '600',fontSize:"16px" }}>
+            <Link to="/candidates" style={{ color: '#f0b71d' }}>Home</Link>
           </Menu.Item>
-          <Menu.Item key="2">
-            <Link to="/favorites">Favorites</Link>
+          <Menu.Item key="2" style={{ fontFamily: 'Libre Franklin, sans-serif', fontWeight: '600' ,fontSize:"16px"}}>
+            <Link to="/favorites" style={{ color: '#f0b71d' }}>Favorites</Link>
           </Menu.Item>
         </Menu>
 
         {/* Logout Button */}
         <Button
-          type="primary"
-          style={{ marginLeft: 'auto' }}
+          type="text"
+          style={{
+            marginLeft: 'auto',
+    color: '#f0b71d',
+    borderColor: '#f0b71d',
+    borderRadius: '20px',
+    fontFamily: 'Libre Franklin, sans-serif',
+    fontWeight: '600',
+    fontSize: '16px',
+    opacity: 0.9,
+          }}
           onClick={handleLogout}
         >
           Logout
@@ -81,11 +92,16 @@ const AppLayout = ({ children }) => {
         {/* Mobile Menu Toggle */}
         {!screens.lg && (
           <Button
-            type="primary"
-            icon={<MenuOutlined />}
-            onClick={toggleDrawer}
-            className="ml-auto"
-          />
+          type="primary"
+          ghost
+          icon={<MenuOutlined style={{ color: '#ffffff', fontSize: '20px' }} />}
+          onClick={toggleDrawer}
+          style={{
+            marginLeft: '16px',
+            borderColor: '#ffffff',
+            borderRadius: '20px',
+          }}
+        />
         )}
       </Header>
 
@@ -97,7 +113,7 @@ const AppLayout = ({ children }) => {
             width={304}
             className="shadow-lg"
             style={{
-              backgroundColor: '#f1f5f9',
+              backgroundColor: '#fcfcfc',
               position: 'fixed',
               height: 'calc(100vh - 64px)',
               overflow: 'auto',
@@ -118,6 +134,8 @@ const AppLayout = ({ children }) => {
           onClose={toggleDrawer}
           visible={drawerVisible}
           bodyStyle={{ padding: 0 }}
+          drawerStyle={{ backgroundColor: '#000000' }}
+  headerStyle={{ backgroundColor: '#000000', color: '#f0b71d' }}
         >
           <FiltersSidebar />
         </Drawer>
@@ -126,7 +144,7 @@ const AppLayout = ({ children }) => {
         <Layout
           style={{
             marginLeft:
-              screens.lg && location.pathname === '/candidates' ? 280 : 0,
+              screens.lg && location.pathname === '/candidates' ? 304 : 0,
             padding: '0 24px 24px',
           }}
         >
@@ -134,8 +152,9 @@ const AppLayout = ({ children }) => {
             style={{
               margin: 0,
               minHeight: 280,
-              background: '#fff',
-              borderRadius: 8,
+              background: '#fcfcfc',
+              borderRadius: "20px",
+              
             }}
           >
             {children}

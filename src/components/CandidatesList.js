@@ -44,75 +44,7 @@ function CandidateList() {
     return filteredCandidates.slice(startIndex, endIndex);
   }, [filteredCandidates, currentPage, pageSize]);
 
-  // Update useEffect to use candidatesForCurrentPage
-  // useEffect(() => {
-  //   const fetchFileLinks = async () => {
-  //     try {
-  //       const updatedFileLinks = {};
 
-  //       await Promise.all(
-  //         candidatesForCurrentPage.map(async (candidate) => {
-  //           if (candidate.files && candidate.files.length > 0) {
-  //             let imageFound = false;
-
-  //             for (const file of candidate.files) {
-  //               let fileLink = '';
-  //               if (typeof file === 'string') {
-  //                 fileLink = file;
-  //               } else if (file.filename) {
-  //                 fileLink = file.filename;
-  //               } else if (file.link) {
-  //                 fileLink = file.link;
-  //               } else {
-  //                 continue; // Skip this file
-  //               }
-
-  //               if (isValidGoogleDriveUrl(fileLink)) {
-  //                 try {
-  //                   const response = await axios.get(`${url}/google-drive/files`, {
-  //                     params: { link: fileLink },
-  //                   });
-
-  //                   const imageFiles = response.data.filter(
-  //                     (file) => file.contentType && file.contentType.startsWith('image/')
-  //                   );
-
-  //                   if (imageFiles.length > 0) {
-  //                     // Store the first image file
-  //                     updatedFileLinks[candidate._id] = imageFiles[0];
-  //                     imageFound = true;
-  //                     break; // Exit the loop since we found an image
-  //                   }
-  //                 } catch (error) {
-  //                   console.error(
-  //                     `Error fetching files for candidate ${candidate._id}:`,
-  //                     error
-  //                   );
-  //                 }
-  //               }
-  //             }
-
-  //             if (!imageFound) {
-  //               // Optionally handle candidates with no images
-  //             }
-  //           }
-  //         })
-  //       );
-
-  //       // Update state only if fileLinks have changed
-  //       setFileLinks((prevFileLinks) => {
-  //         if (!isEqual(prevFileLinks, updatedFileLinks)) {
-  //           return updatedFileLinks;
-  //         }
-  //         return prevFileLinks;
-  //       });
-  //     } catch (error) {
-  //       console.error('Error in fetchFileLinks:', error);
-  //     }
-  //   };
-
-  //   fetchFileLinks();
-  // }, [candidatesForCurrentPage]);
   
   const fileLinks = useFetchFileLinks(candidatesForCurrentPage);
   const favoriteIds = useMemo(() => {
@@ -149,10 +81,10 @@ function CandidateList() {
 
   
   const tagColors = ['orange', 'red', 'purple', 'gold'];
-console.log(fileLinks,'the links ');
+
 
   return (
-    <div className="bg-slate-100 min-h-screen py-6">
+    <div className=" min-h-screen py-6" style={{background: '#fcfcfc'}}>
       {contextHolder}
       <div className="container mx-auto px-4">
       <div className="text-sm text-gray-700 flex items-center mb-4 sm:mb-0">

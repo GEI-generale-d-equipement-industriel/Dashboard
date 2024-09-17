@@ -1,7 +1,7 @@
 // CandidateCard.js
 
 import React,{useState} from 'react';
-import { Card, Button, Tooltip, Tag, Divider, Badge,Result} from 'antd';
+import { Card, Button, Tooltip, Tag, Divider, Carousel} from 'antd';
 import { HeartOutlined, HeartFilled, FrownOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
@@ -15,8 +15,13 @@ const CandidateCard = React.memo(
     onToggleFavorite,
     tagColors,
   }) => {
+    const defaultImage = '/assets/default.jpg';
     const [imageError, setImageError] = useState(false);
-
+    console.log(candidate,'the',fileLink);
+    const images =
+      fileLink && fileLink[candidate._id] && fileLink[candidate._id].length > 0
+        ? fileLink[candidate._id].map((file) => file.webContentLink)
+        : [defaultImage];
     const handleImageError = () => {
       setImageError(true);
     };
