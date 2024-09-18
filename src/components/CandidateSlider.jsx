@@ -6,17 +6,33 @@ import "slick-carousel/slick/slick-theme.css";
 
 // Custom arrow components for the slider
 const PrevArrow = ({ className, style, onClick }) => (
-  <LeftOutlined className={className} style={{ ...style, color: 'gray', fontSize: '16px', zIndex: 1 }} onClick={onClick} />
+  <button
+    className={className}
+    style={{ ...style, display: 'block', background: 'transparent', border: 'none' }}
+    onClick={onClick}
+    aria-label="Previous Slide"
+  >
+    <LeftOutlined style={{ color: '#1890ff', fontSize: '24px' }} />
+  </button>
 );
 
 const NextArrow = ({ className, style, onClick }) => (
-  <RightOutlined className={className} style={{ ...style, color: 'gray', fontSize: '16px', zIndex: 1 }} onClick={onClick} />
+  <button
+    className={className}
+    style={{ ...style, display: 'block', background: 'transparent', border: 'none' }}
+    onClick={onClick}
+    aria-label="Next Slide"
+  >
+    <RightOutlined style={{ color: '#1890ff', fontSize: '24px' }} />
+  </button>
 );
 
 // CandidateFileSlider component
 const CandidateFileSlider = ({ files, className }) => {
-    console.log(files,'from the slider');
-    
+  if (!files || files.length === 0) {
+    return <div className="text-center">No media available</div>;
+  }
+
   const settings = {
     dots: true,
     infinite: true,
@@ -29,32 +45,36 @@ const CandidateFileSlider = ({ files, className }) => {
   };
 
   return (
-    <div className={`h-full w-full ${className || ''}`}> {/* Accepting className as props */}
+    <div className={`h-full w-full ${className || ''}`}>
       <Slider {...settings}>
         {files.map((file) => {
           if (!file) return null;
 
-          const fileUrl = `http://localhost:3002/google-drive/file-stream?fileId=${file.fileId}`;
+          // Use a dynamic base URL
+          const baseURL = process.env.REACT_APP_API_BASE_URL ;
+          const fileUrl = `${baseURL}/google-drive/file-stream?fileId=${file.fileId}`;
 
           if (file.contentType && file.contentType.startsWith('image/')) {
             return (
-              <img
-                key={file.fileId}
-                src={fileUrl}
-                alt={file.filename}
-                className="w-full h-96 object-contain"
-              />
+              <div key={file.fileId} className="flex justify-center">
+                <img
+                  src={file.fileStreamUrl}
+                  alt={file.filename || 'Candidate Image'}
+                  className="max-w-full h-auto object-contain"
+                />
+              </div>
             );
           } else if (file.contentType && file.contentType.startsWith('video/')) {
             return (
-              <video
-                key={file.fileId}
-                controls
-                className="w-full h-96 object-contain"
-              >
-                <source src={fileUrl} type={file.contentType} />
-                Your browser does not support the video tag.
-              </video>
+              <div key={file.fileId} className="flex justify-center">
+                <video
+                  controls
+                  className="max-w-full h-auto object-contain"
+                >
+                  <source src={file.fileStreamUrl} type={file.contentType} />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
             );
           } else {
             return null;

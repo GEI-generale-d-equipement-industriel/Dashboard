@@ -19,6 +19,8 @@ function getBMICategory(bmi) {
 }
 
 export default function BmiIndicateur({ bmi }) {
+
+  
   const { category, color, icon } = getBMICategory(bmi);
 
   const getProgressStatus = () => {
@@ -35,7 +37,7 @@ export default function BmiIndicateur({ bmi }) {
 
   return (
     <div style={{ textAlign: 'center' }}>
-      <Tooltip title={`BMI: ${bmi.toFixed(1)}`}>
+      <Tooltip title={`IMC: ${bmi.toFixed(1)}`}>
         <Tag color={color} style={{ fontSize: '16px', padding: '5px 10px' }}>
           {icon} {category}
         </Tag>

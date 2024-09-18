@@ -19,7 +19,7 @@ export const toggleFavorite = (userId, candidateId) => async (dispatch, getState
   
   try {
     // Update the backend and refetch favorites
-    await dispatch(updateFavorites({ userId, favorites: updatedFavorites })).unwrap();
+    await dispatch(updateFavorites({ userId, favorites: updatedFavorites }));
     await dispatch(fetchFavorites(userId));
   } catch (error) {
     console.error('Failed to update favorites:', error);

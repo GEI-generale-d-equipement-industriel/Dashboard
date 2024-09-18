@@ -1,6 +1,7 @@
 import axios from 'axios';
 import store from '../../store/index'
-const apiUrl = "http://localhost:3002";
+const apiUrl = process.env.REACT_APP_API_BASE_URL;
+console.log("API Base URL:", process.env.REACT_APP_API_BASE_URL);
 
 class AuthInterceptor {  
     constructor() {

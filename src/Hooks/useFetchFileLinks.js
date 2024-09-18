@@ -11,9 +11,9 @@ const isValidGoogleDriveUrl = (url) => {
 
 const useFetchFileLinks = (candidates) => {
   const [fileLinks, setFileLinks] = useState({});
-  const url = 'http://localhost:3002'; // Adjust as needed
-  console.log(candidates,'from the hook');
+  const url = process.env.REACT_APP_API_BASE_URL; // Adjust as needed
   
+
   useEffect(() => {
     const fetchFileLinks = async () => {
       try {
@@ -21,6 +21,8 @@ const useFetchFileLinks = (candidates) => {
 
         await Promise.all(
           candidates.map(async (candidate) => {
+            
+            
             if (candidate.files && candidate.files.length > 0) {
               let imageFound = false;
 
@@ -59,7 +61,7 @@ const useFetchFileLinks = (candidates) => {
                     );
                   }
                 }
-              }
+              } 
 
               if (!imageFound) {
                 // Optionally handle candidates with no images
@@ -89,3 +91,4 @@ const useFetchFileLinks = (candidates) => {
 };
 
 export default useFetchFileLinks;
+

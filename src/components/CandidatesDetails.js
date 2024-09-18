@@ -1,70 +1,145 @@
+// CandidateDetails.js
+
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleFavorite } from '../services/api/favoritesService';
-import { IoIosAddCircleOutline, IoIosRemoveCircleOutline } from 'react-icons/io';
-import { Button, Card, Typography, Divider, Col, Row, Tag, notification } from 'antd';
+import {
+  Button,
+  Card,
+  Typography,
+  Divider,
+  Col,
+  Row,
+  Tag,
+  notification,
+  Layout,
+  Tabs,
+  Carousel,
+  Modal,
+  Descriptions,
+  Tooltip,
+  List,
+} from 'antd';
+import {
+  UserOutlined,
+  PhoneOutlined,
+  CalendarOutlined,
+  ManOutlined,
+  WomanOutlined,
+  EyeOutlined,
+  ScissorOutlined,
+  HeartOutlined,
+  HeartFilled,
+  DashboardOutlined,
+  FileOutlined,
+  FilePdfOutlined,
+  FileWordOutlined,
+  FileExcelOutlined,
+  FileZipOutlined,
+  FileUnknownOutlined,
+  FacebookOutlined,
+  TwitterOutlined,
+  InstagramOutlined,
+  LinkedinOutlined,
+} from '@ant-design/icons';
 import axios from 'axios';
 import BmiIndicateur from './BmiIndicateur';
-import CandidateFileSlider from './CandidateSlider'; // Import the new slider component
+import styled from 'styled-components';
 
-const { Meta } = Card;
-const { Title, Text } = Typography;
-const url = "http://localhost:3002"; // Your backend API base URL
+const { Content } = Layout;
+const { TabPane } = Tabs;
+const { Title } = Typography;
+const url = process.env.REACT_APP_API_BASE_URL; // Your backend API base URL
 
 const CandidateDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const favorites = useSelector((state) => state.favorites.favorites);
   const userId = useSelector((state) => state.auth.id);
   const dispatch = useDispatch();
   const [candidate, setCandidate] = useState(null);
   const [fileLinks, setFileLinks] = useState([]);
   const [notificationApi, contextHolder] = notification.useNotification();
+console.log(candidate,'the candidate from the details');
 
+  const [visible, setVisible] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const showModal = (index) => {
+    setCurrentSlide(index);
+    setVisible(true);
+  };
+
+  const handleCancel = () => {
+    setVisible(false);
+  };
 
   const isValidGoogleDriveUrl = (url) => {
-    const driveFileRegex = /^(https:\/\/)?(www\.)?(drive|docs)\.google\.com\/(?:file\/d\/|drive\/folders\/|open\?id=)[\w-]+/;
+    const driveFileRegex =
+      /^(https:\/\/)?(www\.)?(drive|docs)\.google\.com\/(?:file\/d\/|drive\/folders\/|open\?id=)[\w-]+/;
     return driveFileRegex.test(url);
   };
-  
+
+  const getFileLink = (file) => {
+    if (typeof file === 'string') {
+      return file;
+    } else if (file.filename) {
+      return file.filename;
+    } else if (file.link) {
+      return file.link;
+    } else {
+      return null;
+    }
+  };
+
   useEffect(() => {
     const fetchCandidate = async () => {
       try {
         const res = await axios.get(`${url}/candidates/${id}`);
         setCandidate(res.data);
-  
-        const validFiles = res.data.files.filter(file => isValidGoogleDriveUrl(file.filename));
-  
-        if (validFiles.length > 0) {
-          const fileLinksResponses = await Promise.all(
-            validFiles.map(file => axios.get(`${url}/google-drive/files`, {
-              params: { link: file.filename },
-            }))
-          );
-  
-          const allFileLinks = fileLinksResponses.flatMap(response => response.data);
-          setFileLinks(allFileLinks);
-        } else {
-          setFileLinks([]);
+
+        const candidateFiles = res.data.files;
+
+        const candidateFileLinks = [];
+
+        for (const file of candidateFiles) {
+          const fileLink = getFileLink(file);
+
+          if (fileLink && isValidGoogleDriveUrl(fileLink)) {
+            try {
+              const response = await axios.get(`${url}/google-drive/files`, {
+                params: { link: fileLink },
+              });
+
+              candidateFileLinks.push(...response.data);
+            } catch (error) {
+              console.error(
+                `Error fetching files for candidate ${res.data._id}:`,
+                error
+              );
+            }
+          }
         }
+
+        setFileLinks(candidateFileLinks);
       } catch (error) {
         console.error(error);
       }
     };
-  
+
     fetchCandidate();
   }, [id]);
-  
 
   const handleLikeToggle = async (candidateId) => {
     try {
-      await dispatch(toggleFavorite(userId, candidateId)).unwrap();
-      const isFavorite = favorites.some(c => c._id === candidateId);
+      await dispatch(toggleFavorite(userId, candidateId));
+      const isFavorite = favorites.some((c) => c._id === candidateId);
 
       notificationApi.info({
         message: isFavorite ? 'Removed from Favorites' : 'Added to Favorites',
-        description: isFavorite 
-          ? 'This candidate has been removed from your favorites list.' 
+        description: isFavorite
+          ? 'This candidate has been removed from your favorites list.'
           : 'This candidate has been added to your favorites list.',
         placement: 'topRight',
         duration: 2,
@@ -73,7 +148,8 @@ const CandidateDetails = () => {
       console.error('Failed to toggle favorite:', error);
       notificationApi.error({
         message: 'Action Failed',
-        description: 'There was an error while updating favorites. Please try again.',
+        description:
+          'There was an error while updating favorites. Please try again.',
         placement: 'topRight',
         duration: 2,
       });
@@ -83,70 +159,327 @@ const CandidateDetails = () => {
   if (!candidate) {
     return <div className="text-center mt-8 text-xl">Loading...</div>;
   }
+ 
+
+  // Ensure weight and height are numbers
+  const weight = parseFloat(candidate.weight);
+  const height = parseFloat(candidate.height);
+  const bmi = weight / height ** 2;
+
+  // Function to get the appropriate file icon
+  const getFileIcon = (file) => {
+    const contentType = file.contentType;
+    if (!contentType) {
+      return <FileUnknownOutlined />;
+    }
+    if (contentType === 'application/pdf') {
+      return <FilePdfOutlined style={{ color: 'red' }} />;
+    } else if (
+      contentType ===
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      contentType === 'application/msword'
+    ) {
+      return <FileWordOutlined style={{ color: 'blue' }} />;
+    } else if (
+      contentType ===
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      contentType === 'application/vnd.ms-excel'
+    ) {
+      return <FileExcelOutlined style={{ color: 'green' }} />;
+    } else if (contentType === 'application/zip') {
+      return <FileZipOutlined />;
+    } else {
+      return <FileOutlined />;
+    }
+  };
+  console.log(favorites,'the fav');
+  
+  const isFavorite = Array.isArray(favorites) && favorites.some((c) => c?._id === candidate?._id);
+
+  // Social media links (assuming they are part of candidate data)
+  const socialMediaLinks = candidate.socialMedia || {};
+
+  // Filter out image files for the carousel
+  const imageFiles = fileLinks.filter(
+    (file) => file.contentType && file.contentType.startsWith('image/')
+  );
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <Layout className="min-h-screen">
       {contextHolder}
-      <div className="bg-white shadow-lg rounded-lg p-6">
-        <Title level={2} className="text-center mb-6 border-b-2 border-gray-300 pb-3">
-          {candidate.name} {candidate.firstName}
-        </Title>
-        <Row gutter={16}>
-          <Col xs={24} sm={12}>
-            {/* Use the CandidateFileSlider component for rendering images/videos */}
-            <CandidateFileSlider 
-  files={fileLinks.filter(file => file.contentType.startsWith('image/') || file.contentType.startsWith('video/'))}
-  className="w-full h-80 object-cover" // Tailwind classes for smaller height
-/>          </Col>
-          <Col xs={24} sm={12}>
-            <Card
-              className="bg-gray-100"
-              actions={[
-                <Button
-                  key="toggle-favorite"
-                  type="primary"
-                  icon={favorites.some(c => c._id === candidate._id) ? <IoIosRemoveCircleOutline /> : <IoIosAddCircleOutline />}
-                  onClick={() => handleLikeToggle(candidate._id)}
-                >
-                  {favorites.some(c => c._id === candidate._id) ? 'Remove from Favorites' : 'Add to Favorites'}
-                </Button>
-              ]}
-            >
-              <Meta
-                description={
-                  <div>
-                    <Divider orientation="left">Information</Divider>
-                    <Text strong>Gender:</Text> {candidate.gender}<br />
-                    <Text strong>Birth Year:</Text> {candidate.birthYear}<br />
-                    <Text strong>Height:</Text> {candidate.height} m<br />
-                    <Text strong>Weight:</Text> {candidate.weight} kg<br />
-                    <Text strong>Eye Color:</Text> {candidate.eyeColor}<br />
-                    <Text strong>Hair Color:</Text> {candidate.hairColor}<br />
-                    <Text strong>Phone:</Text> {candidate.phone}<br />
-                    <Text strong>IMC:</Text> {`${(candidate.weight / (candidate.height ** 2)).toFixed(2)}`}<br />
-                    <BmiIndicateur bmi={(candidate.weight / (candidate.height ** 2)).toFixed(2)} />
-                    <Text strong>Interests:</Text>
+      <Content className="container mx-auto px-4 py-6">
+        <Button type="link" onClick={() => navigate(-1)}>
+          Back to Candidates
+        </Button>
+        <div className=" shadow-lg rounded-lg p-6"
+        style={{backgroundColor:"#E5E5E5 "}}
+        >
+          {/* Candidate Name */}
+          <Title level={2} className="text-center mb-6">
+            {candidate.firstName} {candidate.name}
+          </Title>
+          <Divider />
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              {/* Carousel with modal */}
+              {imageFiles.length > 0 ? (
+                <>
+                  <Carousel
+                 
+                    arrows
+                    
+                    afterChange={(current) => setCurrentSlide(current)}
+                  >
+                    {imageFiles.map((file, index) => (
+                      <div
+                        key={index}
+                        onClick={() => showModal(index)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <img
+                          src={file.fileStreamUrl}
+                          alt={`Slide ${index}`}
+                          className="w-full h-96 object-contain"
+                        />
+                      </div>
+                    ))}
+                  </Carousel>
+                  <Modal
+                    visible={visible}
+                    footer={null}
+                    onCancel={handleCancel}
+                    width="40%"
+                    centered
+                  >
+                    {imageFiles[currentSlide] && (
+                      <img
+                        src={imageFiles[currentSlide].fileStreamUrl}
+                        alt={`Slide ${currentSlide}`}
+                        className="w-full"
+                      />
+                    )}
+                  </Modal>
+                </>
+              ) : (
+                <div className="w-full h-80 bg-gray-200 flex items-center justify-center">
+                  <p>No media available</p>
+                </div>
+              )}
+            </Col>
+            <Col xs={24} sm={12}>
+              <Card className="bg-zinc-100"
+              // style={{backgroundColor:"  #E5E5E5 "}}
+              >
+                <Tabs defaultActiveKey="1">
+                  <TabPane tab="Information" key="1">
+                    <Descriptions bordered column={1} size="small">
+                      {/* Gender */}
+                      <Descriptions.Item
+                        label={
+                          <>
+                            {candidate.gender.toLowerCase() === 'female' ||
+                            candidate.gender.toLowerCase() === 'femme' ? (
+                              <>
+                                <WomanOutlined style={{ color: '#eb2f96' }} /> Gender
+                              </>
+                            ) : (
+                              <>
+                                <ManOutlined style={{ color: '#1890ff' }} /> Gender
+                              </>
+                            )}
+                          </>
+                        }
+                      >
+                        {candidate.gender}
+                      </Descriptions.Item>
+                      {/* Birth Year */}
+                      <Descriptions.Item
+                        label={
+                          <>
+                            <CalendarOutlined style={{ color: '#faad14' }} /> Birth Year
+                          </>
+                        }
+                      >
+                        {candidate.birthYear}
+                      </Descriptions.Item>
+                      {/* Height */}
+                      <Descriptions.Item
+                        label={
+                          <>
+                            <UserOutlined style={{ color: '#52c41a' }} /> Height
+                          </>
+                        }
+                      >
+                        {candidate.height} m
+                      </Descriptions.Item>
+                      {/* Weight */}
+                      <Descriptions.Item
+                        label={
+                          <>
+                            <UserOutlined style={{ color: '#722ed1' }} /> Weight
+                          </>
+                        }
+                      >
+                        {candidate.weight} kg
+                      </Descriptions.Item>
+                      {/* Eye Color */}
+                      <Descriptions.Item
+                        label={
+                          <>
+                            <EyeOutlined style={{ color: '#13c2c2' }} /> Eye Color
+                          </>
+                        }
+                      >
+                        {candidate.eyeColor}
+                      </Descriptions.Item>
+                      {/* Hair Color */}
+                      <Descriptions.Item
+                        label={
+                          <>
+                            <ScissorOutlined style={{ color: '#eb2f96' }} /> Hair Color
+                          </>
+                        }
+                      >
+                        {candidate.hairColor}
+                      </Descriptions.Item>
+                      {/* Phone */}
+                      <Descriptions.Item
+                        label={
+                          <>
+                            <PhoneOutlined style={{ color: '#1890ff' }} /> Phone
+                          </>
+                        }
+                      >
+                        {candidate.phone}
+                      </Descriptions.Item>
+                      {/* BMI */}
+                      <Descriptions.Item
+                        label={
+                          <>
+                            <DashboardOutlined style={{ color: '#faad14' }} /> IMC
+                          </>
+                        }
+                      >
+                        <BmiIndicateur bmi={bmi} />
+                      </Descriptions.Item>
+                    </Descriptions>
+                  </TabPane>
+                  <TabPane tab="Interests" key="2">
                     <div className="mt-2">
-                      {candidate.interest.flatMap(interest => interest.split(',')).map((interest, index) => (
-                        <Tag color="blue" key={index}>{interest.trim()}</Tag>
-                      ))}
+                      {candidate.interest &&
+                        candidate.interest
+                          .flatMap((interest) => interest.split(','))
+                          .map((interest, index) => (
+                            <Tag
+                              color="blue"
+                              key={index}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              {interest.trim()}
+                            </Tag>
+                          ))}
                     </div>
-                    <Divider orientation="left">Files</Divider>
+                  </TabPane>
+                  <TabPane tab="Files" key="3">
                     <div className="mt-2">
-                    {fileLinks.filter(file => !file.contentType.startsWith('image/') && !file.contentType.startsWith('video/')).map((file) => (
-  <a key={file.fileId || file.filename} href={file.fileStreamUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-    {file.filename}
-  </a>
-))}
+                      <List
+                        itemLayout="horizontal"
+                        dataSource={fileLinks.filter(
+                          (file) =>
+                            !file.contentType.startsWith('image/') &&
+                            !file.contentType.startsWith('video/')
+                        )}
+                        renderItem={(file) => (
+                          <List.Item>
+                            <List.Item.Meta
+                              avatar={getFileIcon(file)}
+                              title={
+                                <a
+                                  href={file.fileStreamUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 hover:underline"
+                                >
+                                  {file.name || file.filename}
+                                </a>
+                              }
+                            />
+                          </List.Item>
+                        )}
+                      />
                     </div>
-                  </div>
-                }
-              />
-            </Card>
-          </Col>
-        </Row>
-      </div>
-    </div>
+                  </TabPane>
+                  <TabPane tab="Social Media" key="4">
+                    <div className="mt-2 flex space-x-4">
+                      {socialMediaLinks.facebook && (
+                        <a
+                          href={socialMediaLinks.facebook}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <FacebookOutlined
+                            style={{ fontSize: '24px', color: '#3b5998' }}
+                          />
+                        </a>
+                      )}
+                      {socialMediaLinks.twitter && (
+                        <a
+                          href={socialMediaLinks.twitter}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <TwitterOutlined
+                            style={{ fontSize: '24px', color: '#1DA1F2' }}
+                          />
+                        </a>
+                      )}
+                      {socialMediaLinks.instagram && (
+                        <a
+                          href={socialMediaLinks.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <InstagramOutlined
+                            style={{ fontSize: '24px', color: '#C13584' }}
+                          />
+                        </a>
+                      )}
+                      {socialMediaLinks.linkedin && (
+                        <a
+                          href={socialMediaLinks.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <LinkedinOutlined
+                            style={{ fontSize: '24px', color: '#0077B5' }}
+                          />
+                        </a>
+                      )}
+                    </div>
+                  </TabPane>
+                </Tabs>
+                {/* Favorite Button Below Information */}
+                <div className="mt-4 flex justify-center">
+                  <Button
+                    type="primary"
+                    icon={
+                      isFavorite ? (
+                        <HeartFilled style={{ color: 'red' }} />
+                      ) : (
+                        <HeartOutlined />
+                      )
+                    }
+                    onClick={() => handleLikeToggle(candidate._id)}
+                  >
+                    {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
+                  </Button>
+                </div>
+              </Card>
+            </Col>
+          </Row>
+        </div>
+      </Content>
+    </Layout>
   );
 };
 

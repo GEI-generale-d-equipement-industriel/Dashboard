@@ -10,7 +10,7 @@ import { toggleFavorite } from '../services/api/favoritesService';
 import useFetchFileLinks from '../Hooks/useFetchFileLinks';
 const { Meta } = Card;
 const { Title } = Typography;
-const url = "http://localhost:3002";
+const url = process.env.REACT_APP_API_BASE_URL;
 
 const FavoriteCandidates = () => {
   const [notificationApi, contextHolder] = notification.useNotification();
@@ -20,7 +20,7 @@ const FavoriteCandidates = () => {
   const status = useSelector((state) => state.favorites.status);
   // const [fileLinks, setFileLinks] = useState({});
   const fileLinks=useFetchFileLinks(favoriteCandidates)
-  console.log("===>",fileLinks);
+
   
   useEffect(() => {
     if (userId) {
@@ -38,7 +38,7 @@ const FavoriteCandidates = () => {
   const handleLikeToggle = useCallback(
     async (candidateId) => {
       try {
-        await dispatch(toggleFavorite(candidateId));
+        await dispatch(toggleFavorite(userId,candidateId));
 
         // Show notification on success
         const isFavorite = favoriteIds.includes(candidateId);
@@ -61,7 +61,7 @@ const FavoriteCandidates = () => {
         });
       }
     },
-    [dispatch, favoriteIds, notificationApi]
+    [dispatch, favoriteIds, notificationApi,userId]
   );
 
   const downloadXLSX = () => {
@@ -97,6 +97,8 @@ const FavoriteCandidates = () => {
     // Generate Excel file and trigger download
     XLSX.writeFile(workbook, 'favorite_candidates.xlsx');
   };
+  console.log(favoriteCandidates,'the faccc');
+  
 
   return (
     <div className="bg-gray-100 min-h-screen py-6">
@@ -123,8 +125,8 @@ const FavoriteCandidates = () => {
       </Skeleton>
     </Col>
   ))
-) : favoriteCandidates.length > 0 ? (
-  favoriteCandidates.map((candidate) => (
+) : favoriteCandidates?.length > 0 ? (
+  favoriteCandidates?.map((candidate) => (
     <Col xs={24} sm={12} md={8} lg={6} key={candidate._id}>
       <CandidateCard
         candidate={candidate}

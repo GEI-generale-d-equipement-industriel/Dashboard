@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const CandidateFiles = ({ candidate }) => {
+  const url =process.env.REACT_APP_API_BASE_URL
   const [folderFiles, setFolderFiles] = useState([]);
   const extractFileId = (link) => {
     // Check if it's a file link
@@ -48,7 +49,7 @@ const CandidateFiles = ({ candidate }) => {
 
   const fetchFilesInFolder = async (folderId) => {
     try {
-      const response = await axios.get(`http://localhost:3002/google-drive/list-files`, {
+      const response = await axios.get(`${url}/google-drive/list-files`, {
         params: { folderId },
       });
       setFolderFiles(response.data); // Store folder files in state

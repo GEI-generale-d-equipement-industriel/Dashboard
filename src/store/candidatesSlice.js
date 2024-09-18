@@ -126,15 +126,26 @@ const applyFilters = (state) => {
     );
   
     filteredCandidates = filteredCandidates.filter((candidate) => {
-      const candidateInterests = candidate.interest
-        .split(',')
-        .map((interest) => interest.trim().toLowerCase());
-  
-      return selectedInterestsLower.some((interest) =>
+      // Ensure candidate.interest is an array or split if it's a string interest
+
+      const candidateInterests = Array.isArray(candidate.interest)
+      ? candidate.interest.flatMap((interest) => 
+          interest.includes(",") 
+            ? interest.split(",").map((i) => i.trim().toLowerCase()) 
+            : [interest.trim().toLowerCase()]
+        )
+      : candidate.interest
+          .split(',')
+          .map((interest) => interest.trim().toLowerCase()); 
+      console.log("the intrest",candidateInterests);
+      console.log("the selected intrest",selectedInterestsLower)
+      
+      return selectedInterestsLower.every((interest) =>
         candidateInterests.includes(interest)
       );
     });
   }
+  
 
   // Age Filter
   if (state.selectedAgeRange.length === 2) {

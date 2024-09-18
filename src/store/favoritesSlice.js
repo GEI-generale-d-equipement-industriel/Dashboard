@@ -26,8 +26,10 @@ export const updateFavorites = createAsyncThunk(
       const favoriteIds = favorites.map(fav => fav._id || fav);
       const response = await axiosInstance.put(`/user/${userId}/favorites`, { favorites: favoriteIds });
       
+      console.log(response.favorites,'the response');
       
-      return "Candidate added to the favorites list "; // Ensure response data is the updated array of favorite candidate IDs
+      
+      return response.favorites; // Ensure response data is the updated array of favorite candidate IDs
     } catch (error) {
       console.error("Failed to update favorites", error);
       return rejectWithValue(error.response.data);
@@ -56,7 +58,7 @@ const favoritesSlice = createSlice({
         state.favorites = [...state.favorites, { _id: candidateId }];
       }
       
-      console.log("Updated favorites: ", state.favorites);
+
     },
   },
   extraReducers: (builder) => {

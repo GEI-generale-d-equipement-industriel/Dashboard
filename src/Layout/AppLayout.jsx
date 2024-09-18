@@ -108,7 +108,7 @@ const AppLayout = ({ children }) => {
       {/* Main Layout */}
       <Layout style={{ marginTop: 64 }}>
         {/* Sidebar for Filters */}
-        {location.pathname === '/candidates' && screens.lg && (
+        {(location.pathname === '/candidates'||location.pathname === '/') && screens.lg && (
           <Sider
             width={304}
             className="shadow-lg"
@@ -144,7 +144,7 @@ const AppLayout = ({ children }) => {
         <Layout
           style={{
             marginLeft:
-              screens.lg && location.pathname === '/candidates' ? 304 : 0,
+              screens.lg && (location.pathname === '/candidates'||location.pathname === '/') ? 304 : 0,
             padding: '0 24px 24px',
           }}
         >

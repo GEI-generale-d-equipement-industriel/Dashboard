@@ -13,7 +13,7 @@ import useFetchFileLinks from '../Hooks/useFetchFileLinks';
 const { Meta } = Card;
 const { Title } = Typography;
 
-const url = "http://localhost:3002"; // Update this to your actual backend API base URL
+const url = process.env.REACT_APP_API_BASE_URL; // Update this to your actual backend API base URL
 
 // Validate Google Drive URL
 const isValidGoogleDriveUrl = (url) => {

@@ -41,6 +41,8 @@ const FiltersSidebar = () => {
   };
 
   const handleInterestChange = (checkedValues) => {
+   
+    
     dispatch(filterByInterest(checkedValues));
     dispatch(restPages());
   };
