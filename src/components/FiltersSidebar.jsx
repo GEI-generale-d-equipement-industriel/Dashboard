@@ -12,6 +12,8 @@ import {
   filterByName,
   filterByAge,
   filterBySex,
+  filterByHeight,
+  filterByWeight,
   clearFilters,
   restPages,
 } from '../store/candidatesSlice';
@@ -28,12 +30,16 @@ const FiltersSidebar = () => {
     selectedInterests,
     selectedAgeRange,
     selectedSex,
+    selectedHeightRange, // Height
+    selectedWeightRange,
   } = useSelector((state) => state.candidates);
 
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isInterestVisible, setIsInterestVisible] = useState(false);
   const [isAgeVisible, setIsAgeVisible] = useState(false);
   const [isSexVisible, setIsSexVisible] = useState(false);
+  const [isHeightVisible, setIsHeightVisible] = useState(false); // For height
+  const [isWeightVisible, setIsWeightVisible] = useState(false);
   
   const handleSearch = (e) => {
     dispatch(filterByName(e.target.value));
@@ -51,7 +57,15 @@ const FiltersSidebar = () => {
     dispatch(filterByAge(ageRange));
     dispatch(restPages());
   };
+  const handleHeightChange = (heightRange) => {
+    dispatch(filterByHeight(heightRange));
+    dispatch(restPages());
+  };
 
+  const handleWeightChange = (weightRange) => {
+    dispatch(filterByWeight(weightRange));
+    dispatch(restPages());
+  };
   const handleSexChange = (checkedValues) => {
     dispatch(filterBySex(checkedValues));
     dispatch(restPages());
@@ -61,7 +75,7 @@ const FiltersSidebar = () => {
     dispatch(clearFilters());
     dispatch(restPages());
   };
-
+  
   const isFilterActive =
     searchTerm ||
     selectedInterests.length > 0 ||
@@ -160,6 +174,36 @@ const FiltersSidebar = () => {
             <div className="age-range">
               <span>{selectedAgeRange[0]}</span>
               <span>{selectedAgeRange[1]}</span>
+            </div>
+          </>
+        )}
+      </div>
+      <div className="filter-section">
+        <h4 className="filter-title" onClick={() => setIsHeightVisible(!isHeightVisible)}>
+          Height {' '} {isHeightVisible ? <CaretUpOutlined className="caret-icon" /> : <CaretDownOutlined className="caret-icon" />}
+        </h4>
+        {isHeightVisible && (
+          <>
+            <Slider range min={1.0} max={2.5} step={0.01} value={selectedHeightRange} onChange={handleHeightChange} className="age-slider" />
+            <div className="age-range">
+              <span>{selectedHeightRange[0]}m </span>
+              <span>{selectedHeightRange[1]}m</span>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Weight Filter */}
+      <div className="filter-section">
+        <h4 className="filter-title" onClick={() => setIsWeightVisible(!isWeightVisible)}>
+          Weight {isWeightVisible ? <CaretUpOutlined className="caret-icon" /> : <CaretDownOutlined className="caret-icon" />}
+        </h4>
+        {isWeightVisible && (
+          <>
+            <Slider range min={40} max={120} value={selectedWeightRange} onChange={handleWeightChange} className="age-slider" />
+            <div className="age-range">
+              <span>{selectedWeightRange[0]} kg</span>
+              <span>{selectedWeightRange[1]} kg</span>
             </div>
           </>
         )}

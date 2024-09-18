@@ -24,7 +24,9 @@ const candidateSlice = createSlice({
     filteredCandidates: [],
     favorites: JSON.parse(localStorage.getItem("favoriteCandidates")) || [],
     selectedInterests: [],
-    selectedAgeRange: [0, 60], // Adjusted to handle a range as an array [min, max]
+    selectedAgeRange: [0, 60], 
+    selectedHeightRange: [1.0, 2.5], 
+    selectedWeightRange: [20, 120],
     selectedSex: [],
     searchTerm: "",
     currentPage: 1,
@@ -48,6 +50,15 @@ const candidateSlice = createSlice({
       state.selectedAgeRange = action.payload; // Expecting an array [min, max]
       applyFilters(state);
     },
+    filterByHeight: (state, action) => {
+      state.selectedHeightRange = action.payload; // New height filter
+      applyFilters(state);
+    },
+
+    filterByWeight: (state, action) => {
+      state.selectedWeightRange = action.payload; // New weight filter
+      applyFilters(state);
+    },
 
     filterBySex: (state, action) => {
       state.selectedSex = action.payload;
@@ -58,6 +69,8 @@ const candidateSlice = createSlice({
       state.searchTerm = '';
       state.selectedInterests = [];
       state.selectedAgeRange = [0, 60];
+      state.selectedHeightRange = [1.0, 2.5]; // Reset height range
+      state.selectedWeightRange = [20, 120];
       state.selectedSex = [];
       applyFilters(state);
     },
@@ -157,7 +170,23 @@ const applyFilters = (state) => {
       return age >= minAge && age <= maxAge;
     });
   }
+  // Height Filter
+  if (state.selectedHeightRange.length === 2) {
+    const [minHeight, maxHeight] = state.selectedHeightRange;
+    filteredCandidates = filteredCandidates.filter((candidate) => {
+      const height = parseFloat(candidate.height);
+      return height >= minHeight && height <= maxHeight;
+    });
+  }
 
+  // Weight Filter
+  if (state.selectedWeightRange.length === 2) {
+    const [minWeight, maxWeight] = state.selectedWeightRange;
+    filteredCandidates = filteredCandidates.filter((candidate) => {
+      const weight = parseFloat(candidate.weight);
+      return weight >= minWeight && weight <= maxWeight;
+    });
+  }
   // Sex Filter
   if (state.selectedSex.length > 0) {
     const selectedGenders = state.selectedSex.map((sex) => sex.trim().toLowerCase());
@@ -176,6 +205,8 @@ export const {
   filterByInterest,
   filterByAge,
   filterBySex,
+  filterByHeight,
+  filterByWeight,
   clearFilters,
   restPages,
   setPage,
