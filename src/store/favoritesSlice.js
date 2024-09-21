@@ -26,7 +26,7 @@ export const updateFavorites = createAsyncThunk(
       const favoriteIds = favorites.map(fav => fav._id || fav);
       const response = await axiosInstance.put(`/user/${userId}/favorites`, { favorites: favoriteIds });
       
-      console.log(response.favorites,'the response');
+ 
       
       
       return response.favorites; // Ensure response data is the updated array of favorite candidate IDs
@@ -88,31 +88,7 @@ const favoritesSlice = createSlice({
   },
 });
 
-// Combined action to toggle favorite and update backend
-// export const toggleFavoriteWithAPI = (userId, candidateId) => async (dispatch, getState) => {
-//   const { favorites } = getState().favorites;
-//   const favoriteIds = favorites.map(candidate => candidate._id || candidate);
-//   const isFavorite = favoriteIds.includes(candidateId);
-//   let updatedFavorites;
-  
-//   if (isFavorite) {
-//     // Remove candidate from favorites
-//     updatedFavorites = favorites.filter(id => id !== candidateId);
-//   } else {
-//     // Add candidate to favorites
-//     updatedFavorites = [...favorites, candidateId];
-//   }
-  
-//   // Dispatch the local toggle action
-//   dispatch(favoritesSlice.actions.toggleFavorite(candidateId));
-  
-//   try {
-//     // Call the updateFavorites thunk to sync with the backend
-//     await dispatch(updateFavorites({ userId, favorites: updatedFavorites })).unwrap();
-//   } catch (error) {
-//     console.error('Error dispatching updateFavorites:', error);
-//   }
-// };
+
 
 
 export const { toggleFavorite } = favoritesSlice.actions;

@@ -132,10 +132,14 @@ const AppLayout = ({ children }) => {
           title="Filters"
           placement="left"
           onClose={toggleDrawer}
-          visible={drawerVisible}
-          bodyStyle={{ padding: 0 }}
-          drawerStyle={{ backgroundColor: '#000000' }}
-  headerStyle={{ backgroundColor: '#000000', color: '#f0b71d' }}
+          open={drawerVisible}
+        
+  styles={{
+    header: { backgroundColor: '#000000', color: '#f0b71d' },
+    body: { padding: '0' },
+    content: { backgroundColor: '#000000' },
+  }}
+  
         >
           <FiltersSidebar />
         </Drawer>

@@ -18,7 +18,7 @@ function getBMICategory(bmi) {
   }
 }
 
-export default function BmiIndicateur({ bmi }) {
+export default function BmiIndicateur({ bmi,display }) {
 
   
   const { category, color, icon } = getBMICategory(bmi);
@@ -38,17 +38,17 @@ export default function BmiIndicateur({ bmi }) {
   return (
     <div style={{ textAlign: 'center' }}>
       <Tooltip title={`IMC: ${bmi.toFixed(1)}`}>
-        <Tag color={color} style={{ fontSize: '16px', padding: '5px 10px' }}>
+        <Tag color={color} style={{ fontSize: '14px', padding: '5px 5px' }}>
           {icon} {category}
         </Tag>
       </Tooltip>
-      <Progress
+      {display &&<Progress
         percent={Math.min((bmi / 40) * 100, 100)}
         status={getProgressStatus()}
         showInfo={false}
         strokeColor={color}
         style={{ marginTop: '10px' }}
-      />
+      />}
     </div>
   );
 }

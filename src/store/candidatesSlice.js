@@ -29,6 +29,15 @@ const candidateSlice = createSlice({
     selectedWeightRange: [20, 120],
     selectedSex: [],
     searchTerm: "",
+    selectedEyeColor: '',
+    selectedHairColor: '',
+    selectedHairType: '',
+    selectedSkinColor: '',
+    selectedFacialHair: '',
+    selectedSign: [],
+    selectedTown: '',
+    selectedVeilStatus:false,
+    selectedPregnancyStatus:false,
     currentPage: 1,
     pageSize: 8,
     status: "idle",
@@ -64,6 +73,50 @@ const candidateSlice = createSlice({
       state.selectedSex = action.payload;
       applyFilters(state);
     },
+    filterByEyeColor: (state, action) => {
+      state.selectedEyeColor = action.payload;
+      applyFilters(state);
+    },
+
+    filterByHairColor: (state, action) => {
+      state.selectedHairColor = action.payload;
+      applyFilters(state);
+    },
+
+    filterByHairType: (state, action) => {
+      state.selectedHairType = action.payload;
+      applyFilters(state);
+    },
+
+    filterBySkinColor: (state, action) => {
+      state.selectedSkinColor = action.payload;
+      applyFilters(state);
+    },
+
+    filterByFacialHair: (state, action) => {
+      state.selectedFacialHair = action.payload;
+      applyFilters(state);
+    },
+
+    filterBySign: (state, action) => {
+      state.selectedSign = action.payload;
+      applyFilters(state);
+    },
+
+    filterByTown: (state, action) => {
+      state.selectedTown = action.payload;
+      applyFilters(state);
+    },
+    filterByVeilStatus: (state, action) => {
+      state.selectedVeilStatus = action.payload;
+      applyFilters(state);
+    },
+
+    filterByPregnancyStatus: (state, action) => {
+      state.selectedPregnancyStatus = action.payload;
+      applyFilters(state);
+    },
+
 
     clearFilters: (state) => {
       state.searchTerm = '';
@@ -72,6 +125,15 @@ const candidateSlice = createSlice({
       state.selectedHeightRange = [1.0, 2.5]; // Reset height range
       state.selectedWeightRange = [20, 120];
       state.selectedSex = [];
+      state.selectedEyeColor = '';
+      state.selectedHairColor = '';
+      state.selectedHairType = '';
+      state.selectedSkinColor = '';
+      state.selectedFacialHair = '';
+      state.selectedSign = [];
+      state.selectedTown = '';
+      state.selectedPregnancyStatus=false;
+      state.selectedVeilStatus=false;
       applyFilters(state);
     },
 
@@ -150,8 +212,7 @@ const applyFilters = (state) => {
       : candidate.interest
           .split(',')
           .map((interest) => interest.trim().toLowerCase()); 
-      console.log("the intrest",candidateInterests);
-      console.log("the selected intrest",selectedInterestsLower)
+
       
       return selectedInterestsLower.every((interest) =>
         candidateInterests.includes(interest)
@@ -196,7 +257,74 @@ const applyFilters = (state) => {
       return selectedGenders.includes(candidateGender);
     });
   }
+  if (state.selectedEyeColor) {
+    const eyeColorLower = state.selectedEyeColor.toLowerCase();
+    filteredCandidates = filteredCandidates.filter((candidate) => 
+      (candidate.eyeColor || '').toLowerCase() === eyeColorLower
+    );
+  }
 
+  // Hair Color Filter
+  if (state.selectedHairColor) {
+    const hairColorLower = state.selectedHairColor.toLowerCase();
+    filteredCandidates = filteredCandidates.filter((candidate) => 
+      (candidate.hairColor || '').toLowerCase() === hairColorLower
+    );
+  }
+
+  // Hair Type Filter
+  if (state.selectedHairType) {
+    const hairTypeLower = state.selectedHairType.toLowerCase();
+    filteredCandidates = filteredCandidates.filter((candidate) => 
+      (candidate.hairType || '').toLowerCase() === hairTypeLower
+    );
+  }
+
+  // Skin Color Filter
+  if (state.selectedSkinColor) {
+    const skinColorLower = state.selectedSkinColor.toLowerCase();
+    filteredCandidates = filteredCandidates.filter((candidate) => 
+      (candidate.skinColor || '').toLowerCase() === skinColorLower
+    );
+  }
+
+  // Facial Hair Filter
+  if (state.selectedFacialHair) {
+    const facialHairLower = state.selectedFacialHair.toLowerCase();
+    filteredCandidates = filteredCandidates.filter((candidate) => 
+      (candidate.facialHair || '')=== facialHairLower
+    );
+  }
+
+  // Sign Filter
+  if (state.selectedSign.length > 0) {
+    const selectedSignsLower = state.selectedSign.map((sign) => sign.trim().toLowerCase());
+    filteredCandidates = filteredCandidates.filter((candidate) => {
+      const candidateSigns = candidate.sign ? candidate.sign.map((sign) => sign.trim().toLowerCase()) : [];
+      return selectedSignsLower.every((sign) => candidateSigns.includes(sign));
+    });
+  }
+
+  // Town Filter
+  if (state.selectedTown) {
+    const townLower = state.selectedTown.toLowerCase();
+    filteredCandidates = filteredCandidates.filter((candidate) => 
+      (candidate.town || '').toLowerCase() === townLower
+    );
+  }
+
+  if (state.selectedVeilStatus) {
+    filteredCandidates = filteredCandidates.filter((candidate) => 
+      candidate.veiled === state.selectedVeilStatus
+    );
+  }
+
+  // Pregnancy Status Filter
+  if (state.selectedPregnancyStatus) {
+    filteredCandidates = filteredCandidates.filter((candidate) => 
+      candidate.pregnant === state.selectedPregnancyStatus
+    );
+  }
   state.filteredCandidates = filteredCandidates;
 };
 
@@ -207,6 +335,15 @@ export const {
   filterBySex,
   filterByHeight,
   filterByWeight,
+  filterByEyeColor,
+  filterByHairColor,
+  filterByHairType,
+  filterBySkinColor,
+  filterByFacialHair,
+  filterBySign,
+  filterByTown,
+  filterByVeilStatus,
+  filterByPregnancyStatus,
   clearFilters,
   restPages,
   setPage,

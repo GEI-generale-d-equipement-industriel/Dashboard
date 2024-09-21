@@ -7,12 +7,14 @@ import CandidatesDetails from './components/CandidatesDetails';
 import FavoriteCandidates from './components/FavoriteCandidates';
 import LoginPage from './pages/Login.page';
 import PrivateRoute from './components/PrivateRoute';
-
+import { UserSessionProvider } from './context/UserSessionContext';
 
 function App() {
   // const Navigate=useNavigation()
   return (
+    
     <BrowserRouter>
+    <UserSessionProvider>
       <Routes>
         {/* Public Route */}
         <Route path="/login" element={<LoginPage />} />
@@ -68,8 +70,9 @@ function App() {
         />
         {/* Redirect unknown routes to login or a 404 page */}
         <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
+      </Routes></UserSessionProvider>
     </BrowserRouter>
+    
   );
 }
 

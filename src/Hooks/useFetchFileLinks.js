@@ -8,7 +8,7 @@ const isValidGoogleDriveUrl = (url) => {
     /^(https:\/\/)?(www\.)?(drive|docs)\.google\.com\/(file\/d\/|drive\/folders\/|open\?id=)[\w-]+/;
   return driveFileRegex.test(url);
 };
-
+ 
 // Custom hook to fetch file links with caching
 const useFetchFileLinks = (candidates) => {
   const [fileLinks, setFileLinks] = useState({});
@@ -19,7 +19,7 @@ const useFetchFileLinks = (candidates) => {
     const fetchFileLinks = async () => {
       try {
         const updatedFileLinks = { ...cache.current }; // Start with cached data
-        console.log(updatedFileLinks);
+        
         
         await Promise.all(
           candidates.map(async (candidate) => {

@@ -1,16 +1,14 @@
-import React, { useEffect, useMemo, useCallback,useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useMemo, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Card, Button, Typography, Row, Col, notification, Skeleton, Divider, Tag } from 'antd';
-import { IoIosRemoveCircleOutline } from "react-icons/io";
+import { Button, Typography, Row, Col, notification, Skeleton } from 'antd';
 import CandidateCard from './CandidateCard';
-import { fetchFavorites } from '../store/favoritesSlice'; // Import the thunk
+
 import * as XLSX from 'xlsx';
 import { toggleFavorite } from '../services/api/favoritesService';
 import useFetchFileLinks from '../Hooks/useFetchFileLinks';
-const { Meta } = Card;
+
 const { Title } = Typography;
-const url = process.env.REACT_APP_API_BASE_URL;
+
 
 const FavoriteCandidates = () => {
   const [notificationApi, contextHolder] = notification.useNotification();
@@ -18,15 +16,11 @@ const FavoriteCandidates = () => {
   const dispatch = useDispatch();
   const favoriteCandidates = useSelector((state) => state.favorites.favorites);
   const status = useSelector((state) => state.favorites.status);
-  // const [fileLinks, setFileLinks] = useState({});
+
   const fileLinks=useFetchFileLinks(favoriteCandidates)
 
   
-  useEffect(() => {
-    if (userId) {
-      dispatch(fetchFavorites(userId));
-    }
-  }, [userId, dispatch]);
+
 
   const favoriteIds = useMemo(() => {
     return Array.isArray(favoriteCandidates)
@@ -97,7 +91,7 @@ const FavoriteCandidates = () => {
     // Generate Excel file and trigger download
     XLSX.writeFile(workbook, 'favorite_candidates.xlsx');
   };
-  console.log(favoriteCandidates,'the faccc');
+  
   
 
   return (

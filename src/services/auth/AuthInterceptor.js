@@ -52,4 +52,5 @@ class AuthInterceptor {
     }
 }
 
-export default new AuthInterceptor();
+const authInterceptorInstance = new AuthInterceptor();
+export default authInterceptorInstance;

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleFavorite } from '../services/api/favoritesService';
+import useFetchFileLinks from "../Hooks/useFetchFileLinks"
 import {
   Button,
   Card,
@@ -18,7 +19,6 @@ import {
   Carousel,
   Modal,
   Descriptions,
-  Tooltip,
   List,
 } from 'antd';
 import {
@@ -42,10 +42,11 @@ import {
   TwitterOutlined,
   InstagramOutlined,
   LinkedinOutlined,
+  TikTokOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
 import BmiIndicateur from './BmiIndicateur';
-import styled from 'styled-components';
+
 
 const { Content } = Layout;
 const { TabPane } = Tabs;
@@ -61,11 +62,11 @@ const CandidateDetails = () => {
   const [candidate, setCandidate] = useState(null);
   const [fileLinks, setFileLinks] = useState([]);
   const [notificationApi, contextHolder] = notification.useNotification();
-console.log(candidate,'the candidate from the details');
 
   const [visible, setVisible] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
-
+  console.log(candidate,'the candidate');
+  
   const showModal = (index) => {
     setCurrentSlide(index);
     setVisible(true);
@@ -166,6 +167,7 @@ console.log(candidate,'the candidate from the details');
   const height = parseFloat(candidate.height);
   const bmi = weight / height ** 2;
 
+  const tagColors = ['orange', 'red', 'purple', 'gold'];
   // Function to get the appropriate file icon
   const getFileIcon = (file) => {
     const contentType = file.contentType;
@@ -192,12 +194,13 @@ console.log(candidate,'the candidate from the details');
       return <FileOutlined />;
     }
   };
-  console.log(favorites,'the fav');
+  
   
   const isFavorite = Array.isArray(favorites) && favorites.some((c) => c?._id === candidate?._id);
 
   // Social media links (assuming they are part of candidate data)
-  const socialMediaLinks = candidate.socialMedia || {};
+  const socialMediaLinks = candidate?.socialMedia?.map(link => JSON.parse(link)) || [];
+console.log(socialMediaLinks);
 
   // Filter out image files for the carousel
   const imageFiles = fileLinks.filter(
@@ -207,13 +210,11 @@ console.log(candidate,'the candidate from the details');
   return (
     <Layout className="min-h-screen">
       {contextHolder}
-      <Content className="container mx-auto px-4 py-6">
-        <Button type="link" onClick={() => navigate(-1)}>
+      <Content className="container mx-auto px-4 py-6 ">
+        <Button type="link" onClick={() => navigate(-1)} className='text-2xl underline mb-4'>
           Back to Candidates
         </Button>
-        <div className=" shadow-lg rounded-lg p-6"
-        style={{backgroundColor:"#E5E5E5 "}}
-        >
+        <div className="shadow-lg rounded-lg p-6" style={{ backgroundColor: "#E5E5E5" }}>
           {/* Candidate Name */}
           <Title level={2} className="text-center mb-6">
             {candidate.firstName} {candidate.name}
@@ -225,9 +226,7 @@ console.log(candidate,'the candidate from the details');
               {imageFiles.length > 0 ? (
                 <>
                   <Carousel
-                 
                     arrows
-                    
                     afterChange={(current) => setCurrentSlide(current)}
                   >
                     {imageFiles.map((file, index) => (
@@ -267,121 +266,131 @@ console.log(candidate,'the candidate from the details');
               )}
             </Col>
             <Col xs={24} sm={12}>
-              <Card className="bg-zinc-100"
-              // style={{backgroundColor:"  #E5E5E5 "}}
-              >
+              <Card className="bg-zinc-100">
                 <Tabs defaultActiveKey="1">
-                  <TabPane tab="Information" key="1">
-                    <Descriptions bordered column={1} size="small">
-                      {/* Gender */}
-                      <Descriptions.Item
-                        label={
-                          <>
-                            {candidate.gender.toLowerCase() === 'female' ||
-                            candidate.gender.toLowerCase() === 'femme' ? (
+                  <TabPane tab="Details & Interests" key="1">
+                    <Row gutter={16}>
+                      <Col xs={24} sm={12}>
+                        <Descriptions bordered column={1} size="small">
+                          {/* Gender */}
+                          <Descriptions.Item
+                            label={
                               <>
-                                <WomanOutlined style={{ color: '#eb2f96' }} /> Gender
+                                {candidate.gender.toLowerCase() === 'female' ||
+                                candidate.gender.toLowerCase() === 'femme' ? (
+                                  <>
+                                    <WomanOutlined style={{ color: '#eb2f96' }} /> Gender
+                                  </>
+                                ) : (
+                                  <>
+                                    <ManOutlined style={{ color: '#1890ff' }} /> Gender
+                                  </>
+                                )}
                               </>
-                            ) : (
+                            }
+                          >
+                            {candidate.gender}
+                          </Descriptions.Item>
+                          {/* Birth Year */}
+                          <Descriptions.Item
+                            label={
                               <>
-                                <ManOutlined style={{ color: '#1890ff' }} /> Gender
+                                <CalendarOutlined style={{ color: '#faad14' }} /> Birth Year
                               </>
-                            )}
-                          </>
-                        }
-                      >
-                        {candidate.gender}
-                      </Descriptions.Item>
-                      {/* Birth Year */}
-                      <Descriptions.Item
-                        label={
-                          <>
-                            <CalendarOutlined style={{ color: '#faad14' }} /> Birth Year
-                          </>
-                        }
-                      >
-                        {candidate.birthYear}
-                      </Descriptions.Item>
-                      {/* Height */}
-                      <Descriptions.Item
-                        label={
-                          <>
-                            <UserOutlined style={{ color: '#52c41a' }} /> Height
-                          </>
-                        }
-                      >
-                        {candidate.height} m
-                      </Descriptions.Item>
-                      {/* Weight */}
-                      <Descriptions.Item
-                        label={
-                          <>
-                            <UserOutlined style={{ color: '#722ed1' }} /> Weight
-                          </>
-                        }
-                      >
-                        {candidate.weight} kg
-                      </Descriptions.Item>
-                      {/* Eye Color */}
-                      <Descriptions.Item
-                        label={
-                          <>
-                            <EyeOutlined style={{ color: '#13c2c2' }} /> Eye Color
-                          </>
-                        }
-                      >
-                        {candidate.eyeColor}
-                      </Descriptions.Item>
-                      {/* Hair Color */}
-                      <Descriptions.Item
-                        label={
-                          <>
-                            <ScissorOutlined style={{ color: '#eb2f96' }} /> Hair Color
-                          </>
-                        }
-                      >
-                        {candidate.hairColor}
-                      </Descriptions.Item>
-                      {/* Phone */}
-                      <Descriptions.Item
-                        label={
-                          <>
-                            <PhoneOutlined style={{ color: '#1890ff' }} /> Phone
-                          </>
-                        }
-                      >
-                        {candidate.phone}
-                      </Descriptions.Item>
-                      {/* BMI */}
-                      <Descriptions.Item
-                        label={
-                          <>
-                            <DashboardOutlined style={{ color: '#faad14' }} /> IMC
-                          </>
-                        }
-                      >
-                        <BmiIndicateur bmi={bmi} />
-                      </Descriptions.Item>
-                    </Descriptions>
+                            }
+                          >
+                            {candidate.birthYear}
+                          </Descriptions.Item>
+                          {/* Height */}
+                          <Descriptions.Item
+                            label={
+                              <>
+                                <UserOutlined style={{ color: '#52c41a' }} /> Height
+                              </>
+                            }
+                          >
+                            {candidate.height} m
+                          </Descriptions.Item>
+                          {/* Weight */}
+                          <Descriptions.Item
+                            label={
+                              <>
+                                <UserOutlined style={{ color: '#722ed1' }} /> Weight
+                              </>
+                            }
+                          >
+                            {candidate.weight} kg
+                          </Descriptions.Item>
+                          {/* Eye Color */}
+                          <Descriptions.Item
+                            label={
+                              <>
+                                <EyeOutlined style={{ color: '#13c2c2' }} /> Eye Color
+                              </>
+                            }
+                          >
+                            {candidate.eyeColor}
+                          </Descriptions.Item>
+                          {/* Hair Color */}
+                          <Descriptions.Item
+                            label={
+                              <>
+                                <ScissorOutlined style={{ color: '#eb2f96' }} /> Hair Color
+                              </>
+                            }
+                          >
+                            {candidate.hairColor}
+                          </Descriptions.Item>
+                        </Descriptions>
+                      </Col>
+                      <Col xs={24} sm={12}>
+                        <Descriptions bordered column={1} size="small">
+                          {/* Phone */}
+                          <Descriptions.Item
+                            label={
+                              <>
+                                <PhoneOutlined style={{ color: '#1890ff' }} /> Phone
+                              </>
+                            }
+                          >
+                            {candidate.phone}
+                          </Descriptions.Item>
+                          {/* BMI */}
+                          <Descriptions.Item
+                            label={
+                              <>
+                                <DashboardOutlined style={{ color: '#faad14' }} /> IMC
+                              </>
+                            }
+                          >
+                            <BmiIndicateur bmi={bmi} display={true} />
+                          </Descriptions.Item>
+                          {/* Interests */}
+                          <Descriptions.Item
+                            label={<><UserOutlined /> Interests</>}
+                          >
+                            <div className="mt-2">
+                              {candidate.interest &&
+                                candidate.interest
+                                  .flatMap((interest) => interest.split(','))
+                                  .map((interest, index) => (
+                                    <Tag
+                                      color="blue"
+                                      key={index}
+                                      style={{ cursor: 'pointer' }}
+                                    >
+                                      {interest.trim()}
+                                    </Tag>
+                                  ))}
+                            </div>
+                          </Descriptions.Item>
+                        </Descriptions>
+                      </Col>
+                    </Row>
                   </TabPane>
-                  <TabPane tab="Interests" key="2">
+                  <TabPane tab="Files & Social Media" key="2">
                     <div className="mt-2">
-                      {candidate.interest &&
-                        candidate.interest
-                          .flatMap((interest) => interest.split(','))
-                          .map((interest, index) => (
-                            <Tag
-                              color="blue"
-                              key={index}
-                              style={{ cursor: 'pointer' }}
-                            >
-                              {interest.trim()}
-                            </Tag>
-                          ))}
-                    </div>
-                  </TabPane>
-                  <TabPane tab="Files" key="3">
-                    <div className="mt-2">
+                      <Title level={4}>Files</Title>
                       <List
                         itemLayout="horizontal"
                         dataSource={fileLinks.filter(
@@ -408,53 +417,82 @@ console.log(candidate,'the candidate from the details');
                         )}
                       />
                     </div>
-                  </TabPane>
-                  <TabPane tab="Social Media" key="4">
-                    <div className="mt-2 flex space-x-4">
-                      {socialMediaLinks.facebook && (
-                        <a
-                          href={socialMediaLinks.facebook}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <FacebookOutlined
-                            style={{ fontSize: '24px', color: '#3b5998' }}
-                          />
-                        </a>
-                      )}
-                      {socialMediaLinks.twitter && (
-                        <a
-                          href={socialMediaLinks.twitter}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <TwitterOutlined
-                            style={{ fontSize: '24px', color: '#1DA1F2' }}
-                          />
-                        </a>
-                      )}
-                      {socialMediaLinks.instagram && (
-                        <a
-                          href={socialMediaLinks.instagram}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <InstagramOutlined
-                            style={{ fontSize: '24px', color: '#C13584' }}
-                          />
-                        </a>
-                      )}
-                      {socialMediaLinks.linkedin && (
-                        <a
-                          href={socialMediaLinks.linkedin}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <LinkedinOutlined
-                            style={{ fontSize: '24px', color: '#0077B5' }}
-                          />
-                        </a>
-                      )}
+                    <Divider />
+                    <div className="mt-2">
+                      <Title level={4}>Social Media</Title>
+                      <div className="mt-2 flex space-x-4">
+                        {socialMediaLinks.map((link, index) => {
+                          switch (link.type.toLowerCase()) {
+                            case 'facebook':
+                              return (
+                                <a
+                                  key={index}
+                                  href={link.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <FacebookOutlined
+                                    style={{ fontSize: '24px', color: '#3b5998' }}
+                                  />
+                                </a>
+                              );
+                            case 'tiktok':
+                              return (
+                                <a
+                                  key={index}
+                                  href={link.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <TikTokOutlined
+                                    style={{ fontSize: '24px', color: '#3b5998' }}
+                                  />
+                                </a>
+                              );
+                            case 'twitter':
+                              return (
+                                <a
+                                  key={index}
+                                  href={link.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <TwitterOutlined
+                                    style={{ fontSize: '24px', color: '#1DA1F2' }}
+                                  />
+                                </a>
+                              );
+                            case 'instagram':
+                              return (
+                                <a
+                                  key={index}
+                                  href={link.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <InstagramOutlined
+                                    style={{ fontSize: '24px', color: '#C13584' }}
+                                  />
+                                </a>
+                              );
+                            case 'linkedin':
+                              return (
+                                <a
+                                  key={index}
+                                  href={link.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <LinkedinOutlined
+                                    style={{ fontSize: '24px', color: '#0077B5' }}
+                                  />
+                                </a>
+                              );
+                            default:
+                              return null;
+                          }
+                        })}
+                      </div>
                     </div>
                   </TabPane>
                 </Tabs>
