@@ -5,17 +5,24 @@ import AuthInterceptor from "../services/auth/AuthInterceptor";
 // Thunk to fetch candidates from API
 export const fetchCandidates = createAsyncThunk(
   "candidates/fetchCandidates",
-  async (_, { rejectWithValue }) => {
+  async ({ sortBy, sortOrder } = {}, { rejectWithValue }) => { // Default to an empty object
     try {
       const axiosInstance = AuthInterceptor.getInstance();
-      const response = await axiosInstance.get('/candidates');
-      return response;
+      const response = await axiosInstance.get('/candidates', {
+        params: {
+          ...(sortBy && { sortBy }), // Include sortBy if defined
+          ...(sortOrder && { sortOrder }) // Include sortOrder if defined
+        }
+      });
+      return response; // Ensure you return the data array
     } catch (error) {
-      console.error("API request failed", error); // Log the error
+      console.error("API request failed", error);
       return rejectWithValue(error.response?.data || 'Server Error');
     }
   }
 );
+
+
 
 const candidateSlice = createSlice({
   name: "candidates",
@@ -25,8 +32,8 @@ const candidateSlice = createSlice({
     favorites: JSON.parse(localStorage.getItem("favoriteCandidates")) || [],
     selectedInterests: [],
     selectedAgeRange: [0, 60], 
-    selectedHeightRange: [1.0, 2.5], 
-    selectedWeightRange: [20, 120],
+    selectedHeightRange: [0.5, 2.5], 
+    selectedWeightRange: [5, 120],
     selectedSex: [],
     searchTerm: "",
     selectedEyeColor: '',
@@ -36,6 +43,7 @@ const candidateSlice = createSlice({
     selectedFacialHair: '',
     selectedSign: [],
     selectedTown: '',
+    selectedRegistrationType: '',
     selectedVeilStatus:false,
     selectedPregnancyStatus:false,
     currentPage: 1,
@@ -83,6 +91,11 @@ const candidateSlice = createSlice({
       applyFilters(state);
     },
 
+    filterByRegistrationType: (state, action) => {
+      state.selectedRegistrationType = action.payload; // Set the selected registration type
+      applyFilters(state); // Call applyFilters to filter the candidates based on the selected registration type
+    },
+
     filterByHairType: (state, action) => {
       state.selectedHairType = action.payload;
       applyFilters(state);
@@ -122,8 +135,8 @@ const candidateSlice = createSlice({
       state.searchTerm = '';
       state.selectedInterests = [];
       state.selectedAgeRange = [0, 60];
-      state.selectedHeightRange = [1.0, 2.5]; // Reset height range
-      state.selectedWeightRange = [20, 120];
+      state.selectedHeightRange = [0.5, 2.5]; // Reset height range
+      state.selectedWeightRange = [5, 120];
       state.selectedSex = [];
       state.selectedEyeColor = '';
       state.selectedHairColor = '';
@@ -132,8 +145,10 @@ const candidateSlice = createSlice({
       state.selectedFacialHair = '';
       state.selectedSign = [];
       state.selectedTown = '';
+      state.selectedRegistrationType = '';
       state.selectedPregnancyStatus=false;
       state.selectedVeilStatus=false;
+      
       applyFilters(state);
     },
 
@@ -194,6 +209,15 @@ const applyFilters = (state) => {
     });
   }
 
+  if (state.selectedRegistrationType === 'Enfant') {
+    
+    
+    filteredCandidates = filteredCandidates.filter(candidate => candidate.registrationType === 'enfant'); 
+    
+    
+  } else if (state.selectedRegistrationType === 'Adulte') {
+    filteredCandidates = filteredCandidates.filter(candidate => candidate.registrationType === 'moi');
+  } 
   // Interest Filter
   if (state.selectedInterests.length > 0) {
     const selectedInterestsLower = state.selectedInterests.map((interest) =>
@@ -349,6 +373,7 @@ export const {
   setPage,
   setPageSize,
   toggleFavorite,
+  filterByRegistrationType
 } = candidateSlice.actions;
 
 export default candidateSlice.reducer;

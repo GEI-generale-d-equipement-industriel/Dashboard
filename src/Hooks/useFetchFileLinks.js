@@ -8,92 +8,101 @@ const isValidGoogleDriveUrl = (url) => {
     /^(https:\/\/)?(www\.)?(drive|docs)\.google\.com\/(file\/d\/|drive\/folders\/|open\?id=)[\w-]+/;
   return driveFileRegex.test(url);
 };
- 
+
 // Custom hook to fetch file links with caching
 const useFetchFileLinks = (candidates) => {
-  const [fileLinks, setFileLinks] = useState({});
-  const url = process.env.REACT_APP_API_BASE_URL; // Adjust as needed
-  const cache = useRef({}); // Use ref to cache file links between renders
   
+  const [fileLinks, setFileLinks] = useState({});
+  const url = process.env.REACT_APP_API_BASE_URL || '/api'; // Adjust as needed
+  const cache = useRef({}); // Use ref to cache file links between renders
+  const candidateArray = Array.isArray(candidates) ? candidates : [candidates];
   useEffect(() => {
     const fetchFileLinks = async () => {
-      try {
-        const updatedFileLinks = { ...cache.current }; // Start with cached data
-        
-        
-        await Promise.all(
-          candidates.map(async (candidate) => {
-            // Skip fetching if already cached
-            if (updatedFileLinks[candidate._id]) {
-              return;
-            }
+      const updatedFileLinks = { ...cache.current }; // Start with cached data
 
-            if (candidate.files && candidate.files.length > 0) {
-              let imageFound = false;
+      // Prepare an array to handle all fetch promises
+      const fetchPromises = candidateArray.map(async (candidate) => {
+        if (updatedFileLinks[candidate._id]) {
+          return; // Skip if already cached
+        }
 
-              for (const file of candidate.files) {
-                let fileLink = '';
+        if (candidate.files && candidate.files.length > 0) {
+          let imageFound = false;
+
+          for (const file of candidate.files) {
+            let fileLink = file.filename || file.link || '';
+
+            if (isValidGoogleDriveUrl(fileLink)) {
+              // Fetch from Google Drive
+              try {
+                const response = await axios.get(`${url}/google-drive/files`, {
+                  params: { link: fileLink },
+                });
+
+                const imageFiles = response.data.filter(
+                  (file) => file.contentType && file.contentType.startsWith('image/')
+                );
+
+                if (imageFiles.length > 0) {
+                  updatedFileLinks[candidate._id] = imageFiles[0];
+                  cache.current[candidate._id] = imageFiles[0]; // Cache the result
+                  imageFound = true;
+                  break; // Stop after first image found
+                }
+              } catch (error) {
+                console.error(`Error fetching Google Drive files for candidate ${candidate._id}:`, error);
+              }
+            } else {
+              // Fetch from local server
+              try {
+                const fileMetadata = await axios.get(`${url}/files/download/${file._id}`, {
+                  responseType: 'arraybuffer', // Ensure response is treated as binary data
+              });
                 
-                if (typeof file === 'string') {
-                  fileLink = file;
-                } else if (file.filename) {
-                  fileLink = file.filename;
-                } else if (file.link) {
-                  fileLink = file.link;
-                } else {
-                  continue; // Skip this file if no valid link found
+                
+                if (fileMetadata.data) {
+                  const blob = new Blob([fileMetadata.data], { type: fileMetadata.headers['content-type'] });
+                  const imageUrl = URL.createObjectURL(blob);
+                  updatedFileLinks[candidate._id] = {
+                    link: imageUrl,
+                    filename: fileMetadata.data.filename,
+                    contentType: fileMetadata.headers['content-type'],
+                  };
+                  cache.current[candidate._id] = updatedFileLinks[candidate._id]; // Cache the result
+                  imageFound = true;
+                  break; // Stop after first file found
                 }
-
-                // Check if the file is from Google Drive
-                if (isValidGoogleDriveUrl(fileLink)) {
-                  try {
-                    const response = await axios.get(`${url}/google-drive/files`, {
-                      params: { link: fileLink },
-                    });
-
-                    const imageFiles = response.data.filter(
-                      (file) => file.contentType && file.contentType.startsWith('image/')
-                    );
-
-                    if (imageFiles.length > 0) {
-                      // Cache the first image file
-                      updatedFileLinks[candidate._id] = imageFiles[0];
-                      cache.current[candidate._id] = imageFiles[0]; // Cache the result
-                      imageFound = true;
-                      break; // Stop searching after the first image is found
-                    }
-                  } catch (error) {
-                    console.error(
-                      `Error fetching files for candidate ${candidate._id}:`,
-                      error
-                    );
-                  }
-                }
-              }
-
-              if (!imageFound) {
-                // Handle candidates with no images if needed
+              } catch (error) {
+                console.error(`Error fetching local file metadata for candidate ${candidate._id}:`, error);
+                // You can set a fallback or handle errors gracefully
               }
             }
-          })
-        );
-
-        // Update state only if fileLinks have changed
-        setFileLinks((prevFileLinks) => {
-          if (!isEqual(prevFileLinks, updatedFileLinks)) {
-            return updatedFileLinks;
           }
-          return prevFileLinks;
-        });
-      } catch (error) {
-        console.error('Error fetching file links:', error);
-      }
-    };
 
-    if (candidates.length > 0) {
+          if (!imageFound) {
+            updatedFileLinks[candidate._id] = null; // Handle candidates with no images if needed
+          }
+        }
+      });
+
+      // Wait for all fetch promises to resolve
+      await Promise.all(fetchPromises);
+
+      // Update state only if fileLinks have changed
+      setFileLinks((prevFileLinks) => {
+        if (!isEqual(prevFileLinks, updatedFileLinks)) {
+          return updatedFileLinks;
+        }
+        return prevFileLinks;
+      });
+    };
+    ;
+    
+    if (candidates) {
+      
       fetchFileLinks();
     }
-  }, [candidates, url]);
+  }, [candidates, url,candidateArray]);
 
   return fileLinks;
 };

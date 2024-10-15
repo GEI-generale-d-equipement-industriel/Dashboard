@@ -52,9 +52,9 @@ const AppLayout = ({ children }) => {
         >
           <Link to="/candidates">
             <img
-              src="/assets/BeModel.png"
+              src="/assets/Logo.jpg"
               alt="logo"
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              style={{ width: '200%', height: '100%', objectFit: 'cover' }}
             />
           </Link>
         </div>

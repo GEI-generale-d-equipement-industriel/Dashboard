@@ -51,7 +51,7 @@ const CandidateFileSlider = ({ files, className }) => {
           if (!file) return null;
 
           // Use a dynamic base URL
-          const baseURL = process.env.REACT_APP_API_BASE_URL ;
+          const baseURL = process.env.REACT_APP_API_BASE_URL|| '/api' ;
           const fileUrl = `${baseURL}/google-drive/file-stream?fileId=${file.fileId}`;
 
           if (file.contentType && file.contentType.startsWith('image/')) {

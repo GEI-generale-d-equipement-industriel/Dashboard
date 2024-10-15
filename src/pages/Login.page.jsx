@@ -44,15 +44,15 @@ const LoginModal = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-black">
       <div className="w-full max-w-md bg-black p-8 rounded-lg shadow-lg">
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center ">
           <img
-            src="/assets/BeModel.png"
+            src="/assets/Logo1.jpg"
             alt="BeModel Logo"
-            className="w-40 h-auto"
+            className="w-80 h-auto"
           />
         </div>
 
-        <Title level={3} className="text-center text-white mb-8">
+        <Title level={3} className="text-center text-white " >
           Welcome Back
         </Title>
 
@@ -84,7 +84,7 @@ const LoginModal = () => {
               size="large"
               prefix={<MailOutlined style={{ color: '#FFD700' }} />}
               placeholder="Email"
-              className="rounded-none shadow-none bg-transparent border-b-2 border-gray-600 text-white focus:border-yellow-400 focus:ring-0"
+              className="rounded-none shadow-none bg-transparent border-b-2 border-gray-600 text-black focus:border-yellow-400 focus:ring-0"
             />
           </Form.Item>
           <Form.Item
@@ -95,7 +95,7 @@ const LoginModal = () => {
               size="large"
               prefix={<LockOutlined style={{ color: '#FFD700' }} />}
               placeholder="Password"
-              className="rounded-none shadow-none bg-transparent border-b-2 border-gray-600 text-white focus:border-yellow-400 focus:ring-0"
+              className="rounded-none shadow-none bg-transparent border-b-2 border-gray-600 text-black focus:border-yellow-400 focus:ring-0"
             />
           </Form.Item>
           <Form.Item>
@@ -116,7 +116,7 @@ const LoginModal = () => {
           </Form.Item>
         </Form>
 
-        <div className="flex items-center justify-between mt-4 text-white">
+        {/* <div className="flex items-center justify-between mt-4 text-white">
           <Text>Or</Text>
         </div>
 
@@ -142,7 +142,7 @@ const LoginModal = () => {
           <a href="#" className="text-white underline">
             Forgot your password?
           </a>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import store from '../../store/index'
-const apiUrl = process.env.REACT_APP_API_BASE_URL;
+const apiUrl = process.env.REACT_APP_API_BASE_URL|| '/api';
 console.log("API Base URL:", process.env.REACT_APP_API_BASE_URL);
 
 class AuthInterceptor {  

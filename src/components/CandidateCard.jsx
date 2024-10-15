@@ -40,6 +40,7 @@ const CandidateCard = React.memo(
       genderIcon = null;
     }
 
+    
     return (
       <Card
         hoverable

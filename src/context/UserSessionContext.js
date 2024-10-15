@@ -13,7 +13,7 @@ export const UserSessionProvider = ({ children }) => {
   const location = useLocation();
   const dispatch = useDispatch();
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated) {  
       setIsLoggedIn(true);
       dispatch(fetchFavorites(userId));
       if (location.pathname === '/login') {
@@ -25,7 +25,7 @@ export const UserSessionProvider = ({ children }) => {
         navigate('/login');
       }
     }
-  }, [isAuthenticated, location.pathname, navigate,userId, dispatch]);
+  }, [isAuthenticated]);
 
   return (
     <UserSessionContext.Provider value={{ isLoggedIn, setIsLoggedIn }}>
