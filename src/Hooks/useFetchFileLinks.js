@@ -1,110 +1,119 @@
-import { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import isEqual from 'lodash/isEqual';
+// import { useState, useEffect, useRef, useCallback } from 'react';
+// import axios from 'axios';
+// import isEqual from 'lodash/isEqual';
+// import debounce from 'lodash/debounce';
 
-// Function to validate Google Drive URLs
-const isValidGoogleDriveUrl = (url) => {
-  const driveFileRegex =
-    /^(https:\/\/)?(www\.)?(drive|docs)\.google\.com\/(file\/d\/|drive\/folders\/|open\?id=)[\w-]+/;
-  return driveFileRegex.test(url);
-};
+// // Custom hook to fetch file links with caching and debouncing
+// const useFetchFileLinks = (candidates) => {
+//   const [fileLinks, setFileLinks] = useState({});
+//   const url = process.env.REACT_APP_API_BASE_URL || '/api'; // Adjust as needed
+//   const cache = useRef({}); // Cache file links between renders
 
-// Custom hook to fetch file links with caching
-const useFetchFileLinks = (candidates) => {
-  
-  const [fileLinks, setFileLinks] = useState({});
-  const url = process.env.REACT_APP_API_BASE_URL || '/api'; // Adjust as needed
-  const cache = useRef({}); // Use ref to cache file links between renders
-  const candidateArray = Array.isArray(candidates) ? candidates : [candidates];
-  useEffect(() => {
-    const fetchFileLinks = async () => {
-      const updatedFileLinks = { ...cache.current }; // Start with cached data
+//   const candidateArray = Array.isArray(candidates) ? candidates : [candidates];
 
-      // Prepare an array to handle all fetch promises
-      const fetchPromises = candidateArray.map(async (candidate) => {
-        if (updatedFileLinks[candidate._id]) {
-          return; // Skip if already cached
-        }
+//   const fetchFile = async (file, fallback = false) => {
+//     try {
+//       // Attempt to fetch file metadata using fileId or _id as a fallback
+//       const fileIdOrFallback = fallback ? file._id : file.fileId;  
+//       const fileMetadata = await axios.get(`${url}/files/download/${fileIdOrFallback}`, {
+//         responseType: 'arraybuffer',
+//       });
 
+//       if (fileMetadata.data) {
+//         const blob = new Blob([fileMetadata.data], { type: fileMetadata.headers['content-type'] });
+//         const imageUrl = URL.createObjectURL(blob);
+
+//         return {
+//           link: imageUrl,
+//           filename: fileMetadata.headers['content-disposition'],
+//           contentType: fileMetadata.headers['content-type'],
+//         };
+//       }
+//     } catch (error) {
+//       console.error(
+//         `Error fetching file metadata for file ${fallback ? '_id' : 'fileId'} :`,
+//         error
+//       );
+//       if (!fallback) {
+//         // Try fetching using file._id as a fallback
+//         return await fetchFile(file, true);
+//       }
+//       return null;
+//     }
+//   };
+
+//   const debouncedFetchFileLinks = useCallback(
+//     debounce(async (candidateArray) => {
+//       const updatedFileLinks = { ...cache.current }; // Start with cached data
+
+//       const fetchPromises = candidateArray.map(async (candidate) => {
+//         if (updatedFileLinks[candidate._id]) {
+//           return; // Skip if already cached
+//         }
+
+//         if (candidate.files && candidate.files.length > 0) {
+//           let candidateFileLinks = []; // Array to store multiple file links
+
+//           for (const file of candidate.files) {
+//             const fileLink = await fetchFile(file); // Fetch file with fallback logic
+//             if (fileLink) {
+//               candidateFileLinks.push(fileLink);
+//             }
+//           }
+
+//           updatedFileLinks[candidate._id] = candidateFileLinks.length > 0 ? candidateFileLinks : null; // Store as an array
+//           cache.current[candidate._id] = updatedFileLinks[candidate._id]; // Cache the result
+//         }
+//       });
+
+//       // Wait for all fetch promises to resolve
+//       await Promise.all(fetchPromises);
+
+//       // Update state only if fileLinks have changed
+//       setFileLinks((prevFileLinks) => {
+//         if (!isEqual(prevFileLinks, updatedFileLinks)) {
+//           return updatedFileLinks;
+//         }
+//         return prevFileLinks;
+//       });
+//     }, 500),
+//     [url],
+//   );
+
+//   useEffect(() => {
+//     if (candidateArray && candidateArray.length > 0) {
+//       debouncedFetchFileLinks(candidateArray);
+//     }
+//   }, [candidateArray, debouncedFetchFileLinks]);
+
+//   useEffect(() => {
+//     return () => {
+//       debouncedFetchFileLinks.cancel();
+//     };
+//   }, [debouncedFetchFileLinks]);
+
+//   return fileLinks;
+// };
+
+// export default useFetchFileLinks;
+import { useMemo } from 'react';
+
+// Simplified hook to extract file links directly from candidates
+const useFileLinks = (candidates) => {
+  return useMemo(() => {
+    const fileLinks = {};
+
+    if (candidates && candidates.length > 0) {
+      candidates.forEach((candidate) => {
         if (candidate.files && candidate.files.length > 0) {
-          let imageFound = false;
-
-          for (const file of candidate.files) {
-            let fileLink = file.filename || file.link || '';
-
-            if (isValidGoogleDriveUrl(fileLink)) {
-              // Fetch from Google Drive
-              try {
-                const response = await axios.get(`${url}/google-drive/files`, {
-                  params: { link: fileLink },
-                });
-
-                const imageFiles = response.data.filter(
-                  (file) => file.contentType && file.contentType.startsWith('image/')
-                );
-
-                if (imageFiles.length > 0) {
-                  updatedFileLinks[candidate._id] = imageFiles[0];
-                  cache.current[candidate._id] = imageFiles[0]; // Cache the result
-                  imageFound = true;
-                  break; // Stop after first image found
-                }
-              } catch (error) {
-                console.error(`Error fetching Google Drive files for candidate ${candidate._id}:`, error);
-              }
-            } else {
-              // Fetch from local server
-              try {
-                const fileMetadata = await axios.get(`${url}/files/download/${file._id}`, {
-                  responseType: 'arraybuffer', // Ensure response is treated as binary data
-              });
-                
-                
-                if (fileMetadata.data) {
-                  const blob = new Blob([fileMetadata.data], { type: fileMetadata.headers['content-type'] });
-                  const imageUrl = URL.createObjectURL(blob);
-                  updatedFileLinks[candidate._id] = {
-                    link: imageUrl,
-                    filename: fileMetadata.data.filename,
-                    contentType: fileMetadata.headers['content-type'],
-                  };
-                  cache.current[candidate._id] = updatedFileLinks[candidate._id]; // Cache the result
-                  imageFound = true;
-                  break; // Stop after first file found
-                }
-              } catch (error) {
-                console.error(`Error fetching local file metadata for candidate ${candidate._id}:`, error);
-                // You can set a fallback or handle errors gracefully
-              }
-            }
-          }
-
-          if (!imageFound) {
-            updatedFileLinks[candidate._id] = null; // Handle candidates with no images if needed
-          }
+          // Store the first file's CDN URL as the link for each candidate
+          fileLinks[candidate._id] = candidate.files[0]?.filename || null;
         }
       });
-
-      // Wait for all fetch promises to resolve
-      await Promise.all(fetchPromises);
-
-      // Update state only if fileLinks have changed
-      setFileLinks((prevFileLinks) => {
-        if (!isEqual(prevFileLinks, updatedFileLinks)) {
-          return updatedFileLinks;
-        }
-        return prevFileLinks;
-      });
-    };
-    ;
-    
-    if (candidates) {
-      
-      fetchFileLinks();
     }
-  }, [candidates, url,candidateArray]);
 
-  return fileLinks;
+    return fileLinks;
+  }, [candidates]);
 };
 
-export default useFetchFileLinks;
+export default useFileLinks;

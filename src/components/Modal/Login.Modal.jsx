@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { Form, Input, Button, Typography, Alert } from 'antd';
 import { MailOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
-import AuthInterceptor from '../services/auth/AuthInterceptor';
-import { setAuthData } from '../store/authSlice';
+import AuthInterceptor from '../../services/auth/AuthInterceptor';
+import { setAuthData } from '../../store/authSlice';
 import { useDispatch } from 'react-redux';
 
-const { Title } = Typography;
+//const { Title } = Typography;
 
 const LoginModal = ({ onClose }) => {
   const [loading, setLoading] = useState(false);
@@ -43,17 +43,28 @@ const LoginModal = ({ onClose }) => {
   };
 
   return (
-    <div>
-      <div className="flex justify-center">
+    <div className="p-8 rounded-lg shadow-2xl w-[90%]  md:max-w-lg lg:max-w-lg mx-auto relative bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 ">
+      {/* Close Button */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition duration-200"
+        aria-label="Close"
+      >
+        ✕
+      </button>
+      {/* Logo Section */}
+      <div className="flex justify-center mb-8">
         <img
-          src="/assets/Logo1.jpg"
+          src="/assets/BeModel1.png"
           alt="BeModel Logo"
-          className="w-40 h-auto mb-4"
+          className="w-36 "
         />
       </div>
-      <Title level={3} className="text-center">
+      {/* Title */}
+      <h2 className="text-3xl font-bold text-center text-white mb-6">
         Welcome Back
-      </Title>
+      </h2>
+      {/* Error Message */}
       {errorMessage && (
         <Alert
           message={errorMessage}
@@ -62,11 +73,12 @@ const LoginModal = ({ onClose }) => {
           className="mb-4"
         />
       )}
+      {/* Form */}
       <Form
         name="login"
         onFinish={onFinish}
         layout="vertical"
-        className="space-y-4"
+        className="space-y-6"
       >
         <Form.Item
           name="username"
@@ -74,8 +86,9 @@ const LoginModal = ({ onClose }) => {
         >
           <Input
             size="large"
-            prefix={<MailOutlined style={{ color: '#FFD700' }} />}
+            prefix={<MailOutlined className="text-yellow-500" />}
             placeholder="Email"
+            className="rounded-lg bg-gray-100 text-gray-800 border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500"
           />
         </Form.Item>
         <Form.Item
@@ -84,17 +97,18 @@ const LoginModal = ({ onClose }) => {
         >
           <Input.Password
             size="large"
-            prefix={<LockOutlined style={{ color: '#FFD700' }} />}
+            prefix={<LockOutlined className="text-yellow-500" />}
             placeholder="Password"
+            className="rounded-lg bg-gray-100 text-gray-800 border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500"
           />
         </Form.Item>
         <Form.Item>
           <Button
-            type="primary"
+            type="button"
             htmlType="submit"
             loading={loading}
             block
-            className="bg-yellow-500 text-black hover:bg-yellow-600"
+            className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-lg py-2 px-4 font-medium shadow-md"
           >
             LOGIN
           </Button>

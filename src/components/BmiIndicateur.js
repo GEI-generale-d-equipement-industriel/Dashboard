@@ -36,10 +36,10 @@ export default function BmiIndicateur({ bmi,display }) {
   };
 
   return (
-    <div style={{ textAlign: 'center' }}>
+    <div className="text-center">
       <Tooltip title={`IMC: ${bmi.toFixed(1)}`}>
-        <Tag color={color} style={{ fontSize: '14px', padding: '5px 5px' }}>
-          {icon} {category}
+        <Tag color={color} className="inline-flex items-center justify-center text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-1">
+        {icon} <span className="ml-1">{category}</span>
         </Tag>
       </Tooltip>
       {display &&<Progress
@@ -47,7 +47,7 @@ export default function BmiIndicateur({ bmi,display }) {
         status={getProgressStatus()}
         showInfo={false}
         strokeColor={color}
-        style={{ marginTop: '10px' }}
+        className="mt-2 mx-auto w-3/4 sm:w-full"
       />}
     </div>
   );

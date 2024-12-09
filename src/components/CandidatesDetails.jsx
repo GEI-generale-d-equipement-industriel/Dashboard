@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { toggleFavorite } from "../services/api/favoritesService";
+import { useSelector } from "react-redux";
+
 import {
   Button,
   Card,
@@ -13,14 +13,13 @@ import {
   notification,
   Layout,
   Tabs,
-  Carousel,
-  Modal,
   Descriptions,
   List,
   Form,
   Input,
   Select,
   Checkbox,
+  Skeleton,
 } from "antd";
 import {
   UserOutlined,
@@ -33,25 +32,26 @@ import {
   HeartOutlined,
   HeartFilled,
   DashboardOutlined,
-  FileOutlined,
-  FilePdfOutlined,
-  FileWordOutlined,
-  FileExcelOutlined,
-  FileZipOutlined,
-  FileUnknownOutlined,
   FacebookOutlined,
   TwitterOutlined,
   InstagramOutlined,
   LinkedinOutlined,
   TikTokOutlined,
+  ArrowLeftOutlined,
 } from "@ant-design/icons";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import BmiIndicateur from "./BmiIndicateur";
-import useFetchFileLinks from "../Hooks/useFetchFileLinks";
+import {
+  useUpdateFavorites,
+  useFetchFavorites,
+} from "../services/api/favoritesService";
+import isEqual from "lodash/isEqual";
+import ImageGallery from "./ImageGallery/ImagesGallery";
 const { Content } = Layout;
 const { TabPane } = Tabs;
 const { Title } = Typography;
-const url = process.env.REACT_APP_API_BASE_URL|| '/api';
+const url = process.env.REACT_APP_API_BASE_URL || "/api";
 
 const interests = [
   "Modèle pour shooting en studio",
@@ -80,172 +80,130 @@ const signs = ["Appareil dentaire", "Lunettes", "Tatouage"];
 
 const CandidateDetails = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const favorites = useSelector((state) => state.favorites.favorites);
   const userId = useSelector((state) => state.auth.id);
-  const dispatch = useDispatch();
-  const [candidate, setCandidate] = useState(null);
-  const [fileLinks, setFileLinks] = useState([]);
+  const navigate = useNavigate();
   const [notificationApi, contextHolder] = notification.useNotification();
+  const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [form] = Form.useForm();
-  const [visible, setVisible] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
 
-  const showModal = (index) => {
-    setCurrentSlide(index);
-    setVisible(true);
-  };
+  const [isFavorite, setIsFavorite] = useState(false);
 
-  const handleCancel = () => {
-    setVisible(false);
-  };
+  const {
+    data: candidate,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["candidate", id],
+    queryFn: async () => {
+      const res = await axios.get(`${url}/candidates/${id}`);
 
-  const isValidGoogleDriveUrl = (url) => {
-    const driveFileRegex =
-      /^(https:\/\/)?(www\.)?(drive|docs)\.google\.com\/(?:file\/d\/|drive\/folders\/|open\?id=)[\w-]+/;
-    return driveFileRegex.test(url);
-  };
+      return res.data;
+    },
+    enabled: !!id,
+  });
 
-  const getFileLink = (file) => {
-    if (typeof file === "string") {
-      return file;
-    } else if (file.filename) {
-      return file.filename;
-    } else if (file.link) {
-      return file.link;
-    } else {
-      return null;
-    }
-  };
+  // const fileLinks = useFetchFileLinks(candidate ? [candidate] : []);
 
-  
-  useEffect(() => {
-    const fetchCandidate = async () => {
-      try {
-        const res = await axios.get(`${url}/candidates/${id}`);
-        setCandidate(res.data);
-        form.setFieldsValue(res.data);
-
-        // Initialize an empty array for file links
-        const candidateFileLinks = [];
-
-        // Check if candidate has files
-        if (res.data.files && res.data.files.length > 0) {
-          for (const file of res.data.files) {
-            const fileLink = file.filename || file.link || '';
-
-            if (isValidGoogleDriveUrl(fileLink)) {
-              // Fetch file from Google Drive
-              try {
-                const response = await axios.get(`${url}/google-drive/files`, {
-                  params: { link: fileLink },
-                });
-
-                // Add the fetched files to the candidateFileLinks array
-                candidateFileLinks.push(...response.data);
-              } catch (error) {
-                console.error(`Error fetching Google Drive files for candidate ${res.data._id}:`, error);
-              }
-            } else {
-              // Fetch file from local server
-              try {
-                const fileMetadata = await axios.get(`${url}/files/download/${file._id}`, {
-                  responseType: 'arraybuffer',
-                });
-
-                if (fileMetadata.data) {
-                  const blob = new Blob([fileMetadata.data], { type: fileMetadata.headers['content-type'] });
-                  const imageUrl = URL.createObjectURL(blob);
-
-                  candidateFileLinks.push({
-                    link: imageUrl,
-                    filename: fileMetadata.data.filename,
-                    contentType: fileMetadata.headers['content-type'],
-                  });
-                }
-              } catch (error) {
-                console.error(`Error fetching local file metadata for candidate ${res.data._id}:`, error);
-              }
-            }
-          }
-        }
-
-        // Now you can use candidateFileLinks to display the file links
-        setFileLinks(candidateFileLinks);
-
-      } catch (error) {
-        console.error(`Error fetching candidate ${id}:`, error);
-      }
-    };
-
-    fetchCandidate();
-  }, [id, form, url]);
-
-
-  const candidateFileLinks = fileLinks; // Update this to directly use the state
-
+  const { data: favorites = [] } = useFetchFavorites(userId);
+  const { mutate: updateFavorite } = useUpdateFavorites();
 
   // Extracting image files based on content type
-  const imageFiles = candidateFileLinks.filter(
-    (file) => file.contentType && file.contentType.startsWith("image/")
-  );
+  const imageFiles =
+    candidate?.files?.filter(
+      (file) => file.contentType && file.contentType.startsWith("image/")
+    ) || [];
 
+  useEffect(() => {
+    const favorites = queryClient.getQueryData(["favorites", userId]) || [];
+    const favoriteStatus = favorites.some((fav) => fav._id === candidate?._id);
+    setIsFavorite(favoriteStatus); // Set the initial favorite status based on cached favorites
+  }, [candidate, userId, queryClient]);
 
-    
-  const handleLikeToggle = async (candidateId) => {
-    try {
-      await dispatch(toggleFavorite(userId, candidateId));
-      const isFavorite = favorites.some((c) => c._id === candidateId);
-
-      notificationApi.info({
-        message: isFavorite ? "Removed from Favorites" : "Added to Favorites",
-        description: isFavorite
-          ? "This candidate has been removed from your favorites list."
-          : "This candidate has been added to your favorites list.",
-        placement: "topRight",
-        duration: 2,
-      });
-    } catch (error) {
-      console.error("Failed to toggle favorite:", error);
-      notificationApi.error({
-        message: "Action Failed",
-        description:
-          "There was an error while updating favorites. Please try again.",
-        placement: "topRight",
-        duration: 2,
-      });
+  useEffect(() => {
+    if (candidate && favorites) {
+      setIsFavorite(favorites.some((fav) => fav._id === candidate._id));
     }
+  }, [candidate, favorites]);
+
+  const handleLikeToggle = () => {
+    // Get the userId from state or context
+    // const userId = useSelector((state) => state.auth.id);
+
+    if (!userId) {
+      console.error("User ID is not available");
+      return;
+    }
+
+    // Log userId and candidate id for debugging
+
+    const favorites = queryClient.getQueryData(["favorites", userId]) || [];
+
+    // Ensure it's an array
+    if (!Array.isArray(favorites)) {
+      console.error("Favorites data is not an array");
+      return;
+    }
+
+    // const isFavorite = favorites.some(fav => fav._id === candidate._id);
+    const isCurrentlyFavorite = favorites.some(
+      (fav) => fav._id === candidate._id
+    );
+    const updatedFavorites = isCurrentlyFavorite
+      ? favorites.filter((fav) => fav._id !== candidate._id) // Remove from favorites
+      : [...favorites, candidate]; // Add to favorites
+
+    setIsFavorite(!isCurrentlyFavorite);
+
+    updateFavorite(
+      { userId, favorites: updatedFavorites },
+      {
+        onSuccess: () => {
+          notification.success({
+            message: isCurrentlyFavorite
+              ? "Removed from Favorites"
+              : "Added to Favorites",
+            placement: "topRight",
+            duration: 2,
+          });
+          queryClient.invalidateQueries(["favorites", userId]); // Refetch favorites after updating
+        },
+        onError: () => {
+          setIsFavorite(isCurrentlyFavorite);
+          notification.error({
+            message: "Error",
+            description: "Failed to update favorites.",
+          });
+        },
+      }
+    );
   };
 
   const handleSave = async (values) => {
-    
-    const completeValues = {
-      ...values,
-      veiled: form.getFieldValue('veiled') || false,
-      pregnant: form.getFieldValue('pregnant') || false,
-    };
-    
-    
+    const currentValues = form.getFieldsValue();
+    const initialValues = form.getFieldsValue(true);
+
+    // Check if form values have changed
+    if (isEqual(currentValues, initialValues)) {
+      notification.warning({
+        message: "No Changes",
+        description: "No changes detected to save.",
+      });
+      return;
+    }
+
     try {
-      const updatedCandidate = await axios.put(`${url}/candidates/${id}`, completeValues);
-      
+      const updatedCandidate = await axios.put(
+        `${url}/candidates/${id}`,
+        values
+      );
       notification.success({
         message: "Success",
         description: "Candidate details updated successfully.",
       });
       setIsEditing(false);
-      setCandidate((prevCandidate) => ({
-        ...prevCandidate,
-        ...updatedCandidate.data, // Assuming the response contains the updated candidate
-      }));
-    const isFavorite = favorites.some(fav => fav._id === id);
-        if (isFavorite) {
-            dispatch(toggleFavorite(userId, id)); // This should ensure it's added back if it was removed due to reference change
-        }
-      form.setFieldsValue(completeValues);
+      queryClient.invalidateQueries(["candidate", id]);
     } catch (error) {
-      console.error("Failed to update candidate:", error);
       notification.error({
         message: "Error",
         description: "Failed to update candidate details.",
@@ -258,133 +216,95 @@ const CandidateDetails = () => {
     setIsEditing((prev) => !prev);
   };
 
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    form.resetFields();
-  };
-
-  if (!candidate) {
-    return <div className="text-center mt-8 text-xl">Loading...</div>;
+  // if (!candidate) {
+  //   return <div className="text-center mt-8 text-xl">Loading...</div>;
+  // }
+  if (isLoading) {
+    return (
+      <div className="text-center mt-8">
+        <Skeleton active />
+      </div>
+    );
   }
 
+  if (error || !candidate) {
+    return (
+      <div className="text-center mt-8 text-red-500">
+        <p>Error loading candidate details. Please try again later.</p>
+      </div>
+    );
+  }
+  // const isFavorite = queryClient.getQueryData("favorites")?.some(
+  //   (fav) => fav._id === candidate._id
+  // );
   // Ensure weight and height are numbers
   const weight = parseFloat(candidate.weight);
   const height = parseFloat(candidate.height);
   const bmi = weight / height ** 2;
 
-  const isFavorite =
-    Array.isArray(favorites) &&
-    favorites.some((c) => c._id === candidate._id);
+  // const isFavorite =
+  //   Array.isArray(favorites) &&
+  //   favorites.some((c) => c._id === candidate._id);
 
   const socialMediaLinks =
     candidate?.socialMedia?.map((link) => JSON.parse(link)) || [];
 
-  
-
-  const getFileIcon = (file) => {
-    const contentType = file.contentType;
-    if (!contentType) {
-      return <FileUnknownOutlined />;
-    }
-    if (contentType === "application/pdf") {
-      return <FilePdfOutlined style={{ color: "red" }} />;
-    } else if (
-      contentType ===
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-      contentType === "application/msword"
-    ) {
-      return <FileWordOutlined style={{ color: "blue" }} />;
-    } else if (
-      contentType ===
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-      contentType === "application/vnd.ms-excel"
-    ) {
-      return <FileExcelOutlined style={{ color: "green" }} />;
-    } else if (contentType === "application/zip") {
-      return <FileZipOutlined />;
-    } else {
-      return <FileOutlined />;
-    }
-  };
-
   return (
-    <Layout className="min-h-screen">
+    <Layout className="min-h-screen bg-gray-50">
       {contextHolder}
-      <Content className="container mx-auto px-4 py-6">
+      <Content className="max-w-6xl mx-auto p-4 sm:p-6">
         <Button
-          type="link"
+          type="text"
           onClick={() => navigate(-1)}
-          className="text-2xl underline mb-4"
+          className="flex items-center space-x-2 mb-4 text-lg text-blue-600 hover:text-blue-800 transition"
         >
-          Back to Candidates
+          <ArrowLeftOutlined />
+          <span>Back to Candidates</span>
         </Button>
-        <div
+        {/* <div
           className="shadow-lg rounded-lg p-6"
           style={{ backgroundColor: "#E5E5E5" }}
-        >
-          <Title level={2} className="text-center mb-6">
+        > */}
+        <Card className="shadow-lg rounded-lg bg-white p-6">
+          <Title level={3} className="text-center text-gray-800 mb-4">
             {candidate.firstName} {candidate.name}
           </Title>
           <Divider />
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-           
-              {imageFiles.length > 0 ? (
-                <>
-                  <Carousel
-                    arrows
-                    afterChange={(current) => setCurrentSlide(current)}
-                  >
-                    {imageFiles.map((file, index) => (
-                      <div
-                        key={index}
-                        onClick={() => showModal(index)}
-                        style={{ cursor: "pointer" }}
-                      >
-                        
-                        <img
-                          src={file.fileStreamUrl||file.link}
-                          alt={`Slide ${index}`}
-                          className="w-full h-96 object-contain"
-                        />
-                      </div>
-                    ))}
-                  </Carousel>
-                  <Modal
-                    visible={visible}
-                    footer={null}
-                    onCancel={handleCancel}
-                    width="40%"
-                    centered
-                  >
-                    {imageFiles[currentSlide] && (
-                      <img
-                        src={imageFiles[currentSlide].fileStreamUrl||imageFiles[currentSlide].link}
-                        alt={`Slide ${currentSlide}`}
-                        className="w-full"
-                      />
-                    )}
-                  </Modal>
-                </>
-              ) : (
-                <div className="w-full h-80 bg-gray-200 flex items-center justify-center">
-                  <p>No media available</p>
-                </div>
-              )}
+          <Row gutter={[16, 16]} className="flex-wrap">
+            <Col xs={24} sm={24} md={12} lg={12} className="flex justify-center">
+              
+                <ImageGallery
+                  images={imageFiles} // Array of image objects
+                  containerStyle={{ maxWidth: "600px", margin: "0 auto" ,padding: "16px",}}
+                  thumbnailSize={60} // Thumbnail size in pixels
+                  mainImageHeight={400} // Fixed height for the main image
+                  // Optional callback
+                />
+              
             </Col>
-            <Col xs={24} sm={12}>
-              <Card className="bg-zinc-100">
+
+            <Col xs={24} sm={24} md={12} lg={12}>
+              <Card className="bg-gray-100 shadow-md p-6 rounded-lg">
                 <Form
                   form={form}
                   layout="vertical"
                   onFinish={handleSave}
                   initialValues={candidate}
                 >
-                  <Tabs defaultActiveKey="1">
+                  <Tabs defaultActiveKey="1" className="custom-tabs"
+                tabBarStyle={{
+                  borderBottom: "2px solid #E5E7EB",
+                  marginBottom: "1rem",
+                }}>
                     <TabPane tab="Details & Interests" key="1">
-                      <Row gutter={16}>
-                        <Col xs={24} sm={12}>
-                          <Descriptions bordered column={1} size="small">
+                      <Row gutter={[16, 16]}>
+                        <Col span={24}>
+                          <Descriptions
+                            bordered
+                            column={{ xs: 1, sm: 1, md: 2 }}
+                            size="small"
+                            className="mb-4 bg-white rounded-lg shadow-md"
+                          >
                             <Descriptions.Item label="Gender">
                               {isEditing ? (
                                 <Form.Item name="gender" noStyle>
@@ -401,55 +321,59 @@ const CandidateDetails = () => {
                                   </Select>
                                 </Form.Item>
                               ) : (
-                                <>
+                                <div className="flex items-center">
                                   {candidate.gender.toLowerCase() ===
                                   "femme" ? (
-                                    <WomanOutlined
-                                      style={{ color: "#eb2f96" }}
-                                    />
+                                    <WomanOutlined className="text-pink-500 mr-2 text-lg" />
                                   ) : (
-                                    <ManOutlined style={{ color: "#1890ff" }} />
+                                    <ManOutlined className="text-blue-500 mr-2 text-lg" />
                                   )}
-                                  {candidate.gender}
-                                </>
+                                  <span className="text-gray-700">
+                                    {candidate.gender}
+                                  </span>
+                                </div>
                               )}
                             </Descriptions.Item>
                             <Descriptions.Item label="Birth Year">
                               {isEditing ? (
                                 <Form.Item name="birthYear" noStyle>
-                                  <Input />
+                                  <Input className="w-full" />
                                 </Form.Item>
                               ) : (
-                                <>
-                                  <CalendarOutlined
-                                    style={{ color: "#faad14" }}
-                                  />
-                                  {candidate.birthYear}
-                                </>
+                                <div className="flex items-center">
+                                  <CalendarOutlined className="text-yellow-500 mr-2 text-lg" />
+                                  <span className="text-gray-700">
+                                    {candidate.birthYear}
+                                  </span>
+                                </div>
                               )}
                             </Descriptions.Item>
                             <Descriptions.Item label="Height">
                               {isEditing ? (
                                 <Form.Item name="height" noStyle>
-                                  <Input />
+                                  <Input className="w-full" />
                                 </Form.Item>
                               ) : (
-                                <>
-                                  <UserOutlined style={{ color: "#52c41a" }} />
-                                  {candidate.height} m
-                                </>
+                                <div className="flex items-center">
+                                  <UserOutlined className="text-green-500 mr-2 text-lg" />
+                                  <span className="text-gray-700">
+                                    {candidate.height} m
+                                  </span>
+                                </div>
                               )}
                             </Descriptions.Item>
                             <Descriptions.Item label="Weight">
                               {isEditing ? (
                                 <Form.Item name="weight" noStyle>
-                                  <Input />
+                                  <Input className="w-full" />
                                 </Form.Item>
                               ) : (
-                                <>
-                                  <UserOutlined style={{ color: "#722ed1" }} />
-                                  {candidate.weight} kg
-                                </>
+                                <div className="flex items-center">
+                                  <UserOutlined className="text-purple-500 mr-2 text-lg" />
+                                  <span className="text-gray-700">
+                                    {candidate.weight} kg
+                                  </span>
+                                </div>
                               )}
                             </Descriptions.Item>
                             <Descriptions.Item label="Eye Color">
@@ -469,10 +393,12 @@ const CandidateDetails = () => {
                                   </Select>
                                 </Form.Item>
                               ) : (
-                                <>
-                                  <EyeOutlined style={{ color: "#13c2c2" }} />
-                                  {candidate.eyeColor}
-                                </>
+                                <div className="flex items-center">
+                                  <EyeOutlined className="text-teal-500 mr-2 text-lg" />
+                                  <span className="text-gray-700">
+                                    {candidate.eyeColor}
+                                  </span>
+                                </div>
                               )}
                             </Descriptions.Item>
                             <Descriptions.Item label="Hair Color">
@@ -492,12 +418,12 @@ const CandidateDetails = () => {
                                   </Select>
                                 </Form.Item>
                               ) : (
-                                <>
-                                  <ScissorOutlined
-                                    style={{ color: "#eb2f96" }}
-                                  />
-                                  {candidate.hairColor}
-                                </>
+                                <div className="flex items-center">
+                                  <ScissorOutlined className="text-pink-500 mr-2 text-lg" />
+                                  <span className="text-gray-700">
+                                    {candidate.hairColor}
+                                  </span>
+                                </div>
                               )}
                             </Descriptions.Item>
                             <Descriptions.Item label="Hair Type">
@@ -517,7 +443,9 @@ const CandidateDetails = () => {
                                   </Select>
                                 </Form.Item>
                               ) : (
-                                <>{candidate.hairType}</>
+                                <span className="text-gray-700">
+                                  {candidate.hairType}
+                                </span>
                               )}
                             </Descriptions.Item>
                             <Descriptions.Item label="Skin Color">
@@ -537,7 +465,9 @@ const CandidateDetails = () => {
                                   </Select>
                                 </Form.Item>
                               ) : (
-                                <>{candidate.skinColor}</>
+                                <span className="text-gray-700">
+                                  {candidate.skinColor}
+                                </span>
                               )}
                             </Descriptions.Item>
                             <Descriptions.Item label="Signs">
@@ -564,7 +494,7 @@ const CandidateDetails = () => {
                                         <Tag
                                           color="blue"
                                           key={index}
-                                          style={{ cursor: "pointer" }}
+                                          className="text-sm cursor-pointer"
                                         >
                                           {sign.trim()}
                                         </Tag>
@@ -573,172 +503,199 @@ const CandidateDetails = () => {
                               )}
                             </Descriptions.Item>
                           </Descriptions>
-                        </Col>
-                        <Col xs={24} sm={12}>
-                          <Descriptions bordered column={1} size="small" className="mb-4">
-                            <Descriptions.Item label="Phone">
-                              {isEditing ? (
-                                <Form.Item name="phone" noStyle>
-                                  <Input />
-                                </Form.Item>
-                              ) : (
-                                <>
-                                  <PhoneOutlined style={{ color: "#1890ff" }} />
-                                  {candidate.phone}
-                                </>
-                              )}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="BMI">
-                            {isEditing ? (
-                                <BmiIndicateur
-                                  bmi={bmi}
-                                  display={true}
-                                  className="p-2 bg-blue-50 rounded-lg"
-                                />
-                              ) : (
-                                <>
-                                  <DashboardOutlined
-                                    style={{ color: "#faad14" }}
-                                  />
+
+                          <Col xs={24} sm={12}>
+                            <Descriptions
+                              bordered
+                              column={1}
+                              size="small"
+                              className="mb-4 bg-white rounded-lg shadow-md p-4"
+                            >
+                              <Descriptions.Item label="Phone">
+                                {isEditing ? (
+                                  <Form.Item name="phone" noStyle>
+                                    <Input
+                                      className="w-full"
+                                      placeholder="Enter phone number"
+                                    />
+                                  </Form.Item>
+                                ) : (
+                                  <div className="flex items-center">
+                                    <PhoneOutlined className="text-blue-500 mr-2 text-lg" />
+                                    <span className="text-gray-700">
+                                      {candidate.phone}
+                                    </span>
+                                  </div>
+                                )}
+                              </Descriptions.Item>
+                              <Descriptions.Item label="BMI">
+                                {isEditing ? (
                                   <BmiIndicateur
                                     bmi={bmi}
                                     display={true}
                                     className="p-2 bg-blue-50 rounded-lg"
                                   />
-                                </>
-                              )}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Interests">
-                              {isEditing ? (
-                                <Form.Item name="interest" noStyle>
-                                  <Select mode="multiple">
-                                    {interests.map((interest) => (
-                                      <Select.Option
-                                        key={interest}
-                                        value={interest}
-                                      >
-                                        {interest}
-                                      </Select.Option>
-                                    ))}
-                                  </Select>
-                                </Form.Item>
-                              ) : (
-                                <div className="mt-2">
-                                  {candidate.interest &&
-                                    candidate.interest
-                                      .flatMap((interest) =>
-                                        interest.split(",")
-                                      )
-                                      .map((interest, index) => (
-                                        <Tag
-                                          color="blue"
-                                          key={index}
-                                          style={{ cursor: "pointer" }}
-                                        >
-                                          {interest.trim()}
-                                        </Tag>
-                                      ))}
-                                </div>
-                              )}
-                            </Descriptions.Item>
-                            {form.getFieldValue("gender") === "Homme" && (
-                              <Descriptions.Item label="Facial Hair">
+                                ) : (
+                                  <div className="flex items-center">
+                                    <DashboardOutlined className="text-yellow-500 mr-2 text-lg" />
+                                    <BmiIndicateur
+                                      bmi={bmi}
+                                      display={true}
+                                      className="p-2 bg-blue-50 rounded-lg"
+                                    />
+                                  </div>
+                                )}
+                              </Descriptions.Item>
+                              <Descriptions.Item label="Interests">
                                 {isEditing ? (
-                                  <Form.Item name="facialHair" noStyle>
+                                  <Form.Item name="interest" noStyle>
                                     <Select
-                                      placeholder="Select Facial Hair"
-                                      allowClear
-                                      popupMatchSelectWidth={false}
-                                      maxTagCount="responsive"
+                                      mode="multiple"
+                                      className="w-full"
+                                      placeholder="Select interests"
                                     >
-                                      {facialHairOptions.map((option) => (
+                                      {interests.map((interest) => (
                                         <Select.Option
-                                          key={option}
-                                          value={option}
+                                          key={interest}
+                                          value={interest}
                                         >
-                                          {option}
+                                          {interest}
                                         </Select.Option>
                                       ))}
                                     </Select>
                                   </Form.Item>
                                 ) : (
-                                  <div className="mt-2">
-                                    {candidate.facialHair}
+                                  <div className="flex flex-wrap gap-2 mt-2">
+                                    {candidate.interest &&
+                                      candidate.interest
+                                        .flatMap((interest) =>
+                                          interest.split(",")
+                                        )
+                                        .map((interest, index) => (
+                                          <Tag
+                                            key={index}
+                                            color="blue"
+                                            className="text-sm"
+                                          >
+                                            {interest.trim()}
+                                          </Tag>
+                                        ))}
                                   </div>
                                 )}
                               </Descriptions.Item>
-                            )}
-                            {form.getFieldValue("gender") === "Femme" && (
-                              <>
-                                {/* Editing Mode */}
-                                {isEditing ? (
-                                  <>
-                                    <Form.Item
-                                      label="Voilé"
-                                      name="veiled"
-                                      valuePropName="checked"
-                                      initialValue={candidate.veiled || false}
-                                    >
-                                      <Checkbox
-                                      onChange={(e) => {
-                                        form.setFieldsValue({ veiled: e.target.checked });
-                                        
-                                      }}>Oui</Checkbox>
+                              {form.getFieldValue("gender") === "Homme" && (
+                                <Descriptions.Item label="Facial Hair">
+                                  {isEditing ? (
+                                    <Form.Item name="facialHair" noStyle>
+                                      <Select
+                                        placeholder="Select Facial Hair"
+                                        allowClear
+                                        popupMatchSelectWidth={false}
+                                        maxTagCount="responsive"
+                                      >
+                                        {facialHairOptions.map((option) => (
+                                          <Select.Option
+                                            key={option}
+                                            value={option}
+                                          >
+                                            {option}
+                                          </Select.Option>
+                                        ))}
+                                      </Select>
                                     </Form.Item>
-                                    <Form.Item
-                                      label="Enceinte"
-                                      name="pregnant"
-                                      valuePropName="checked"
-                                      initialValue={candidate.pregnant || false}
+                                  ) : (
+                                    <span className="text-gray-700">
+                                      {candidate.facialHair}
+                                    </span>
+                                  )}
+                                </Descriptions.Item>
+                              )}
+                              {form.getFieldValue("gender") === "Femme" && (
+                                <>
+                                  {/* Editing Mode */}
+                                  {isEditing ? (
+                                    <>
+                                      <Form.Item
+                                        label="Voilé"
+                                        name="veiled"
+                                        valuePropName="checked"
+                                        initialValue={candidate.veiled || false}
                                       >
                                         <Checkbox
                                           onChange={(e) => {
-                                            form.setFieldsValue({ pregnant: e.target.checked });
-                                            
+                                            form.setFieldsValue({
+                                              veiled: e.target.checked,
+                                            });
                                           }}
                                         >
-                                        Oui</Checkbox>
-                                    </Form.Item>
-                                  </>
-                                ) : (
-                                  <>
-                                    {/* Display Mode */}
-                                    <Descriptions.Item label="Voilé">
-                                      {candidate.veiled ? "Oui" : "Non"}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="Enceinte">
-                                      {candidate.pregnant ? "Oui" : "Non"}
-                                    </Descriptions.Item>
-                                  </>
-                                )}
-                              </>
-                            )}
-                            <Descriptions.Item label="Town">
-                              {isEditing ? (
-                                <Form.Item name="town" noStyle>
-                                  <Select
-                                    placeholder="Select a Town"
-                                    allowClear
-                                    popupMatchSelectWidth={false}
-                                    maxTagCount="responsive"
-                                  >
-                                    {towns.map((town) => (
-                                      <Select.Option key={town} value={town}>
-                                        {town}
-                                      </Select.Option>
-                                    ))}
-                                  </Select>
-                                </Form.Item>
-                              ) : (
-                                <div className="mt-2">{candidate.town}</div>
+                                          Oui
+                                        </Checkbox>
+                                      </Form.Item>
+                                      <Form.Item
+                                        label="Enceinte"
+                                        name="pregnant"
+                                        valuePropName="checked"
+                                        initialValue={
+                                          candidate.pregnant || false
+                                        }
+                                      >
+                                        <Checkbox
+                                          onChange={(e) => {
+                                            form.setFieldsValue({
+                                              pregnant: e.target.checked,
+                                            });
+                                          }}
+                                        >
+                                          Oui
+                                        </Checkbox>
+                                      </Form.Item>
+                                    </>
+                                  ) : (
+                                    <>
+                                      {/* Display Mode */}
+                                      <Descriptions.Item label="Voilé">
+                                        <span className="text-gray-700">
+                                          {candidate.veiled ? "Oui" : "Non"}
+                                        </span>
+                                      </Descriptions.Item>
+                                      <Descriptions.Item label="Enceinte">
+                                        <span className="text-gray-700">
+                                          {candidate.pregnant ? "Oui" : "Non"}
+                                        </span>
+                                      </Descriptions.Item>
+                                    </>
+                                  )}
+                                </>
                               )}
-                            </Descriptions.Item>
-                          </Descriptions>
+                              <Descriptions.Item label="Town">
+                                {isEditing ? (
+                                  <Form.Item name="town" noStyle>
+                                    <Select
+                                      placeholder="Select a Town"
+                                      allowClear
+                                      popupMatchSelectWidth={false}
+                                      maxTagCount="responsive"
+                                    >
+                                      {towns.map((town) => (
+                                        <Select.Option key={town} value={town}>
+                                          {town}
+                                        </Select.Option>
+                                      ))}
+                                    </Select>
+                                  </Form.Item>
+                                ) : (
+                                  <span className="text-gray-700">
+                                    {candidate.town}
+                                  </span>
+                                )}
+                              </Descriptions.Item>
+                            </Descriptions>
+                          </Col>
                         </Col>
                       </Row>
                       <Form.Item className="text-center">
                         {isEditing ? (
-                          <div className="flex justify-center space-x-4 mt-4">
+                          <div className="flex justify-center space-x-4 ">
                             <Button
                               type="primary"
                               htmlType="submit"
@@ -748,7 +705,7 @@ const CandidateDetails = () => {
                             </Button>
                             <Button
                               type="default"
-                              onClick={handleCancelEdit}
+                              onClick={() => setIsEditing(false)}
                               className="px-6 py-2"
                             >
                               Cancel
@@ -758,7 +715,7 @@ const CandidateDetails = () => {
                           <div className="flex justify-center mt-4">
                             <Button
                               type="primary"
-                              onClick={handleEditToggle}
+                              onClick={(e) => handleEditToggle(e)}
                               className="px-6 py-2"
                             >
                               Edit
@@ -770,31 +727,91 @@ const CandidateDetails = () => {
                     <TabPane tab="Files & Social Media" key="2">
                       <div className="mt-2">
                         <Title level={4}>Files</Title>
-                        <List
-                          itemLayout="horizontal"
-                          // dataSource={fileLinks.filter(
-                          //   (file) =>
-                          //     !file.contentType.startsWith("image/") &&
-                          //     !file.contentType.startsWith("video/")
-                          // )}
-                          renderItem={(file) => (
-                            <List.Item>
-                              <List.Item.Meta
-                                avatar={getFileIcon(file)}
-                                title={
-                                  <a
-                                    href={file.fileStreamUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-500 hover:underline"
+                        {candidate?.files?.some(
+                          (file) =>
+                            file.contentType?.startsWith("audio/") ||
+                            file.contentType?.startsWith("video/")
+                        ) ? (
+                          <List
+                            itemLayout="vertical"
+                            dataSource={candidate.files.filter(
+                              (file) =>
+                                file.contentType?.startsWith("audio/") ||
+                                file.contentType?.startsWith("video/")
+                            )}
+                            renderItem={(file) => (
+                              <List.Item>
+                                <List.Item.Meta
+                                  title={
+                                    <div>
+                                      <span style={{ fontWeight: "bold" }}>
+                                        <a
+                                          href={file.filename}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          style={{
+                                            color: "inherit",
+                                            textDecoration: "none",
+                                          }}
+                                        >
+                                          {file.contentType.startsWith("audio/")
+                                            ? "Audio File"
+                                            : "Video File"}
+                                        </a>
+                                      </span>
+                                      <span
+                                        style={{
+                                          marginLeft: "10px",
+                                          fontStyle: "italic",
+                                          color: "#555",
+                                        }}
+                                      >
+                                        ({file.contentType})
+                                      </span>
+                                    </div>
+                                  }
+                                  description={`Type: ${file.contentType}`}
+                                />
+                                {file.contentType.startsWith("audio/") && (
+                                  <audio controls style={{ width: "100%" }}>
+                                    <source
+                                      src={file.filename}
+                                      type={file.contentType}
+                                    />
+                                    Your browser does not support the audio
+                                    element.
+                                  </audio>
+                                )}
+                                {file.contentType.startsWith("video/") && (
+                                  <video
+                                    controls
+                                    style={{
+                                      width: "100%", // or set a specific width (e.g., "320px")
+                                      maxWidth: "500px", // Limit the maximum width to keep it consistent
+                                      height: "280px", // Fixed height for the video
+                                      objectFit: "contain", // Ensure the video fills the defined size proportionally
+                                      borderRadius: "8px", // Optional for rounded corners
+                                      boxShadow:
+                                        "0px 4px 6px rgba(0, 0, 0, 0.1)", // Optional for better aesthetics
+                                    }}
                                   >
-                                    {file.name || file.filename}
-                                  </a>
-                                }
-                              />
-                            </List.Item>
-                          )}
-                        />
+                                    <source
+                                      src={file.filename}
+                                      type={file.contentType}
+                                    />
+                                    Your browser does not support the video
+                                    element.
+                                  </video>
+                                )}
+                              </List.Item>
+                            )}
+                          />
+                        ) : (
+                          <p>
+                            No audio or video files available for this
+                            candidate.
+                          </p>
+                        )}
                       </div>
                       <Divider />
                       <div className="mt-2">
@@ -901,7 +918,7 @@ const CandidateDetails = () => {
                         <HeartOutlined />
                       )
                     }
-                    onClick={() => handleLikeToggle(candidate._id)}
+                    onClick={handleLikeToggle}
                   >
                     {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
                   </Button>
@@ -909,10 +926,12 @@ const CandidateDetails = () => {
               </Card>
             </Col>
           </Row>
-        </div>
+        </Card>
+        {/* </div> */}
       </Content>
     </Layout>
   );
 };
 
 export default CandidateDetails;
+  

@@ -4,11 +4,12 @@ import { BrowserRouter, Routes, Route,Navigate } from 'react-router-dom';
 import AppLayout from './Layout/AppLayout';
 import CandidatesList from './components/CandidatesList';
 import CandidatesDetails from './components/CandidatesDetails';
+import CandidateDetails from './pages/CandidateDetails.page';
 import FavoriteCandidates from './components/FavoriteCandidates';
 import LoginPage from './pages/Login.page';
 import PrivateRoute from './components/PrivateRoute';
 import { UserSessionProvider } from './context/UserSessionContext';
-
+import LandingPage from './pages/Landing.page'
 function App() {
   // const Navigate=useNavigation()
   return (
@@ -17,7 +18,9 @@ function App() {
     <UserSessionProvider>
       <Routes>
         {/* Public Route */}
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/home" element={<LandingPage/>}/>
+
+        {/* <Route path="/login" element={<LoginPage />} /> */}
 
         {/* Protected Routes */}
         <Route
@@ -50,7 +53,7 @@ function App() {
             <PrivateRoute
               element={() => (
                 <AppLayout>
-                  <CandidatesDetails />
+                  <CandidateDetails />
                 </AppLayout>
               )}
             />
@@ -70,7 +73,8 @@ function App() {
         />
         {/* Redirect unknown routes to login or a 404 page */}
         <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes></UserSessionProvider>
+      </Routes>
+      </UserSessionProvider>
     </BrowserRouter>
     
   );

@@ -3,6 +3,8 @@ FROM node:22.6.0 AS build
 
 WORKDIR /app
 
+ARG CACHEBUST=1
+
 # Copy package.json and package-lock.json or yarn.lock
 COPY package*.json ./
 

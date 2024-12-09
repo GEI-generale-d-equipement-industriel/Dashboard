@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useCallback } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import {
   Typography,
   Row,
@@ -10,23 +10,24 @@ import {
   Button,
 } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
-import { toggleFavorite } from "../services/api/favoritesService";
+// import { toggleFavorite } from "../services/api/favoritesService";
+import { useQueryClient } from "@tanstack/react-query";
 import CandidateCard from "./CandidateCard";
 import useFetchFileLinks from "../Hooks/useFetchFileLinks";
 import useInfiniteScroll from "react-infinite-scroll-hook";
 import useCandidates from "../Hooks/useCandidates";
-
+import { useFetchFavorites, useUpdateFavorites } from "../services/api/favoritesService";
 const { Title } = Typography;
 const { Option } = Select;
 const pageSize = 10;
 
 function CandidateList() {
   const [notificationApi, contextHolder] = notification.useNotification();
-  const favorites = useSelector((state) => state.favorites.favorites);
+  // const favorites = useSelector((state) => state.favorites.favorites);
   const userId = useSelector((state) => state.auth.id);
   const location = useLocation();
   const navigate = useNavigate();
-
+  const queryClient = useQueryClient();
   const queryParams = useMemo(
     () => new URLSearchParams(location.search),
     [location.search]
@@ -63,20 +64,20 @@ const initialSortOrder = queryParams.get("sortOrder") || "desc";
   }, [queryParams, sortBy, sortOrder]);
   
 
-  const dispatch = useDispatch();
 
-  const scrollPositionKey = `scrollPosition_${location.pathname}`;
+
+  
 
   const {
     data,
-    isLoading,
     isFetching,
     isFetchingNextPage,
-    isError,
-    error,
     hasNextPage,
     fetchNextPage,
   } = useCandidates(filters, pageSize);
+  
+  const { data: favorites = [] } = useFetchFavorites(userId);
+  const { mutate: updateFavorite } = useUpdateFavorites()
 
   const candidatesForCurrentPage = useMemo(() => {
     if (!data) return [];
@@ -84,14 +85,17 @@ const initialSortOrder = queryParams.get("sortOrder") || "desc";
     const uniqueCandidates = Array.from(
       new Map(allCandidates.map((candidate) => [candidate._id, candidate])).values()
     );
-    console.log(allCandidates.length);
+   
     
     return uniqueCandidates;
   }, [data]);
-  console.log(`Total candidates displayed: ${candidatesForCurrentPage.length}`);
+  
+
+  
 
   const fileLinks = useFetchFileLinks(candidatesForCurrentPage);
 
+  
   const favoriteIds = useMemo(() => {
     return Array.isArray(favorites)
       ? favorites.map((fav) => fav._id || fav)
@@ -100,37 +104,46 @@ const initialSortOrder = queryParams.get("sortOrder") || "desc";
 
   const handleLikeToggle = useCallback(
     async (candidateId) => {
-      try {
-        await dispatch(toggleFavorite(userId, candidateId));
-        const isFavorite = favoriteIds.includes(candidateId);
-        notificationApi.success({
-          message: isFavorite
-            ? "Removed from Favorites"
-            : "Added to Favorites",
-          description: isFavorite
-            ? "This candidate has been removed from your favorites list."
-            : "This candidate has been added to your favorites list.",
-          placement: "topRight",
-          duration: 2,
-        });
-      } catch (error) {
-        console.error("Failed to toggle favorite:", error);
-        notificationApi.error({
-          message: "Action Failed",
-          description:
-            "There was an error while updating favorites. Please try again.",
-          placement: "topRight",
-          duration: 2,
-        });
-      }
+      const cachedFavorites = queryClient.getQueryData(['favorites', userId]) || [];
+      const isFavorite = cachedFavorites.some(fav => fav._id === candidateId);
+  
+      const updatedFavorites = isFavorite
+        ? cachedFavorites.filter(fav => fav._id !== candidateId) // Remove from favorites
+        : [...cachedFavorites, { _id: candidateId }]; // Add to favorites
+  
+      // Optimistic update for UI
+      queryClient.setQueryData(['favorites', userId], updatedFavorites);
+  
+      updateFavorite(
+        { userId, favorites: updatedFavorites },
+        {
+          onSuccess: () => {
+            notificationApi.success({
+              message: isFavorite ? "Removed from Favorites" : "Added to Favorites",
+              description: isFavorite
+                ? "This candidate has been removed from your favorites list."
+                : "This candidate has been added to your favorites list.",
+              placement: "topRight",
+              duration: 2,
+            });
+            queryClient.invalidateQueries(['favorites', userId]); // Refetch the favorites after updating
+          },
+          onError: () => {
+            notificationApi.error({
+              message: "Error",
+              description: "Failed to update favorites.",
+              placement: "topRight",
+            });
+          },
+        }
+      );
     },
-    [dispatch, userId, favoriteIds, notificationApi]
+    [ queryClient, updateFavorite, notificationApi, userId]
   );
+  
 
   const tagColors = ["orange", "red", "purple", "gold"];
-  useEffect(() => {
-    console.log("Sorting by:", sortBy, "Order:", sortOrder);
-  }, [sortBy, sortOrder]);
+ 
   
   // Update URL when sortBy or sortOrder changes
   useEffect(() => {
@@ -141,15 +154,15 @@ const initialSortOrder = queryParams.get("sortOrder") || "desc";
     } else {
       params.delete("sortBy");
     }
-
+  
     if (sortOrder) {
       params.set("sortOrder", sortOrder);
     } else {
-      params.delete("sortOrder");
+      params.delete("sortOrder");  
     }
 
     navigate({ search: params.toString() }, { replace: true });
-  }, [sortBy, sortOrder, navigate]);
+  }, [sortBy, sortOrder, navigate,location.search]);
 
   // Infinite Scroll Hook
   const [sentryRef] = useInfiniteScroll({
@@ -160,6 +173,7 @@ const initialSortOrder = queryParams.get("sortOrder") || "desc";
   });
 
   // Scroll Restoration
+  const scrollPositionKey = `scrollPosition_${location.pathname}`;
   const [hasRestoredScroll, setHasRestoredScroll] = React.useState(false);
 
   useEffect(() => {
@@ -216,6 +230,8 @@ const initialSortOrder = queryParams.get("sortOrder") || "desc";
       window.removeEventListener("scroll", debouncedHandleScroll);
     };
   }, [scrollPositionKey]);
+
+
   const handleSortByChange = (value) => {
     setSortBy(value);
     const params = new URLSearchParams(location.search);
@@ -304,23 +320,21 @@ const initialSortOrder = queryParams.get("sortOrder") || "desc";
 
         <Row gutter={[16, 24]}>
           {candidatesForCurrentPage.map((candidate) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={candidate._id}>
+            <Col xs={12} sm={12} md={8} lg={6} key={candidate._id}>
               <CandidateCard
                 candidate={candidate}
-                fileLink={
-                  fileLinks[candidate._id]?.fileStreamUrl ||
-                  fileLinks[candidate._id]?.link
-                }
+                fileLink={fileLinks[candidate._id]}
                 isFavorite={favoriteIds.includes(candidate._id)}
                 onToggleFavorite={handleLikeToggle}
                 tagColors={tagColors}
               />
+              
             </Col>
           ))}
           {isFetchingNextPage && (
             <>
               {[...Array(pageSize)].map((_, index) => (
-                <Col xs={24} sm={12} md={8} lg={6} key={`loading-${index}`}>
+                <Col xs={12} sm={12} md={8} lg={6} key={`loading-${index}`}>
                   <Skeleton active>
                     <CandidateCard loading />
                   </Skeleton>
@@ -332,7 +346,7 @@ const initialSortOrder = queryParams.get("sortOrder") || "desc";
         <div ref={sentryRef}></div>
       </div>
     </div>
-  );
+  );  
 }
 
 // Debounce function

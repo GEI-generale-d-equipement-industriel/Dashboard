@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Button, Checkbox, Input, Slider, Divider, Select, Radio } from "antd";
+import { Button, Checkbox, Input, Slider, Divider, Select} from "antd";
 import {
   ClearOutlined,
   CaretDownOutlined,
   CaretUpOutlined,
 } from "@ant-design/icons";
-import { useDispatch, useSelector } from "react-redux";
+
 import { useNavigate, useLocation } from "react-router-dom";
 
 import "../styles/FilterSidebar.css";
@@ -34,10 +34,10 @@ const hairTypes = ["Lisses", "Ondulés", "Bouclés", "Crépus"];
 const hairColors = ["Blond", "Brun", "Chatain", "Noir", "Roux", "Gris"];
 const skinColors = ["Clair", "Pâle", "Moyen", "Olive", "Foncé", "Noir"];
 const signs = ["Appareil dentaire", "Lunettes", "Tatouage"];
-const registrationTypes = ["Enfant", "Adulte"];
+// const registrationTypes = ["Enfant", "Adulte"];
 
 const FiltersSidebar = () => {
-  const dispatch = useDispatch();
+  
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -91,8 +91,7 @@ const FiltersSidebar = () => {
   const [isHeightVisible, setIsHeightVisible] = useState(false);
   const [isEyeColorVisible, setIsEyeColorVisible] = useState(false);
   const [isSignVisible, setIsSignVisible] = useState(false);
-  const [isRegistrationTypeVisible, setIsRegistrationTypeVisible] =
-    useState(false);
+ 
 
   useEffect(() => {
     const params = new URLSearchParams();

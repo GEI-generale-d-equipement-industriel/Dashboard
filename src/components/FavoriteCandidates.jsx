@@ -1,62 +1,86 @@
 import React, { useMemo, useCallback } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Button, Typography, Row, Col, notification, Skeleton } from 'antd';
 import CandidateCard from './CandidateCard';
-
+import {  useQueryClient } from '@tanstack/react-query';
 import * as XLSX from 'xlsx';
-import { toggleFavorite } from '../services/api/favoritesService';
 import useFetchFileLinks from '../Hooks/useFetchFileLinks';
+import { useFetchFavorites, useUpdateFavorites } from '../services/api/favoritesService';
 
 const { Title } = Typography;
-
+  
 
 const FavoriteCandidates = () => {
   const [notificationApi, contextHolder] = notification.useNotification();
   const userId = useSelector((state) => state.auth.id);
-  const dispatch = useDispatch();
-  const favoriteCandidates = useSelector((state) => state.favorites.favorites);
+
+  const { data: favoriteCandidates, isLoading, isError } = useFetchFavorites(userId);
+
+  const { mutate: updateFavorites } = useUpdateFavorites();
+  
+  const queryClient = useQueryClient();
+  // const favoriteCandidates = useSelector((state) => state.favorites.favorites);
   const status = useSelector((state) => state.favorites.status);
 
-  const fileLinks=useFetchFileLinks(favoriteCandidates)
+  const fileLinks = useFetchFileLinks(favoriteCandidates || []);
+
+
+ 
 
   
 
 
-  const favoriteIds = useMemo(() => {
-    return Array.isArray(favoriteCandidates)
-      ? favoriteCandidates.map((fav) => fav._id || fav)
-      : [];
-  }, [favoriteCandidates]);
+  const favoriteIds = useMemo(
+    () =>
+      favoriteCandidates.map((fav) => fav._id),
+    [favoriteCandidates]
+  );
 
 
   const handleLikeToggle = useCallback(
-    async (candidateId) => {
-      try {
-        await dispatch(toggleFavorite(userId,candidateId));
-
-        // Show notification on success
-        const isFavorite = favoriteIds.includes(candidateId);
-        notificationApi.success({
-          message: isFavorite ? 'Removed from Favorites' : 'Added to Favorites',
-          description: isFavorite
-            ? 'This candidate has been removed from your favorites list.'
-            : 'This candidate has been added to your favorites list.',
-          placement: 'topRight',
-          duration: 2,
-        });
-      } catch (error) {
-        console.error('Failed to toggle favorite:', error);
-        notificationApi.error({
-          message: 'Action Failed',
-          description:
-            'There was an error while updating favorites. Please try again.',
-          placement: 'topRight',
-          duration: 2,
-        });
-      }
+    (candidateId) => {
+      const isFavorite = favoriteIds.includes(candidateId);
+  
+      // Optimistically update the favorites list
+      const updatedFavorites = isFavorite
+        ? favoriteCandidates.filter((fav) => fav._id !== candidateId)
+        : [...favoriteCandidates, { _id: candidateId }];
+  
+      // Optimistically update the local cache
+      queryClient.setQueryData(['favorites', userId], updatedFavorites);
+   
+      // Make the API call to update favorites
+      updateFavorites(
+        { userId, favorites: updatedFavorites },
+        {
+          onSuccess: () => {
+            notificationApi.success({
+              message: isFavorite ? "Removed from Favorites" : "Added to Favorites",
+              description: isFavorite
+                ? "This candidate has been removed from your favorites list."
+                : "This candidate has been added to your favorites list.",
+              placement: "topRight",
+              duration: 2,
+            });
+          },
+          onError: (error) => {
+            // Revert to the previous state on error
+            queryClient.setQueryData(['favorites', userId], favoriteCandidates);
+  
+            notificationApi.error({
+              message: 'Action Failed',
+              description:
+                'There was an error while updating favorites. Please try again.',
+              placement: 'topRight',
+              duration: 2,
+            });
+          },
+        }
+      );
     },
-    [dispatch, favoriteIds, notificationApi,userId]
+    [favoriteCandidates, favoriteIds, notificationApi, updateFavorites, userId, queryClient]
   );
+  
 
   const downloadXLSX = () => {
     const worksheetData = [
@@ -118,14 +142,16 @@ const FavoriteCandidates = () => {
         <CandidateCard loading />
       </Skeleton>
     </Col>
-  ))
+  ))  
 ) : favoriteCandidates?.length > 0 ? (
   favoriteCandidates?.map((candidate) => (
     <Col xs={24} sm={12} md={8} lg={6} key={candidate._id}>
+      
       <CandidateCard
         candidate={candidate}
         isFavorite={true}
-        fileLink={fileLinks[candidate._id]?.fileStreamUrl}
+        fileLink={fileLinks[candidate._id]}
+
         onToggleFavorite={handleLikeToggle}
         tagColors={['orange', 'red', 'purple', 'gold']}
       />

@@ -6,7 +6,9 @@ import FiltersSidebar from '../components/FiltersSidebar';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { removeAuthData } from '../store/authSlice';
+import AuthInterceptor from '../services/auth/AuthInterceptor';
 import '../styles/AppLayout.css'
+
 
 const { Header, Content, Sider } = Layout;
 const { useBreakpoint } = Grid;
@@ -24,6 +26,7 @@ const AppLayout = ({ children }) => {
 
   const handleLogout = () => {
     dispatch(removeAuthData());
+    AuthInterceptor.updateToken(null);
     navigate('/login', { replace: true });
   };
 

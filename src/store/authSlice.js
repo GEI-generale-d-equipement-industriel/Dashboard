@@ -1,10 +1,12 @@
 // slices/authSlice.js
 import { createSlice } from '@reduxjs/toolkit';
+import { setCookie, deleteCookie } from '../utils/cookieUtils';
+
 
 const initialState = {
-  token: localStorage.getItem('token') || null,
-  id: localStorage.getItem('id') || null,
-  
+  token: sessionStorage.getItem('token') || null,
+  id: sessionStorage.getItem('id') || null,
+  authInitialized: false,
 };
 
 
@@ -16,17 +18,30 @@ const authSlice = createSlice({
       const { token, id } = action.payload;
       state.token = token;
       state.id = id;
-      localStorage.setItem('token', token);
-      localStorage.setItem('id', id);
+      state.authInitialized = true;
+
+      sessionStorage.setItem('token', token);
+      sessionStorage.setItem('id', id);
+      
+      setCookie('authToken', token);
+      setCookie('userId', id);
+      
     },
     removeAuthData: (state) => {
       state.token = null;
       state.id = null;
-      localStorage.removeItem('token');
-      localStorage.removeItem('id');
+      state.authInitialized = true;
+
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('id');
+      
+      deleteCookie('authToken');
+      deleteCookie('userId');
+    },
+    setAuthInitialized: (state, action) => {
+      state.authInitialized = action.payload;
     },
   },
 });
-
-export const { setAuthData, removeAuthData } = authSlice.actions;
+export const { setAuthData, removeAuthData,setAuthInitialized } = authSlice.actions;
 export default authSlice.reducer;

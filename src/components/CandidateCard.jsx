@@ -20,7 +20,7 @@ const CandidateCard = React.memo(
     onToggleFavorite,
     tagColors,
   }) => {
-    const defaultImage = '/assets/default.jpg';
+    const defaultImage = 'https://res.cloudinary.com/dqtwi6rca/image/upload/v1733126857/cfoimwrcnfty6hoxiusw.jpg';
 
     const currentYear = new Date().getFullYear();
     const age = currentYear - candidate.birthYear;
@@ -50,7 +50,7 @@ const CandidateCard = React.memo(
               <img
                 alt={candidate.firstName}
                 src={fileLink || defaultImage}
-                className="w-full h-56 object-cover transition duration-300 ease-in-out transform hover:scale-105"
+                className="w-full h-40 object-cover transition-transform duration-300 ease-in-out transform hover:scale-105 sm:h-56 md:h-60 lg:h-64"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = defaultImage;
@@ -59,27 +59,27 @@ const CandidateCard = React.memo(
               />
             </Link>
             {genderIcon && (
-              <div className="absolute top-2 right-2 bg-white rounded-full p-1 flex items-center justify-center shadow">
+              <div className="absolute top-2 right-2 bg-white rounded-full p-1 shadow">
                 {genderIcon}
               </div>
             )}
           </div>
         }
-        className="shadow-lg rounded-lg overflow-hidden"
-        styles={{ body: { padding: '16px' } }}
+        className="shadow-md rounded-md overflow-hidden p-2 sm:p-4 text-sm sm:text-base"
+         bodyStyle={{ padding: '12px' }}
       >
         <Meta
           title={
             <Link
               to={`/candidate/${candidate._id}`}
-              className="text-lg font-semibold text-gray-800 hover:text-blue-500"
+              className="text-base font-semibold text-gray-800 hover:text-blue-500 sm:text-lg"
             >
               {candidate.firstName + ' ' + candidate.name}
             </Link>
           }
           description={
             <div className="mt-2">
-              <div className="flex justify-between text-sm text-gray-700 mb-2">
+              <div className="flex justify-between text-xs text-gray-700 mb-2 sm:text-sm">
                 <span>Age: {age}</span>
                 <span>Taille: {candidate.height} m</span>
               </div>
@@ -95,7 +95,7 @@ const CandidateCard = React.memo(
                     const shortInterest =
                       interestShortNames[trimmedInterest] || trimmedInterest;
                     return (
-                      <Tag color={tagColors[index % tagColors.length]} key={index}>
+                      <Tag color={tagColors[index % tagColors.length]} key={index} className="text-xs sm:text-sm">
                         {shortInterest}
                       </Tag>
                     );
@@ -109,7 +109,7 @@ const CandidateCard = React.memo(
             title={
               isFavorite
                 ? 'Click to remove from favorites'
-                : 'Click to add to favorites'
+                : 'Click to add to favorites' 
             }
           >
             <Button

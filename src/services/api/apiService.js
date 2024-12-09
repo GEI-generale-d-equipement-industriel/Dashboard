@@ -12,7 +12,7 @@ export const fetchCandidates = async (filters) => {
       });
   
       // Log the API response for debugging
-  console.log(data,'the api response ')
+
       return data || []; // Return the data or an empty array if data is undefined
     } catch (error) {
       console.error('Error fetching candidates:', error);
