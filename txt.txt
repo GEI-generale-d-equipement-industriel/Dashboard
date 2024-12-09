@@ -20,3 +20,90 @@
                         </div>
                       )}
                     </div>
+                    {
+  "_id": {
+    "$oid": "66d5904bfeeafd921050c26d"
+  },
+  "name": "Chamli",
+  "firstName": "Mariem",
+  "gender": "Femme",
+  "birthYear": 1989,
+  "height": 1.65,
+  "weight": 72.5,
+  "eyeColor": "Marron foncé",
+  "hairColor": "Noir",
+  "phone": "90535587",
+  "interest": "Voix-off",
+  "socialMedia": [
+    {
+      "type": "Instagram",
+      "link": ""
+    },
+    {
+      "type": "TikTok",
+      "link": ""
+    }
+  ],
+  "files": [
+    {
+      "filename": "https://drive.google.com/file/d/1cMqmsLp1LVMPsrOoxtE3gjtU5uGjA5GA/view?usp=drive_link",
+      "contentType": "application/octet-stream"
+    }
+  ]
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+const renderFileLinks = (file) => {
+    if (file.filename.includes("drive.google.com")) {
+      return (
+        <a key={file._id} href={file.filename} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-blue-500 hover:underline">
+          <GoogleOutlined />
+          <span>Google Drive Folder</span>
+        </a>
+      );
+    }
+
+    if (file.filename.includes("tiktok.com")) {
+      return (
+        <a key={file._id} href={file.filename} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-blue-500 hover:underline">
+          <TikTokOutlined />
+          <span>TikTok Profile</span>
+        </a>
+      );
+    }
+
+    if (file.filename.includes("facebook.com")) {
+      return (
+        <a key={file._id} href={file.filename} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-blue-500 hover:underline">
+          <FacebookOutlined />
+          <span>Facebook Profile</span>
+        </a>
+      );
+    }
+
+    if (file.filename.includes("instagram.com")) {
+      return (
+        <a key={file._id} href={file.filename} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-blue-500 hover:underline">
+          <InstagramOutlined />
+          <span>Instagram Profile</span>
+        </a>
+      );
+    }
+
+    return (
+      <a key={file._id} href={`${url}/files/download/${file._id}`} download className="text-blue-500 hover:underline">
+        {file.filename} (Download)
+      </a>
+    );
+  };

@@ -1,0 +1,85 @@
+/* FiltersSidebar.css */
+
+/* Sidebar Container */
+.filters-sidebar {
+    padding: 16px;
+    background-color: #ffffff;
+    height: 100%;
+    overflow: auto;
+    border-radius: 8px;
+    font-family: 'Libre Franklin', sans-serif;
+    border: 1px solid #e0e0e0;
+  }
+  
+  /* Filters Title */
+  .filters-title {
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 16px;
+    color: #f0b71d;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 8px;
+  }
+  
+  /* Clear Filters */
+  .clear-filters-container {
+    margin-bottom: 24px;
+  }
+  
+  .clear-filters-button {
+    width: 100%;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+  
+  /* Filter Sections */
+  .filter-section {
+    margin-bottom: 24px;
+  }
+  
+  .filter-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333333;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 8px;
+  }
+  
+  .filter-title:hover {
+    color: #f0b71d;
+  }
+  
+  .caret-icon {
+    font-size: 14px;
+    margin-left: 8px;
+  }
+  
+  /* Search Input */
+  .search-input {
+    border-radius: 8px;
+    margin-top: 16px;
+  }
+  
+  /* Checkbox Group */
+  .checkbox-group {
+    display: flex;
+    flex-direction: column;
+    margin-top: 16px;
+  }
+  
+  /* Age Slider */
+  .age-slider {
+    margin-top: 16px;
+  }
+  
+  .age-range {
+    display: flex;
+    justify-content: space-between;
+    color: #666666;
+    margin-top: 8px;
+  }
+  

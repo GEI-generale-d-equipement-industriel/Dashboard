@@ -1,30 +1,38 @@
-import React, { useState } from 'react';
-import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-} from '@ant-design/icons';
-import { Layout, Menu, theme } from 'antd';
+// AppLayout.jsx
+import React from 'react';
+import { Layout, Menu, Drawer, Button, Grid } from 'antd';
+import { MenuOutlined } from '@ant-design/icons';
 import FiltersSidebar from '../components/FiltersSidebar';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { removeAuthData } from '../store/authSlice';
+import AuthInterceptor from '../services/auth/AuthInterceptor';
+import '../styles/AppLayout.css'
+
 
 const { Header, Content, Sider } = Layout;
+const { useBreakpoint } = Grid;
 
 const AppLayout = ({ children }) => {
-  const [collapsed, setCollapsed] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedInterest, setSelectedInterest] = useState([]);
-  const [selectedAge, setSelectedAge] = useState([]);
-  const [selectedSex, setSelectedSex] = useState([]);
+  const [drawerVisible, setDrawerVisible] = React.useState(false);
+  const screens = useBreakpoint();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
+  const toggleDrawer = () => {
+    setDrawerVisible(!drawerVisible);
+  };
 
-  const toggleCollapse = () => {
-    setCollapsed(!collapsed);
+  const handleLogout = () => {
+    dispatch(removeAuthData());
+    AuthInterceptor.updateToken(null);
+    navigate('/login', { replace: true });
   };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout className="min-h-screen">
+      {/* Header */}
       <Header
         style={{
           position: 'fixed',
@@ -32,81 +40,128 @@ const AppLayout = ({ children }) => {
           width: '100%',
           display: 'flex',
           alignItems: 'center',
-          background: '#001529',
+          background: '#000000',
           padding: '0 16px',
         }}
       >
+        {/* Logo */}
         <div
           className="logo"
           style={{
             width: 120,
-            height: 120,
-            margin: '16px 24px 16px 0',
+            height: 64,
+            marginRight: '24px',
           }}
         >
-          <img
-            src="/assets/GEI.png"
-            alt="logo"
-            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-          />
+          <Link to="/candidates">
+            <img
+              src="/assets/Logo.jpg"
+              alt="logo"
+              style={{ width: '200%', height: '100%', objectFit: 'cover' }}
+            />
+          </Link>
         </div>
-        <Menu
-          theme="dark"
-          mode="horizontal"
-          defaultSelectedKeys={['2']}
-          items={['1', '2', '3'].map((key) => ({
-            key,
-            label: `nav ${key}`,
-          }))}
+
+        {/* Navigation Menu */}
+        <Menu  mode="horizontal" style={{ flex: 1, minWidth: 0,backgroundColor: 'transparent', 
+            borderBottom: 'none', }}theme="dark"
+            className="custom-menu">
+          <Menu.Item key="1" style={{ fontFamily: 'Libre Franklin, sans-serif', fontWeight: '600',fontSize:"16px" }}>
+            <Link to="/candidates" style={{ color: '#f0b71d' }}>Home</Link>
+          </Menu.Item>
+          <Menu.Item key="2" style={{ fontFamily: 'Libre Franklin, sans-serif', fontWeight: '600' ,fontSize:"16px"}}>
+            <Link to="/favorites" style={{ color: '#f0b71d' }}>Favorites</Link>
+          </Menu.Item>
+        </Menu>
+
+        {/* Logout Button */}
+        <Button
+          type="text"
           style={{
-            flex: 1,
-            minWidth: 0,
+            marginLeft: 'auto',
+    color: '#f0b71d',
+    borderColor: '#f0b71d',
+    borderRadius: '20px',
+    fontFamily: 'Libre Franklin, sans-serif',
+    fontWeight: '600',
+    fontSize: '16px',
+    opacity: 0.9,
+          }}
+          onClick={handleLogout}
+        >
+          Logout
+        </Button>
+
+        {/* Mobile Menu Toggle */}
+        {!screens.lg && (
+          <Button
+          type="primary"
+          ghost
+          icon={<MenuOutlined style={{ color: '#ffffff', fontSize: '20px' }} />}
+          onClick={toggleDrawer}
+          style={{
+            marginLeft: '16px',
+            borderColor: '#ffffff',
+            borderRadius: '20px',
           }}
         />
+        )}
       </Header>
+
+      {/* Main Layout */}
       <Layout style={{ marginTop: 64 }}>
-        <Sider
-          
-          collapsed={collapsed}
-          onCollapse={toggleCollapse}
-          trigger={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-          width={220}
-          style={{
-            background: colorBgContainer,
-            position: 'fixed',
-            height: '100vh',
-            overflow: 'auto',
-            top: 64,
-            left: 0,
-            zIndex: 100,
-          }}
+        {/* Sidebar for Filters */}
+        {(location.pathname === '/candidates'||location.pathname === '/') && screens.lg && (
+          <Sider
+            width={304}
+            className="shadow-lg"
+            style={{
+              backgroundColor: '#fcfcfc',
+              position: 'fixed',
+              height: 'calc(100vh - 64px)',
+              overflow: 'auto',
+              top: 64,
+              left: 0,
+              zIndex: 100,
+              padding: '16px',
+            }}
+          >
+            <FiltersSidebar />
+          </Sider>
+        )}
+
+        {/* Drawer for Mobile Filters */}
+        <Drawer
+          title="Filters"
+          placement="left"
+          onClose={toggleDrawer}
+          open={drawerVisible}
+        
+  styles={{
+    header: { backgroundColor: '#000000', color: '#f0b71d' },
+    body: { padding: '0' },
+    content: { backgroundColor: '#000000' },
+  }}
+  
         >
-          <FiltersSidebar
-            collapsed={collapsed}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            selectedInterest={selectedInterest}
-            setSelectedInterest={setSelectedInterest}
-            selectedAge={selectedAge}
-            setSelectedAge={setSelectedAge}
-            selectedSex={selectedSex}
-            setSelectedSex={setSelectedSex}
-          />
-        </Sider>
+          <FiltersSidebar />
+        </Drawer>
+
+        {/* Content Area */}
         <Layout
           style={{
-            marginLeft: collapsed ? 80 : 200,
-            transition: 'margin-left 0.2s',
+            marginLeft:
+              screens.lg && (location.pathname === '/candidates'||location.pathname === '/') ? 304 : 0,
             padding: '0 24px 24px',
           }}
         >
           <Content
             style={{
-              padding: 24,
               margin: 0,
               minHeight: 280,
-              background: colorBgContainer,
-              borderRadius: borderRadiusLG,
+              background: '#fcfcfc',
+              borderRadius: "20px",
+              
             }}
           >
             {children}
