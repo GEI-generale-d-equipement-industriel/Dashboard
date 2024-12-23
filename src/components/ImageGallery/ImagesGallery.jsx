@@ -27,12 +27,12 @@ const ImageGallery = ({
 
   return (
     <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        ...containerStyle,
-      }}
+    style={{
+      ...containerStyle,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center"
+    }}
     >
       {images.length > 0 ? (
         <>
@@ -41,9 +41,9 @@ const ImageGallery = ({
             style={{
               width: "100%",
               height: `${mainImageHeight}px`,
-              textAlign: "center",
-              marginBottom: "16px",
               position: "relative",
+              marginBottom: "16px",
+              textAlign: "center",
             }}
           >
             <Button
@@ -116,10 +116,10 @@ const ImageGallery = ({
                   cursor: "pointer",
                   padding: "4px",
                   borderRadius: "4px",
-                  boxShadow:
-                    currentSlide === index
-                      ? "0px 4px 6px rgba(24, 144, 255, 0.4)"
-                      : "none",
+                  // boxShadow:
+                  //   currentSlide === index
+                  //     ? "0px 4px 6px rgba(24, 144, 255, 0.4)"
+                  //     : "none",
                 }}
               >
                 <img
@@ -138,7 +138,7 @@ const ImageGallery = ({
 
           {/* Modal for Larger View */}
           <Modal
-            visible={visible}
+            open={visible}
             footer={null}
             onCancel={() => setVisible(false)}
             width="40%"
@@ -194,7 +194,17 @@ const ImageGallery = ({
           </Modal>
         </>
       ) : (
-        <div className="w-full h-80 bg-gray-200 flex flex-col items-center justify-center text-center">
+        <div
+          style={{
+            width: "100%",
+            height: `${mainImageHeight}px`,
+            background: "#e2e2e2",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "8px",
+          }}
+        >
           <FileImageOutlined style={{ fontSize: "48px", color: "#8c8c8c" }} />
           <p style={{ marginTop: "16px", fontSize: "16px", color: "#595959" }}>
             No photos available.

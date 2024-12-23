@@ -1,14 +1,14 @@
 // src/context/UserSessionContext.js
-import React, { createContext, useEffect, useContext, useState } from 'react';
-import { useSelector,useDispatch } from 'react-redux';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { fetchFavorites } from '../store/favoritesSlice';
-import useBroadcastChannel from './useBroadcastChannel';
-import { setAuthData,setAuthInitialized } from '../store/authSlice';
-import { getCookie } from '../utils/cookieUtils';
-import AuthInterceptor from '../services/auth/AuthInterceptor';
-import { Skeleton } from 'antd';
-
+import React, { createContext, useEffect, useContext, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate, useLocation } from "react-router-dom";
+import { fetchFavorites } from "../store/favoritesSlice";
+import useBroadcastChannel from "./useBroadcastChannel";
+import { setAuthData, setAuthInitialized } from "../store/authSlice";
+import { getCookie } from "../utils/cookieUtils";
+import AuthInterceptor from "../services/auth/AuthInterceptor";
+import { Skeleton } from "antd";
+import { decodeJWT } from "../utils/jwtUtils";
 const UserSessionContext = createContext(null);
 
 export const UserSessionProvider = ({ children }) => {
@@ -20,60 +20,73 @@ export const UserSessionProvider = ({ children }) => {
   const location = useLocation();
   const dispatch = useDispatch();
 
+  useBroadcastChannel();
 
-useBroadcastChannel()
-
-useEffect(() => {
-  const initializeAuth = async () => {
-    const token = getCookie('authToken'); // Get token from cookie
-    const id = getCookie('userId');       // Get ID from cookie
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const token = getCookie('authToken');
+      
     
-    // If cookies are present, set Redux state and sessionStorage
-    if (token && id) {
-      sessionStorage.setItem('token', token); // Store token in sessionStorage
-      sessionStorage.setItem('id', id);
-      
-      // Dispatch to Redux to keep state consistent
-      dispatch(setAuthData({ token, id }));
-      
-      // Ensure Axios has the correct token for subsequent requests
-      AuthInterceptor.updateToken(token);
-    }
+      if (token ) {
+        const decodedToken = decodeJWT(token);
+        const role = decodedToken?.role;
+        const id = decodedToken?.sub;
+    
+       
+    
+        if (role) {
+          sessionStorage.setItem('token', token);
+          sessionStorage.setItem('id', id);
+          sessionStorage.setItem('role', role);
+    
+          // Ensure `role` is included in the dispatch
+          dispatch(setAuthData({ token, id, role }));
+          AuthInterceptor.updateToken(token);
+        } else {
+          console.error('Role is missing in the decoded JWT');
+        }
+      }
+    
+      dispatch(setAuthInitialized(true)); // Mark initialization as complete
+    };
 
-    // Mark authentication as initialized
-    dispatch(setAuthInitialized(true));
-  };
+    initializeAuth();
+  }, [dispatch]);
 
-  initializeAuth();
-}, [dispatch]);
-
-useEffect(() => {
-  if (authInitialized) {
-    if (isAuthenticated) {  
-      setIsLoggedIn(true);
-      dispatch(fetchFavorites(userId));
-      if (location.pathname === '/home') {
-        const from = location.state?.from?.pathname || '/candidates';
+  useEffect(() => {
+    if (authInitialized) {
+      if (isAuthenticated) {
+        setIsLoggedIn(true);
+        dispatch(fetchFavorites(userId));
+        if (location.pathname === "/home") {
+          const from = location.state?.from?.pathname || "/candidates";
           navigate(from, { replace: true });
-      }
-    } else {
-      if (location.pathname !== '/home') {
-        setIsLoggedIn(false);
-        navigate('/home', { replace: true });
+        }
+      } else {
+        if (location.pathname !== "/home") {
+          setIsLoggedIn(false);
+          navigate("/home", { replace: true });
+        }
       }
     }
+  }, [
+    isAuthenticated,
+    authInitialized,
+    dispatch,
+    navigate,
+    location.pathname,
+    location.state,
+    userId,
+  ]);
+
+  if (!authInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        {/* Replace with your preferred loading indicator */}
+        <Skeleton size="large" />
+      </div>
+    );
   }
-}, [isAuthenticated, authInitialized, dispatch, navigate, location.pathname,location.state, userId]);
-
-
-if (!authInitialized) {
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      {/* Replace with your preferred loading indicator */}
-      <Skeleton size="large" />
-    </div>
-  );
-}
 
   return (
     <UserSessionContext.Provider value={{ isLoggedIn, setIsLoggedIn }}>

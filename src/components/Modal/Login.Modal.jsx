@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Typography, Alert } from 'antd';
+import { Form, Input, Button,  Alert } from 'antd';
 import { MailOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AuthInterceptor from '../../services/auth/AuthInterceptor';
@@ -24,10 +24,11 @@ const LoginModal = ({ onClose }) => {
         username: values.username,
         password: values.password,
       });
-
+      
+      
       if (response.access_token && response.id) {
         AuthInterceptor.updateToken(response.access_token);
-        dispatch(setAuthData({ token: response.access_token, id: response.id }));
+        dispatch(setAuthData({ token: response.access_token, id: response.id,role:response.role }));
 
         const from = location.state?.from?.pathname || '/candidates';
         navigate(from, { replace: true });

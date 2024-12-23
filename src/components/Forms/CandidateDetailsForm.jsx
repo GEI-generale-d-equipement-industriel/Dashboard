@@ -1,232 +1,192 @@
 import React from 'react';
-import { Row, Col, Form, Select, Input, Checkbox, Tag, Collapse } from 'antd';
+import { Row, Col, Form, Select, Input,  Typography } from 'antd';
 import {
   ManOutlined,
   WomanOutlined,
   CalendarOutlined,
   UserOutlined,
-  EyeOutlined,
-  ScissorOutlined,
-  DashboardOutlined,
+  
+  PhoneOutlined,
+  EnvironmentOutlined,
+  BgColorsOutlined,
+  SkinOutlined,
 } from '@ant-design/icons';
-import {
-  eyeColors,
-  hairColors,
-  towns,
-  interests,
-  sexes,
-  facialHairOptions,
-} from '../../Modules/CandidatesModules/options';
-import BmiIndicator from '../BmiIndicateur';
 
-const { Panel } = Collapse;
 
-const CandidateDetailsForm = ({ candidate, isEditing, form, bmi }) => {
-  // Get gender value from form
-  const gender = form.getFieldValue('gender');
+const { Title } = Typography;
 
+const CandidateDetailsForm = ({ candidate, isEditing, form, bmi, role }) => {
+ 
+
+
+  // Allow editing only if the role is 'admin'
+  const canEdit = role === 'admin' && isEditing;
+  const formattedHeight = parseFloat(candidate.height).toFixed(2); // Two decimal places
+  const formattedWeight = parseFloat(candidate.weight).toFixed(); // One decimal place
+
+  
   return (
-    <Form form={form} initialValues={candidate} layout="vertical">
-      <Collapse defaultActiveKey={['1']} accordion>
+    <div style={{ padding: '12px' }}>
+      <Form
+        form={form}
+        initialValues={candidate}
+        layout="vertical"
+        style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <Title level={3} style={{ marginBottom: '2px', color: '#5A6650' }}>
+            {candidate.firstName} {candidate.name}
+          </Title>
+        </div>
+
         {/* Basic Information Section */}
-        <Panel header="Basic Information" key="1">
+        <div>
+          <Title level={4}>Basic Information</Title>
           <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Gender" name="gender">
-                {isEditing ? (
-                  <Select>
-                    {sexes.map((genderOption) => (
-                      <Select.Option key={genderOption} value={genderOption}>
-                        {genderOption}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                ) : (
-                  <div className="flex items-center">
-                    {candidate.gender?.toLowerCase() === 'femme' ? (
-                      <WomanOutlined className="text-pink-500 mr-2 text-lg" />
-                    ) : (
-                      <ManOutlined className="text-blue-500 mr-2 text-lg" />
-                    )}
-                    <span style={{ marginLeft: '8px' }}>{candidate.gender}</span>
-                  </div>
-                )}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Birth Year" name="birthYear">
-                {isEditing ? (
-                  <Input />
-                ) : (
-                  <div className="flex items-center">
-                    <CalendarOutlined className="text-yellow-500 mr-2 text-lg" />
-                    <span>{candidate.birthYear}</span>
-                  </div>
-                )}
-              </Form.Item>
-            </Col>
-          </Row>
-        </Panel>
-
-        {/* Physical Attributes Section */}
-        <Panel header="Physical Attributes" key="2">
-          <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Height" name="height">
-                {isEditing ? (
-                  <Input />
-                ) : (
-                  <div className="flex items-center">
-                    <UserOutlined className="text-green-500 mr-2 text-lg" />
-                    <span>{candidate.height} m</span>
-                  </div>
-                )}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Weight" name="weight">
-                {isEditing ? (
-                  <Input />
-                ) : (
-                  <div className="flex items-center">
-                    <UserOutlined className="text-purple-500 mr-2 text-lg" />
-                    <span>{candidate.weight} kg</span>
-                  </div>
-                )}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Eye Color" name="eyeColor">
-                {isEditing ? (
-                  <Select>
-                    {eyeColors.map((color) => (
-                      <Select.Option key={color} value={color}>
-                        {color}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                ) : (
-                  <div className="flex items-center">
-                    <EyeOutlined className="text-teal-500 mr-2 text-lg" />
-                    <span>{candidate.eyeColor}</span>
-                  </div>
-                )}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Hair Color" name="hairColor">
-                {isEditing ? (
-                  <Select>
-                    {hairColors.map((color) => (
-                      <Select.Option key={color} value={color}>
-                        {color}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                ) : (
-                  <div className="flex items-center">
-                    <ScissorOutlined className="text-pink-500 mr-2 text-lg" />
-                    <span>{candidate.hairColor}</span>
-                  </div>
-                )}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item label="BMI">
-                <div className="flex items-center">
-                  <DashboardOutlined className="text-yellow-500 mr-2 text-lg" />
-                  <BmiIndicator bmi={bmi} display={true} />
-                </div>
-              </Form.Item>
-            </Col>
-          </Row>
-        </Panel>
-
-        {/* Additional Details Section */}
-        <Panel header="Additional Details" key="3">
-          <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Interests" name="interest">
-                {isEditing ? (
-                  <Select mode="multiple">
-                    {interests.map((interest) => (
-                      <Select.Option key={interest} value={interest}>
-                        {interest}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                ) : (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {candidate.interest &&
-                      candidate.interest
-                        .flatMap((interest) => interest.split(','))
-                        .map((interest, index) => (
-                          <Tag key={index} color="blue">
-                            {interest.trim()}
-                          </Tag>
-                        ))}
-                  </div>
-                )}
-              </Form.Item>
-            </Col>
-            {gender === 'Homme' && (
-              <Col xs={24} sm={12}>
-                <Form.Item label="Facial Hair" name="facialHair">
-                  {isEditing ? (
+            <Col span={12}>
+              <Form.Item>
+                <span>
+                  <strong>Gender:</strong>{' '}
+                  {canEdit ? (
                     <Select>
-                      {facialHairOptions.map((option) => (
-                        <Select.Option key={option} value={option}>
-                          {option}
-                        </Select.Option>
-                      ))}
+                      <Select.Option value="Homme">Homme</Select.Option>
+                      <Select.Option value="Femme">Femme</Select.Option>
                     </Select>
                   ) : (
-                    <span>{candidate.facialHair}</span>
+                    <>
+                      {candidate.gender?.toLowerCase() === 'femme' ? (
+                        <WomanOutlined style={{ color: '#ff85c0', marginRight: '8px' }} />
+                      ) : (
+                        <ManOutlined style={{ color: '#69c0ff', marginRight: '8px' }} />
+                      )}
+                      {candidate.gender}
+                    </>
                   )}
-                </Form.Item>
-              </Col>
-            )}
-            {gender === 'Femme' && (
-              <>
-                <Col xs={24} sm={12}>
-                  <Form.Item label="Veiled" name="veiled" valuePropName="checked">
-                    {isEditing ? (
-                      <Checkbox>Yes</Checkbox>
-                    ) : (
-                      <span>{candidate.veiled ? 'Yes' : 'No'}</span>
-                    )}
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item label="Pregnant" name="pregnant" valuePropName="checked">
-                    {isEditing ? (
-                      <Checkbox>Yes</Checkbox>
-                    ) : (
-                      <span>{candidate.pregnant ? 'Yes' : 'No'}</span>
-                    )}
-                  </Form.Item>
-                </Col>
-              </>
-            )}
-            <Col xs={24} sm={12}>
-              <Form.Item label="Town" name="town">
-                {isEditing ? (
-                  <Select>
-                    {towns.map((town) => (
-                      <Select.Option key={town} value={town}>
-                        {town}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                ) : (
-                  <span>{candidate.town}</span>
-                )}
+                </span>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item>
+                <span>
+                  <strong>Birth Year:</strong>{' '}
+                  {canEdit ? (
+                    <Input />
+                  ) : (
+                    <>
+                      <CalendarOutlined style={{ color: '#faad14', marginRight: '8px' }} />
+                      {candidate.birthYear}
+                    </>
+                  )}
+                </span>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item>
+                <span>
+                  <strong>Phone:</strong>{' '}
+                  {canEdit ? (
+                    <Input />
+                  ) : (
+                    <>
+                      <PhoneOutlined style={{ color: '#13c2c2', marginRight: '8px' }} />
+                      {candidate.phone}
+                    </>
+                  )}
+                </span>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item>
+                <span>
+                  <strong>Town:</strong>{' '}
+                  {canEdit ? (
+                    <Input />
+                  ) : (
+                    <>
+                      <EnvironmentOutlined style={{ color: '#52c41a', marginRight: '8px' }} />
+                      {candidate.town}
+                    </>
+                  )}
+                </span>
               </Form.Item>
             </Col>
           </Row>
-        </Panel>
-      </Collapse>
-    </Form>
+        </div>
+
+        {/* Physical Attributes Section */}
+        <div>
+          <Title level={4}>Physical Attributes</Title>
+          <Row gutter={[16, 16]}>
+            <Col span={12}>
+              <Form.Item>
+                <span>
+                  <strong>Height:</strong>{' '}
+                  {canEdit ? (
+                    <Input />
+                  ) : (
+                    <>
+                      <UserOutlined style={{ color: '#52c41a', marginRight: '8px' }} />
+                      {formattedHeight} m
+                    </>
+                  )}
+                </span>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item>
+                <span>
+                  <strong>Weight:</strong>{' '}
+                  {canEdit ? (
+                    <Input />
+                  ) : (
+                    <>
+                      <UserOutlined style={{ color: '#722ed1', marginRight: '8px' }} />
+                      {formattedWeight} kg
+                    </>
+                  )}
+                </span>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item>
+                <span>
+                  <strong>Skin Color:</strong>{' '}
+                  {canEdit ? (
+                    <Select>
+                      <Select.Option value="fair">Fair</Select.Option>
+                      <Select.Option value="medium">Medium</Select.Option>
+                    </Select>
+                  ) : (
+                    <>
+                      <SkinOutlined style={{ color: '#faad14', marginRight: '8px' }} />
+                      {candidate.skinColor?.[0]}
+                    </>
+                  )}
+                </span>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item>
+                <span>
+                  <strong>Hair Type:</strong>{' '}
+                  {canEdit ? (
+                    <Select>
+                      <Select.Option value="straight">Straight</Select.Option>
+                      <Select.Option value="curly">Curly</Select.Option>
+                    </Select>
+                  ) : (
+                    <>
+                      <BgColorsOutlined style={{ color: '#ff7a45', marginRight: '8px' }} />
+                      {candidate.hairType?.[0]}
+                    </>
+                  )}
+                </span>
+              </Form.Item>
+            </Col>
+          </Row>
+        </div>
+      </Form>
+    </div>
   );
 };
 

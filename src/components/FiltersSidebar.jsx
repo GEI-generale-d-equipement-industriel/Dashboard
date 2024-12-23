@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Button, Checkbox, Input, Slider, Divider, Select} from "antd";
+import { Button, Checkbox, Input, Slider, Divider, Select,Grid} from "antd";
 import {
   ClearOutlined,
   CaretDownOutlined,
   CaretUpOutlined,
+  CloseOutlined
 } from "@ant-design/icons";
 
 import { useNavigate, useLocation } from "react-router-dom";
 
 import "../styles/FilterSidebar.css";
-
+const { useBreakpoint } = Grid;
 const interests = [
   "Modèle pour shooting en studio",
   "Créateur UGC",
@@ -36,8 +37,8 @@ const skinColors = ["Clair", "Pâle", "Moyen", "Olive", "Foncé", "Noir"];
 const signs = ["Appareil dentaire", "Lunettes", "Tatouage"];
 // const registrationTypes = ["Enfant", "Adulte"];
 
-const FiltersSidebar = () => {
-  
+const FiltersSidebar = ({ onClose }) => {
+  const screens = useBreakpoint();
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -196,8 +197,24 @@ const FiltersSidebar = () => {
       handleFilterChange('selectedPregnancyStatus', checkedValues.includes('Pregnant'));
     };
     
+    
   return (
     <div className="filters-sidebar">
+       {!screens.lg && (
+        <Button
+          icon={<CloseOutlined />}
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            zIndex: 2000,
+            background: 'none',
+            color: '#ffff',
+            border: 'none',
+          }}
+        />
+      )}
       <h2 className="filters-title">Filters</h2>
 
       {isFilterActive && (

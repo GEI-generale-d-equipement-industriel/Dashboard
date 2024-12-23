@@ -511,6 +511,7 @@ const CandidateDetails = () => {
                               size="small"
                               className="mb-4 bg-white rounded-lg shadow-md p-4"
                             >
+                             
                               <Descriptions.Item label="Phone">
                                 {isEditing ? (
                                   <Form.Item name="phone" noStyle>

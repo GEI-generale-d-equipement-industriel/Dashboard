@@ -15,7 +15,7 @@ class AuthInterceptor {
             headers: {
                 "Content-Type": "application/json",
             },
-            withCredentials: true,
+            withCredentials: true,  
         });
 
         this.axiosInstance.interceptors.request.use(

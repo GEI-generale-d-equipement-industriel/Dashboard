@@ -27,7 +27,7 @@ const CandidateCard = React.memo(
 
     // Calculate BMI
     const weight = parseFloat(candidate.weight);
-    const height = parseFloat(candidate.height);
+    const height = parseFloat(candidate.height).toFixed(2);;
     const bmi = weight / (height * height);
 
     // Get gender icon
@@ -81,7 +81,7 @@ const CandidateCard = React.memo(
             <div className="mt-2">
               <div className="flex justify-between text-xs text-gray-700 mb-2 sm:text-sm">
                 <span>Age: {age}</span>
-                <span>Taille: {candidate.height} m</span>
+                <span>Taille: {height} m</span>
               </div>
               <div className="mb-2">
                 <BmiIndicateur bmi={bmi} display={false} />

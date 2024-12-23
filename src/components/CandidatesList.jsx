@@ -13,6 +13,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 // import { toggleFavorite } from "../services/api/favoritesService";
 import { useQueryClient } from "@tanstack/react-query";
 import CandidateCard from "./CandidateCard";
+import BackToTopButton from "../components/button/BackToTopButton"
 import useFetchFileLinks from "../Hooks/useFetchFileLinks";
 import useInfiniteScroll from "react-infinite-scroll-hook";
 import useCandidates from "../Hooks/useCandidates";
@@ -345,6 +346,7 @@ const initialSortOrder = queryParams.get("sortOrder") || "desc";
         </Row>
         <div ref={sentryRef}></div>
       </div>
+      <BackToTopButton />
     </div>
   );  
 }

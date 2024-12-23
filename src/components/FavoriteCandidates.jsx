@@ -14,7 +14,7 @@ const FavoriteCandidates = () => {
   const [notificationApi, contextHolder] = notification.useNotification();
   const userId = useSelector((state) => state.auth.id);
 
-  const { data: favoriteCandidates, isLoading, isError } = useFetchFavorites(userId);
+  const { data: favoriteCandidates } = useFetchFavorites(userId);
 
   const { mutate: updateFavorites } = useUpdateFavorites();
   

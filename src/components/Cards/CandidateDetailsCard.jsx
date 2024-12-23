@@ -14,20 +14,18 @@ const CandidateDetailsCard = ({
   bmi,
 }) => {
   return (
-    <div className="shadow-md p-6 bg-white rounded-lg flex flex-col justify-between h-full">
-      {/* Candidate Tabs */}
+    <Card className="bg-white rounded-lg shadow-md">
       <CandidateTabs candidate={candidate} isEditing={isEditing} form={form} bmi={bmi} />
-
-      {/* Actions */}
       <div className="mt-4 flex justify-end space-x-4">
         <CandidateActions
           isEditing={isEditing}
+          handleSave={handleSave}
           handleEditToggle={handleEditToggle}
           isFavorite={isFavorite}
           handleLikeToggle={handleLikeToggle}
         />
       </div>
-    </div>
+    </Card>
   );
 };
 

@@ -1,17 +1,16 @@
 import React from 'react';
-import { Col } from 'antd';
 import ImageGallery from './ImagesGallery'; // Adjust the import path accordingly
 
 const CandidateImageGallery = ({ imageFiles }) => {
   return (
-    <Col xs={24} sm={24} md={12} lg={12} className="flex justify-center">
+    <div style={{ width: '120%', maxWidth: '600px' }}>
       <ImageGallery
         images={imageFiles}
-        containerStyle={{ maxWidth: '600px', margin: '0 auto', padding: '16px' }}
+        containerStyle={{ width: '100%' }}
         thumbnailSize={60}
-        mainImageHeight={400}
+        mainImageHeight={500} // Fixed height for stability
       />
-    </Col>
+    </div>
   );
 };
 
