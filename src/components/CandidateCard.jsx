@@ -95,7 +95,7 @@ const CandidateCard = React.memo(
                     const shortInterest =
                       interestShortNames[trimmedInterest] || trimmedInterest;
                     return (
-                      <Tag color={tagColors[index % tagColors.length]} key={index} className="text-xs sm:text-sm">
+                      <Tag color={tagColors[index % tagColors?.length]} key={index} className="text-xs sm:text-sm">
                         {shortInterest}
                       </Tag>
                     );
@@ -121,7 +121,10 @@ const CandidateCard = React.memo(
                   <HeartOutlined className="text-xl text-gray-500" />
                 )
               }
-              onClick={() => onToggleFavorite(candidate._id)}
+              onClick={() =>  onToggleFavorite({
+                candidateId: candidate._id,
+                action: isFavorite ? 'remove' : 'add',
+              })}
               className="flex items-center hover:text-blue-500 transition-colors duration-300"
             />
           </Tooltip>

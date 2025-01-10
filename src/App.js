@@ -3,13 +3,16 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AppLayout from "./Layout/AppLayout";
 import CandidatesList from "./components/CandidatesList";
 import CandidateDetails from "./pages/CandidateDetails.page";
-import FavoriteCandidates from "./components/FavoriteCandidates";
+// import FavoriteCandidates from "./components/FavoriteCandidates";
 import PrivateRoute from "./components/PrivateRoute";
 import { UserSessionProvider } from "./context/UserSessionContext";
+
+import Favorites from "./pages/Favorites.page";
 import LandingPage from "./pages/Landing.page";
 import ProfilePage from "./pages/Profile.page";
 import Unauthorized from "./pages/Unauthorized.page";
 import FeedBack from "./pages/FeedBack.page";
+import CampaignsPage from "./pages/Campaigns.page";
 function App() {
   return (
     <BrowserRouter>
@@ -49,11 +52,21 @@ function App() {
             }
           />
           <Route
+            path="campaigns/:campaignId"
+            element={
+              <PrivateRoute>
+                <AppLayout>
+                  <CampaignsPage />
+                </AppLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/favorites"
             element={
               <PrivateRoute>
                 <AppLayout>
-                  <FavoriteCandidates />
+                  <Favorites />
                 </AppLayout>
               </PrivateRoute>
             }

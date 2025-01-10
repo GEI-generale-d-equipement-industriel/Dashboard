@@ -1,16 +1,16 @@
 import React,{useState} from "react";
-import { Modal } from "antd";
 import LoginModal from "../components/Modal/Login.Modal";
+import JoinModal from "../components/Modal/Join.Modal";
+
 const LandingPage = () => {
-    const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
+  const [isJoinModalVisible, setIsJoinModalVisible] = useState(false);
 
-  const showModal = () => {
-    setIsModalVisible(true);
-  };
+  const showLoginModal = () => setIsLoginModalVisible(true);
+  const closeLoginModal = () => setIsLoginModalVisible(false);
 
-  const handleCloseModal = () => {
-    setIsModalVisible(false);
-  };
+  const showJoinModal = () => setIsJoinModalVisible(true);
+  const closeJoinModal = () => setIsJoinModalVisible(false);
   return (
     <div className="bg-gray-900 min-h-screen text-white">
       {/* Header */}
@@ -19,7 +19,7 @@ const LandingPage = () => {
           {/* Logo */}
           <a href="/" className="flex items-center space-x-3 hover:opacity-90 transition-opacity duration-300">
             <img
-              src="/assets/BeModel1.png"
+              src="https://res.cloudinary.com/dqtwi6rca/image/upload/v1736505510/assets/loiqsnuqfzvz8xr8udvr.png"
               alt="BeModel Logo"
               className="h-5 w-24"
             />
@@ -44,7 +44,7 @@ const LandingPage = () => {
             </a>
             <button
               className="bg-yellow-500 text-black px-4 py-2 rounded-lg hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition duration-300"
-              onClick={showModal}
+              onClick={showLoginModal}
             >
               Login
             </button>
@@ -61,12 +61,12 @@ const LandingPage = () => {
           <p className="text-gray-400 mt-4 max-w-2xl mx-auto">
             Connecting brands with models and influencers for impactful content.
           </p>
-          <a
-            href="https://www.be-model.tn/form/"
-            className="mt-6 inline-block bg-yellow-500 text-black px-6 py-3 rounded-lg hover:bg-yellow-600 font-semibold shadow-md transition"
+          <button
+            className="mt-6 inline-block bg-yellow-500 text-black px-6 py-3 rounded-lg hover:bg-yellow-600 font-semibold shadow-md transition duration-300"
+            onClick={showJoinModal}
           >
             Join BeModel Now
-          </a>
+          </button>
         </div>
       </section>
 
@@ -121,9 +121,14 @@ const LandingPage = () => {
       </footer>
 
       {/* Modal */}
-      {isModalVisible && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black bg-opacity-50 transition-opacity duration-300">
-          <LoginModal onClose={handleCloseModal} />
+      {isLoginModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black bg-opacity-50 backdrop-blur-sm">
+          <LoginModal onClose={closeLoginModal} />
+        </div>
+      )}
+      {isJoinModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black bg-opacity-50 backdrop-blur-sm">
+          <JoinModal onClose={closeJoinModal} />
         </div>
       )}
     </div>

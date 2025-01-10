@@ -13,6 +13,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "antd": "^5.20.3",
+    "antd-style": "^3.7.1",
     "autoprefixer": "^10.4.16",
     "axios": "^1.7.5",
     "dotenv": "^16.4.5",

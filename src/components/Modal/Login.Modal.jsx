@@ -56,7 +56,7 @@ const LoginModal = ({ onClose }) => {
       {/* Logo Section */}
       <div className="flex justify-center mb-8">
         <img
-          src="/assets/BeModel1.png"
+          src="https://res.cloudinary.com/dqtwi6rca/image/upload/v1736505510/assets/loiqsnuqfzvz8xr8udvr.png"
           alt="BeModel Logo"
           className="w-36 "
         />

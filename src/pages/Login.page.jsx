@@ -42,11 +42,11 @@ const LoginModal = ({ onClose }) => {
     }
   };
 
-  return (
+  return (  
     <div>
       <div className="flex justify-center">
         <img
-          src="/assets/Logo1.jpg"
+          src="https://res.cloudinary.com/dqtwi6rca/image/upload/v1736504762/assets/mzuyr4pqlp5le4mqp7gz.jpg"
           alt="BeModel Logo"
           className="w-40 h-auto mb-4"
         />

@@ -1,14 +1,14 @@
 import React from 'react';
-import { Layout, Drawer, Grid, Button } from 'antd';
+import { Layout, Drawer, Grid } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { CloseOutlined } from '@ant-design/icons';
+// import { CloseOutlined } from '@ant-design/icons';
 import { removeAuthData } from '../store/authSlice';
 import AuthInterceptor from '../services/auth/AuthInterceptor';
 import FiltersSidebar from '../components/FiltersSidebar';
 import AppHeader from '../components/header/AppHeader'; // Import the extracted AppHeader
 import '../styles/AppLayout.css';
-
+  
 const { Content, Sider } = Layout;
 const { useBreakpoint } = Grid;
 
