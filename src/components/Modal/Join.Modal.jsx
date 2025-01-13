@@ -24,6 +24,7 @@ const JoinModal = ({ onClose }) => {
       <button
         onClick={onClose}
         className="absolute top-3 right-3 text-gray-500 hover:text-black transition"
+        aria-label="Close Join modal"
       >
         ✖
       </button>
