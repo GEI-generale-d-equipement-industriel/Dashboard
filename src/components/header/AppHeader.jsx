@@ -87,7 +87,7 @@ const AppHeader = ({ handleLogout, toggleDrawer, screens }) => {
       >
         <Link to="/candidates">
           <img
-            src="/assets/Logo.jpg"
+            src="https://res.cloudinary.com/dqtwi6rca/image/upload/v1736504762/assets/mzuyr4pqlp5le4mqp7gz.jpg"
             alt="logo"
             style={{ width: '200%', height: '100%', objectFit: 'cover' }}
           />

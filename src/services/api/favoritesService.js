@@ -32,32 +32,30 @@ export const useUpdateFavorites = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ userId, favorites }) => {
-      const favoriteIds = favorites.map((fav) => fav._id || fav);
+    // Now we accept a single candidate with { candidateId, action }
+    mutationFn: async ({ userId, candidateId, action }) => {
       const { data } = await axios.put(`${url}/user/${userId}/favorites`, {
-        favorites: favoriteIds,
+        candidateId,
+        action,
       });
-      return data.favorites;
+      return data; // { message, favorites, length }
     },
-    onMutate: async ({ userId, favorites }) => {
-      await queryClient.cancelQueries(['favorites', userId]);
-
-      const previousFavorites = queryClient.getQueryData(['favorites', userId]);
-
-      queryClient.setQueryData(['favorites', userId], favorites);
-
+    onMutate: async (variables) => {
+      // e.g.  { userId, candidateId, action }
+      await queryClient.cancelQueries(['favorites', variables.userId]);
+      const previousFavorites = queryClient.getQueryData(['favorites', variables.userId]);
       return { previousFavorites };
     },
     onError: (error, variables, context) => {
-      const { userId } = variables;
+      // Revert
       if (context?.previousFavorites) {
-        queryClient.setQueryData(['favorites', userId], context.previousFavorites);
+        queryClient.setQueryData(['favorites', variables.userId], context.previousFavorites);
       }
     },
     onSettled: (data, error, variables) => {
-      const { userId } = variables;  
-      queryClient.invalidateQueries(['favorites', userId]);
+      queryClient.invalidateQueries(['favorites', variables.userId]);
     },
   });
 };
+
 

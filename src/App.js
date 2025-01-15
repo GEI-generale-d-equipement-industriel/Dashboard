@@ -1,22 +1,29 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import AppLayout from "./Layout/AppLayout";
 import CandidatesList from "./components/CandidatesList";
 import CandidateDetails from "./pages/CandidateDetails.page";
-import FavoriteCandidates from "./components/FavoriteCandidates";
+// import FavoriteCandidates from "./components/FavoriteCandidates";
 import PrivateRoute from "./components/PrivateRoute";
 import { UserSessionProvider } from "./context/UserSessionContext";
+import GoogleAnalytics from "./components/analytics/GoogleAnalytics";
+
+import Favorites from "./pages/Favorites.page";
 import LandingPage from "./pages/Landing.page";
 import ProfilePage from "./pages/Profile.page";
 import Unauthorized from "./pages/Unauthorized.page";
 import FeedBack from "./pages/FeedBack.page";
+import CampaignsPage from "./pages/Campaigns.page";
 function App() {
-  return (
+  return (  
+    <HelmetProvider>
     <BrowserRouter>
       <UserSessionProvider>
+      <GoogleAnalytics />
         <Routes>
           {/* Public Route */}
-          <Route path="/home" element={<LandingPage />} />
+          <Route path="/" element={<LandingPage />} />
 
           <Route
             path="/unauthorized"
@@ -49,11 +56,21 @@ function App() {
             }
           />
           <Route
+            path="campaigns/:campaignId"
+            element={
+              <PrivateRoute>
+                <AppLayout>
+                  <CampaignsPage />
+                </AppLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/favorites"
             element={
               <PrivateRoute>
                 <AppLayout>
-                  <FavoriteCandidates />
+                  <Favorites />
                 </AppLayout>
               </PrivateRoute>
             }
@@ -89,10 +106,11 @@ function App() {
 />
           
           {/* Catch-All */}
-          <Route path="*" element={<Navigate to="/home" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </UserSessionProvider>
     </BrowserRouter>
+    </HelmetProvider>
   );
 }
 

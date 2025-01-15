@@ -110,6 +110,24 @@ const CandidateDetailsForm = ({ candidate, isEditing, form, bmi, role }) => {
                 </span>
               </Form.Item>
             </Col>
+            <Col span={12}>
+              <Form.Item>
+                <span>
+                  <strong>Source:</strong>{' '}
+                  {canEdit ? (
+                    // If admin is editing, show the input
+                    <Form.Item name="source" noStyle>
+                      <Input placeholder="Where did this candidate come from?" />
+                    </Form.Item>
+                  ) : (
+                    // Otherwise display existing source or 'N/A'
+                    candidate.source ?? 'N/A'
+                  )}
+                </span>
+              </Form.Item>
+            </Col>   
+
+
           </Row>
         </div>
 

@@ -49,14 +49,14 @@ const LoginModal = ({ onClose }) => {
       <button
         onClick={onClose}
         className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition duration-200"
-        aria-label="Close"
+        aria-label="Close login modal"
       >
         ✕
       </button>
       {/* Logo Section */}
       <div className="flex justify-center mb-8">
         <img
-          src="/assets/BeModel1.png"
+          src="https://res.cloudinary.com/dqtwi6rca/image/upload/v1736505510/assets/loiqsnuqfzvz8xr8udvr.png"
           alt="BeModel Logo"
           className="w-36 "
         />
@@ -110,6 +110,7 @@ const LoginModal = ({ onClose }) => {
             loading={loading}
             block
             className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-lg py-2 px-4 font-medium shadow-md"
+            aria-label="Login"
           >
             LOGIN
           </Button>

@@ -19,7 +19,7 @@ const PrivateRoute = ({ children, allowedRoles }) => {
 
   if (!isAuthenticated) {
     // Redirect unauthenticated users to the login page
-    return <Navigate to="/home" state={{ from: location }} replace />;
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   // Check role-based access only if allowedRoles is provided

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Checkbox, Input, Slider, Divider, Select,Grid} from "antd";
+import { Button, Checkbox, Input, Slider, Divider, Select,Grid,InputNumber} from "antd";
 import {
   ClearOutlined,
   CaretDownOutlined,
@@ -35,6 +35,7 @@ const hairTypes = ["Lisses", "Ondulés", "Bouclés", "Crépus"];
 const hairColors = ["Blond", "Brun", "Chatain", "Noir", "Roux", "Gris"];
 const skinColors = ["Clair", "Pâle", "Moyen", "Olive", "Foncé", "Noir"];
 const signs = ["Appareil dentaire", "Lunettes", "Tatouage"];
+const knownSources = ["techwood", "canpol"];
 // const registrationTypes = ["Enfant", "Adulte"];
 
 const FiltersSidebar = ({ onClose }) => {
@@ -83,6 +84,7 @@ const FiltersSidebar = ({ onClose }) => {
       ? queryParams.get("signs").split(",")
       : [],
     selectedRegistrationType: queryParams.get("registrationType") || "",
+    selectedSource: queryParams.get("source") || "",
   });
 
   // Visibility States
@@ -150,6 +152,7 @@ const FiltersSidebar = ({ onClose }) => {
       params.set("signs", filters.selectedSign.join(","));
     if (filters.selectedRegistrationType)
       params.set("registrationType", filters.selectedRegistrationType);
+    if (filters.selectedSource) params.set("source", filters.selectedSource);
 
     navigate({ search: params.toString() });
   }, [filters, navigate]);
@@ -180,6 +183,31 @@ const FiltersSidebar = ({ onClose }) => {
     });
   };
 
+  // const handleMinAgeChange = (value) => {
+  //   // Safely parse the new value
+  //   if (typeof value !== "number" || isNaN(value)) return;
+
+  //   // Clamps user input so min doesn't exceed the current max
+  //   const currentMax = filters.selectedAgeRange[1];
+  //   const newMin = Math.min(value, currentMax);
+
+  //   setFilters((prev) => ({
+  //     ...prev,
+  //     selectedAgeRange: [newMin, currentMax],
+  //   }));
+  // };
+
+  // const handleMaxAgeChange = (value) => {
+  //   if (typeof value !== "number" || isNaN(value)) return;
+
+  //   const currentMin = filters.selectedAgeRange[0];
+  //   const newMax = Math.max(value, currentMin);
+
+  //   setFilters((prev) => ({
+  //     ...prev,
+  //     selectedAgeRange: [currentMin, newMax],
+  //   }));
+  // };
   const isFilterActive =
     filters.searchTerm ||
     filters.selectedInterests.length > 0 ||
@@ -224,7 +252,7 @@ const FiltersSidebar = ({ onClose }) => {
             icon={<ClearOutlined />}
             danger
             className="clear-filters-button"
-          >
+          >  
             Clear All Filters
           </Button>
           <Divider />
@@ -297,33 +325,56 @@ const FiltersSidebar = ({ onClose }) => {
           <div className="pl-4">
             <div className="mb-4">
               <h5 className="text-md">Age</h5>
-              <Slider
-                range
-                min={0}
-                max={60}
-                value={filters.selectedAgeRange}
-                onChange={(ageRange) =>
-                  handleFilterChange("selectedAgeRange", ageRange)
-                }
-                className="age-slider"
-              />
+              <div className="flex items-center space-x-2">
+                {/* InputNumber for min age */}
+                <InputNumber
+            min={0}
+            max={60}
+            value={filters.selectedAgeRange[0]}
+            onChange={(val) => {
+              if (typeof val !== "number" || isNaN(val)) return; // Validate input
+              const maxAge = filters.selectedAgeRange[1];
+              const newMin = Math.min(val, maxAge); // Clamp value
+              handleFilterChange("selectedAgeRange", [newMin, maxAge]);
+            }}
+            style={{ width: 70 }}
+          />
+
+          {/* Age Slider */}
+          <Slider
+            range
+            min={0}
+            max={60}
+            value={filters.selectedAgeRange}
+            onChange={(newRange) =>
+              handleFilterChange("selectedAgeRange", newRange)
+            }
+            className="age-slider"
+            style={{ flex: 1 }}
+          />
+
+          {/* InputNumber for Maximum Age */}
+          <InputNumber
+            min={0}
+            max={60}
+            value={filters.selectedAgeRange[1]}
+            onChange={(val) => {
+              if (typeof val !== "number" || isNaN(val)) return; // Validate input
+              const minAge = filters.selectedAgeRange[0];
+              const newMax = Math.max(val, minAge); // Clamp value
+              handleFilterChange("selectedAgeRange", [minAge, newMax]);
+            }}
+            style={{ width: 70 }}
+          />
+              </div>
+
+              {/* Optional: show values under the slider */}
               <div className="age-range">
                 <span>{filters.selectedAgeRange[0]}</span>
                 <span>{filters.selectedAgeRange[1]}</span>
               </div>
             </div>
-            {/* <div className="filter-section">
-        <h4 className="filter-title">
-          Registration Type
-        </h4>
-        <Radio.Group onChange={handleRegistrationTypeChange} value={selectedRegistrationType}>
-          {registrationTypes.map(type => (
-            <Radio key={type} value={type}>
-              {type}
-            </Radio>
-          ))}
-        </Radio.Group>
-      </div> */}
+            
             <div className="mb-4">
               <h5 className="text-md">Sex</h5>
               <Checkbox.Group
@@ -583,6 +634,27 @@ const FiltersSidebar = ({ onClose }) => {
           </div>
         )}
       </div>
+      <div className="filter-section">
+  <h4 className="filter-title">Source</h4>
+  <Select
+    placeholder="Select source"
+    value={filters.selectedSource || undefined}
+    onChange={(value) => 
+      setFilters((prev) => ({
+        ...prev,
+        selectedSource: value,
+      }))
+    }
+    allowClear
+    style={{ width: "100%" }}
+  >
+    {knownSources.map((src) => (
+      <Select.Option key={src} value={src}>
+        {src}
+      </Select.Option>
+    ))}
+  </Select>
+</div>
     </div>
   );
 };
