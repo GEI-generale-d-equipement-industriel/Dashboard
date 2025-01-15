@@ -1,4 +1,5 @@
 import React, { useMemo, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useSelector } from "react-redux";
 import { Typography, Row, Col, Skeleton, Select, Button } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -138,6 +139,35 @@ const CandidateList = () => {
 
   return (
     <div className="min-h-screen py-6" style={{ background: "#fcfcfc" }}>
+      <Helmet>
+        <title>Candidates List - BeModel</title>
+        <meta name="description" content="Explore a diverse list of candidates, including professional models and influencers, ready for collaboration." />
+        <meta name="keywords" content="candidates, models, influencers, collaborations" />
+        <meta property="og:title" content="Candidates List - BeModel" />
+        <meta property="og:description" content="Explore a diverse list of candidates, including professional models and influencers, ready for collaboration." />
+        <meta property="og:url" content={`${window.location.origin}/candidates`} />
+       
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": "Candidates List",
+            "description": "Explore a diverse list of candidates, including professional models and influencers.",
+            "url": `${window.location.origin}/candidates`,
+            "numberOfItems": candidatesForCurrentPage.length,
+            "itemListElement": candidatesForCurrentPage.map((candidate, index) => ({
+              "@type": "ListItem",
+              "position": index + 1,
+              "item": {
+                "@type": "Person",
+                "name": candidate.name,
+                "url": `${window.location.origin}/candidate/${candidate._id}`,
+                "image": fileLinks[candidate._id],
+              },
+            })),
+          })}
+        </script>
+      </Helmet>
       <div className="container mx-auto px-4">
         {/* Sorting Controls */}
         <Row gutter={[16, 24]} className="mb-4" justify="end">

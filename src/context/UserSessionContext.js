@@ -58,12 +58,12 @@ export const UserSessionProvider = ({ children }) => {
       if (isAuthenticated) {
         setIsLoggedIn(true);
         dispatch(fetchFavorites(userId));
-        if (location.pathname === "/home") {
+        if (location.pathname === "/") {
           const from = location.state?.from?.pathname || "/candidates";
           navigate(from, { replace: true });
         }
       } else {
-        if (location.pathname !== "/home") {
+        if (location.pathname !== "/") {
           setIsLoggedIn(false);
           navigate("/home", { replace: true });
         }

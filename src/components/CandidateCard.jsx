@@ -42,13 +42,14 @@ const CandidateCard = React.memo(
 
     
     return (
+    <article className=" rounded-md text-sm sm:text-base" aria-label={`Profile of ${candidate.firstName} ${candidate.name}`}>
       <Card
         hoverable
         cover={
           <div className="relative">
             <Link to={`/candidate/${candidate._id}`}>
               <img
-                alt={candidate.firstName}
+                alt={`${candidate.firstName} ${candidate.name}'s profile`}
                 src={fileLink || defaultImage}
                 className="w-full h-40 object-cover transition-transform duration-300 ease-in-out transform hover:scale-105 sm:h-56 md:h-60 lg:h-64"
                 onError={(e) => {
@@ -70,12 +71,15 @@ const CandidateCard = React.memo(
       >
         <Meta
           title={
+            <header>
             <Link
               to={`/candidate/${candidate._id}`}
               className="text-base font-semibold text-gray-800 hover:text-blue-500 sm:text-lg"
+              aria-label={`View profile of ${candidate.firstName} ${candidate.name}`}
             >
-              {candidate.firstName + ' ' + candidate.name}
+              {candidate.firstName + " " + candidate.name}
             </Link>
+          </header>
           }
           description={
             <div className="mt-2">
@@ -104,7 +108,7 @@ const CandidateCard = React.memo(
             </div>
           }
         />
-        <div className="mt-4 flex justify-between items-center">
+        <footer className="mt-4 flex justify-between items-center">
           <Tooltip
             title={
               isFavorite
@@ -128,8 +132,20 @@ const CandidateCard = React.memo(
               className="flex items-center hover:text-blue-500 transition-colors duration-300"
             />
           </Tooltip>
-        </div>
+        </footer>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Person",
+          "name": `${candidate.firstName} ${candidate.name}`,
+          "image": fileLink || defaultImage,
+          "jobTitle": candidate.jobTitle || "Model",
+          "url": `${window.location.origin}/candidate/${candidate._id}`,
+          "gender": candidate.gender,
+          "birthDate": candidate.birthYear ? `${candidate.birthYear}-01-01` : undefined,
+          "description": `Age: ${age}, Height: ${height}m, Interests: ${candidate.interest.join(", ")}`,
+        })}</script>
       </Card>
+      </article>
     );
   },
   (prevProps, nextProps) => {
