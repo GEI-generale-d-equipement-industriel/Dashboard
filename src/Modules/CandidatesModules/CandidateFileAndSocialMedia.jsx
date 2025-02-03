@@ -19,18 +19,31 @@ const CandidateFilesAndSocialMedia = ({ candidate }) => {
       file.contentType?.startsWith("video/")
   );
 
-  const videoFiles = mediaFiles?.filter((file) =>
-    file.contentType.startsWith("video/")
+  const videoFiles = candidate?.files?.filter(
+    (file) => file.filename.toLowerCase().includes("video")
   );
 
   const audioFiles = mediaFiles?.filter((file) =>
     file.contentType.startsWith("audio/")
   );
 
-  const socialMediaLinks =
-    candidate?.socialMedia?.map((link) => JSON.parse(link)) || [];
+  const socialMediaLinks = candidate?.socialMedia?.map((link) =>
+    typeof link === "string" ? JSON.parse(link) : link
+  ) || [];
+    const combinedAudioFiles = [
+      ...(audioFiles || []),
+      candidate?.voiceUrl
+        ? {
+            filename: candidate.voiceUrl,
+            
+          }
+        : null,
+    ].filter(Boolean); 
 
+   
+    
   const carouselRef = React.useRef();
+
 
   return (
     <div
@@ -110,10 +123,10 @@ const CandidateFilesAndSocialMedia = ({ candidate }) => {
 )}
 
         {/* Audio Files */}
-        {audioFiles && audioFiles.length > 0 && (
+        {combinedAudioFiles && combinedAudioFiles.length > 0 && (
           <div>
             <Row gutter={[16, 16]}>
-              {audioFiles.map((file, index) => (
+              {combinedAudioFiles.map((file, index) => (
                 <Col key={index} xs={24} sm={12}>
                   <div style={{ marginBottom: "16px" }}>
                     <div style={{ fontWeight: "bold", marginBottom: "8px" }}>
@@ -184,7 +197,7 @@ const CandidateFilesAndSocialMedia = ({ candidate }) => {
                 ),
               };
 
-              const icon = socialMediaIcons[link.type.toLowerCase()];
+              const icon = socialMediaIcons[link?.type?.toLowerCase()];
               return (
                 <Col key={index} xs={6} sm={4}>
                   <a
