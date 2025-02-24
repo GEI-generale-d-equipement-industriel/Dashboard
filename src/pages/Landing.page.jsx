@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import LoginModal from "../components/Modal/Login.Modal";
 import SignupModal from "../components/Modal/Signup.Modal";
+import CandidatePreview from "../components/preview/CandidatePreview";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
@@ -73,42 +74,37 @@ const LandingPage = () => {
       <main>
         <section className="py-20 text-center bg-gray-900">
           <div className="container mx-auto px-6">
-            <h1 className="text-5xl font-bold leading-tight">
-              <span className="text-white">Matching</span>{" "}
-              <span className="text-yellow-400">Brands</span>{" "}
-              <span className="text-white">&</span>{" "}
-              <span className="text-yellow-400">Creators</span>
+             <h1 className="text-5xl font-bold leading-tight mb-4">
+              Matching <span className="text-yellow-500">Brands</span> &{" "}
+              <span className="text-yellow-500">Creators</span>
             </h1>
             <p className="text-gray-400 mt-4 max-w-2xl mx-auto">
-              Connecting brands with models and influencers for impactful content.
+            The only platform you need for content creation.
             </p>
-            <div className="mt-10 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Brand Column */}
-              <div className="flex flex-col items-center max-w-md mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            <div className="flex flex-col items-center">
                 <img
                   src="/assets/brand.webp"
                   alt="Professional shoot for a brand"
-                  className="w-full h-auto rounded-lg shadow-md"
+                  className="w-full h-[300px] object-contain rounded-lg shadow-lg mb-6"
                 />
                 <button
-                  className="mt-6 inline-block bg-yellow-500 text-black px-6 py-3 rounded-lg hover:bg-yellow-600 font-semibold shadow-md transition duration-300"
-                  onClick={() => navigate('/brandform', { replace: true })}
-                  aria-label="Join as a Brand"
+                  onClick={() => navigate("/brandform", { replace: true })}
+                  className="bg-yellow-500 text-black px-8 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition duration-300"
                 >
                   Join as a Brand
                 </button>
               </div>
               {/* Creator Column */}
-              <div className="flex flex-col items-center max-w-md mx-auto">
+              <div className="flex flex-col items-center">
                 <img
                   src="/assets/creator.webp"
                   alt="Collaboration with a creator"
-                  className="w-full h-auto rounded-lg shadow-md"
+                  className="w-full h-[300px] object-contain rounded-lg shadow-lg mb-6"
                 />
                 <button
-                  className="mt-6 inline-block bg-yellow-500 text-black px-6 py-3 rounded-lg hover:bg-yellow-600 font-semibold shadow-md transition duration-300"
                   onClick={handleJoinCreator}
-                  aria-label="Join as a Creator"
+                  className="bg-yellow-500 text-black px-8 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition duration-300"
                 >
                   Join as a Creator
                 </button>
@@ -118,45 +114,124 @@ const LandingPage = () => {
         </section>
 
         {/* Why Choose Us */}
-        <section id="about" className="bg-gray-800 py-20">
+        <section className="py-8 bg-gray-100">
           <div className="container mx-auto px-6">
-            <h2 className="text-3xl font-bold text-center text-yellow-500">
-              Why Choose BeModel?
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
-              {[
-                {
-                  title: "Curated Talent",
-                  desc: "Access a diverse network of professional models and influencers.",
-                },
-                {
-                  title: "Seamless Collaboration",
-                  desc: "Simplified tools to connect and create impactful campaigns.",
-                },
-                {
-                  title: "Authentic Content",
-                  desc: "Build trust with content that connects emotionally.",
-                },
-              ].map((item, index) => (
-                <article
-                  key={index}
-                  className="bg-gray-900 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
-                >
-                  <h3 className="text-xl font-semibold text-yellow-500">
-                    {item.title}
-                  </h3>
-                  <p className="text-gray-400 mt-2">{item.desc}</p>
-                </article>
+            <h2 className="text-2xl font-semibold text-center text-gray-600 mb-6">Used by Leading Brands</h2>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-8 items-center justify-items-center">
+              {["KA","BE",  "TI","TR","TE"].map((brand) => (
+                <img
+                  key={brand}  
+                  src={`/Logos/${brand}.svg `}
+                  alt={`${brand} logo`}
+                  className="h-28 object-contain filter    hover:opacity-100 transition-opacity duration-300"
+                />
               ))}
             </div>
           </div>
         </section>
+        <section className="py-20 bg-gray-900">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold mb-4">
+                How does it <span className="text-yellow-500">work</span> ?
+              </h2>
+              <p className="text-gray-400">Join a network of 2k+ Creators & 20+ Brands</p>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="space-y-8">
+                <div className="space-y-6">
+                  <h3 className="text-xl font-semibold text-yellow-500">For Creators</h3>
+                  <ul className="space-y-4">
+                    {[
+                      "Connect with leading brands for collaboration opportunities",  
+                      "Showcase your portfolio to potential clients",
+                      "Access professional resources and community support",
+                    ].map((text, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="text-yellow-500 mr-2">•</span>
+                        <span className="text-gray-300">{text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="space-y-6">
+                  <h3 className="text-xl font-semibold text-yellow-500">For Brands</h3>
+                  <ul className="space-y-4">
+                    {[
+                      "Find the perfect creators for your campaigns",
+                      "Streamline content creation and collaboration",
+                      "Track campaign performance and ROI",
+                    ].map((text, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="text-yellow-500 mr-2">•</span>
+                        <span className="text-gray-300">{text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <div className="relative aspect-video rounded-lg overflow-hidden shadow-xl">
+                <video className="w-full h-full object-cover" controls poster="/assets/video-thumbnail.jpg">
+                  <source src="/assets/how-it-works.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            </div>
+          </div>
+        </section>
+{/* <CandidatePreview /> */}
+        {/* Testimonials Section - New */}
+        <section className="py-20 bg-gray-100">
+          <div className="container mx-auto px-6">
+           
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                {
+                  name: "Wassim G",
+                  image: "/assets/user1.png",
+                  text: "Aamelt 2 shooting maa market contactewni aal BeModel. Nes el kol professionnel w ambiance behia.",
+                },
+                {
+                  name: "Siwar K",
+                  image: "/assets/user2.png",
+                  text: "Aamelt 2 shooting maa market contactewni aal BeModel. Nes el kol professionnel w ambiance behia.",
+                },
+                {
+                  name: "Monia B",
+                  image: "/assets/user3.png",
+                  text: "Aamelt 2 shooting maa market contactewni aal BeModel. Nes el kol professionnel w ambiance behia.",
+                },
+                {
+                  name: "Wassim G",
+                  image: "/assets/user4.png",
+                  text: "Aamelt 2 shooting maa market contactewni aal BeModel. Nes el kol professionnel w ambiance behia.",
+                },
+              ].map((testimonial, index) => (
+                <div key={index} className="flex flex-col items-center">
+                
+                <div className="bg-gray-200 rounded-lg p-6 min-h-[200px] w-full shadow-2xl">
+                <div className={` rounded-full flex items-center justify-center mb-6`}>
+                  <img
+                    src={testimonial.image || "/placeholder.svg"}
+                    alt={testimonial.name}
+                    className="w-28 h-28 rounded-full object-cover"
+                  />
+                </div>
+                <h3 className="text-yellow-500 text-center text-xl font-bold mb-4">{testimonial.name}</h3>
+                  <p className="text-gray-800 text-center font-bold leading-relaxed">{testimonial.text}</p>
+                </div>
+              </div>
+              ))}
+            </div>
+          </div>
+        </section>
+              
       </main>
 
       {/* Footer */}
       <footer className="bg-gray-900 py-6 text-gray-400">
         <div className="container mx-auto px-6 flex justify-between items-center">
-          <p>&copy; 2024 BeModel. All rights reserved.</p>
+          <p>&copy; 2024-2025 BeModel. All rights reserved.</p>
           <nav aria-label="Footer navigation">
             <div className="flex space-x-4">
               <a href="#" className="hover:text-yellow-500">
