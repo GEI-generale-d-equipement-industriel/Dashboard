@@ -1,6 +1,9 @@
 // src/Hooks/useCandidates.js
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { fetchCandidates } from "../services/api/apiService";
+import { removeCandidateRequest } from "../services/api/apiService";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
 
 const useCandidates = (filters, pageSize) => {
   // Transform filters to match backend expectations
@@ -27,7 +30,7 @@ const useCandidates = (filters, pageSize) => {
     registrationType: filters.selectedRegistrationType || undefined,
     source: filters.selectedSource || undefined,
   };
-
+ 
   return useInfiniteQuery({
     queryKey: ["candidates", transformedFilters,],
     queryFn: ({ pageParam = 1 }) =>
@@ -45,5 +48,20 @@ const useCandidates = (filters, pageSize) => {
     keepPreviousData: false,
   });
 };
+export const useRemoveCandidate = () => {
+  const queryClient = useQueryClient();
 
+  return useMutation({
+    mutationFn: (candidateId) => removeCandidateRequest(candidateId),
+    onSuccess: (data, candidateId) => {
+      // If you want to remove them from the local "candidates" list, 
+      // or re-fetch it:
+      queryClient.invalidateQueries(['candidates']);
+      // Or do other cleanup if needed
+    },
+    onError: (error) => {
+      console.error('Error removing candidate:', error);
+    },
+  });
+};
 export default useCandidates;

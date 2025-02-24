@@ -26,15 +26,15 @@ const CandidateDetailsForm = ({ candidate, isEditing, form, bmi, role }) => {
 
   
   return (
-    <div style={{ padding: '12px' }}>
+    <div style={{ padding: '1px' }}>
       <Form
         form={form}
         initialValues={candidate}
         layout="vertical"
-        style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+        style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}
       >
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <Title level={3} style={{ marginBottom: '2px', color: '#5A6650' }}>
+        <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+          <Title level={3} style={{ marginBottom: '0px', color: '#5A6650' }}>
             {candidate.firstName} {candidate.name}
           </Title>
         </div>
@@ -42,7 +42,7 @@ const CandidateDetailsForm = ({ candidate, isEditing, form, bmi, role }) => {
         {/* Basic Information Section */}
         <div>
           <Title level={4}>Basic Information</Title>
-          <Row gutter={[16, 16]}>
+          <Row gutter={[16]}>
             <Col span={12}>
               <Form.Item>
                 <span>
@@ -74,7 +74,7 @@ const CandidateDetailsForm = ({ candidate, isEditing, form, bmi, role }) => {
                   ) : (
                     <>
                       <CalendarOutlined style={{ color: '#faad14', marginRight: '8px' }} />
-                      {candidate.birthYear}
+                      {candidate.birthYear? candidate.birthYear:  candidate.birthDate.substring(0, 10)}
                     </>
                   )}
                 </span>
@@ -133,8 +133,8 @@ const CandidateDetailsForm = ({ candidate, isEditing, form, bmi, role }) => {
 
         {/* Physical Attributes Section */}
         <div>
-          <Title level={4}>Physical Attributes</Title>
-          <Row gutter={[16, 16]}>
+          <Title level={4} color='gray-400'>Physical Attributes</Title>
+          <Row gutter={[16]}>
             <Col span={12}>
               <Form.Item>
                 <span>

@@ -1,27 +1,23 @@
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import TagManager from "react-gtm-module";
 
 const GoogleAnalytics = () => {
   const location = useLocation();
-  const id=process.env.REACT_APP_GTM_ID; 
-  
-  
-  useEffect(() => {
-    TagManager.initialize({
-      gtmId: id, // Replace with your Google Tag Manager ID
-    });
 
-    TagManager.dataLayer({
-      dataLayer: {
-        event: "pageview",
-        pagePath: location.pathname + location.search,
-        pageTitle: document.title,
-      },
-    });
+  useEffect(() => {
+    // Push pageview event to dataLayer on route change
+    if (window.dataLayer) {
+      window.dataLayer.push({
+        event: "pageview", // Standard event name for GTM
+        pagePath: location.pathname + location.search, // Current URL
+        pageTitle: document.title, // Current page title
+      });
+    } else {
+      console.warn("dataLayer is not defined");
+    }
   }, [location]);
 
-  return null;
+  return null; // This component does not render anything
 };
 
 export default GoogleAnalytics;

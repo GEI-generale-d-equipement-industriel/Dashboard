@@ -52,6 +52,35 @@ export const deleteCampaignRequest = async (campaignId) => {
   return data;
 };
 
+// Update campaign profile (add/remove)
+export const updateCampaignProfileRequest = async ({ campaignId, profileId, action }) => {
+  const { data } = await axios.put(`${url}/campaigns/${campaignId}/profiles`, {
+    profileId,
+    action,
+  });
+  return data; // Return updated campaign
+};
+
+export const useUpdateCampaignProfile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateCampaignProfileRequest,
+    onSuccess: (data, variables) => {
+      const { campaignId } = variables;
+
+      // Invalidate the specific campaign's cache to reflect the updated profiles
+      queryClient.invalidateQueries(['campaignProfiles', campaignId]);
+
+      // Optionally, invalidate the campaigns list to reflect changes in the UI
+      queryClient.invalidateQueries(['campaigns']);
+    },
+    onError: (error) => {
+      console.error('Error updating campaign profile:', error);
+    },
+  });
+};
+
 export const useDeleteCampaign = () => {
     const queryClient = useQueryClient();
   

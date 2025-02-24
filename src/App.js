@@ -15,6 +15,9 @@ import ProfilePage from "./pages/Profile.page";
 import Unauthorized from "./pages/Unauthorized.page";
 import FeedBack from "./pages/FeedBack.page";
 import CampaignsPage from "./pages/Campaigns.page";
+import BrandForm from "./pages/BrandForm.page";
+import SignupPage from "./pages/SingUp.page";
+import ChatPage from "./pages/Chat.page";
 function App() {
   return (  
     <HelmetProvider>
@@ -24,6 +27,7 @@ function App() {
         <Routes>
           {/* Public Route */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/brandform" element={<BrandForm />} />
 
           <Route
             path="/unauthorized"
@@ -38,7 +42,7 @@ function App() {
           <Route
             path="/candidates"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={["admin","user"]}>
                 <AppLayout>
                   <CandidatesList />
                 </AppLayout>
@@ -55,6 +59,7 @@ function App() {
               </PrivateRoute>
             }
           />
+          
           <Route
             path="campaigns/:campaignId"
             element={
@@ -68,9 +73,19 @@ function App() {
           <Route
             path="/favorites"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={["admin","user"]}>
                 <AppLayout>
                   <Favorites />
+                </AppLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <PrivateRoute>
+                <AppLayout>
+                  <ChatPage /> 
                 </AppLayout>
               </PrivateRoute>
             }
@@ -87,15 +102,15 @@ function App() {
             }
           />
           <Route
-            path="/profile"
-            element={
-              <PrivateRoute allowedRoles={['user']}>
-                <AppLayout>
-                  <ProfilePage />
-                </AppLayout>
-              </PrivateRoute>
-            }
-          />
+              path="/profile/:userId"
+              element={
+                <PrivateRoute allowedRoles={["candidate"]}>
+                  <AppLayout>
+                    <ProfilePage />
+                  </AppLayout>
+                </PrivateRoute>
+              }
+            />
           <Route
   path="/under-construction"
   element={
@@ -104,7 +119,7 @@ function App() {
     </PrivateRoute>
   }
 />
-          
+   
           {/* Catch-All */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

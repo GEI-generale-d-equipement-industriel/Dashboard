@@ -1,94 +1,131 @@
-import React, { useState } from "react";
-import { Input, Button, Form, Avatar, Typography } from "antd";
-import { EditOutlined, SaveOutlined, UserOutlined } from "@ant-design/icons";
+import React, { useState, useEffect } from "react";
+import { Avatar, Button, Card, Spin } from "antd";
+import { EditOutlined, SaveOutlined, CloseOutlined } from "@ant-design/icons";
 
-const { Title } = Typography;
+import DisplayMode from "../components/Items/DisplayMode";
+import EditMode from "../components/Items/EditMode";
+import CandidateMediaGallery from "../components/Items/CandidateMediaGallery";
+import { useParams } from "react-router-dom"; 
+import { useUserWithLinkedCandidate, useUpdateUserProfile } from "../Hooks/useUserPRofile";
 
-const ProfilePage = () => {
+export default function CandidateProfile() {
+  const { userId: Id } = useParams();
+
+  const { data: user, isLoading, error } = useUserWithLinkedCandidate(Id);
+  const updateMutation = useUpdateUserProfile();
+
+  // Local state for edit mode and candidate profile data
   const [isEditing, setIsEditing] = useState(false);
-  const [form] = Form.useForm();
+  const [candidate, setCandidate] = useState(null);
+  const [initialCandidate, setInitialCandidate] = useState(null); // Store initial state
 
-  const [profileData, setProfileData] = useState({
-    name: "Aziz Menzli",
-    email: "aziz.menzli@example.com",
-    phone: "123-456-7890",
-    bio: "Full Stack Developer | React and Node.js Enthusiast",
-  });
+  useEffect(() => {
+    if (user && user.linkedCandidateId) {
+      setCandidate(user.linkedCandidateId);
+      setInitialCandidate(user.linkedCandidateId); // Store initial state when fetched
+    }
+  }, [user]);
 
-  const handleEditClick = () => {
-    form.setFieldsValue(profileData);
-    setIsEditing(true);
+  const toggleEdit = () => {
+    if (!isEditing) {
+      setInitialCandidate({ ...candidate }); // ✅ Store initial state before editing
+    }
+    setIsEditing((prev) => !prev);
   };
 
-  const handleSaveClick = () => {
-    form.validateFields().then((values) => {
-      setProfileData(values);
-      setIsEditing(false);
-    });
+  // Handler for input changes
+  const handleInputChange = (e) => {
+    setCandidate({ ...candidate, [e.target.name]: e.target.value });
   };
+
+  // Handler for Ant Design Selects, Radio, Switch, etc.
+  const handleSelectChange = (name, value) => {
+    setCandidate({ ...candidate, [name]: value });
+  };
+
+  // Handler for switch changes
+  const handleSwitchChange = (name, checked) => {
+    setCandidate({ ...candidate, [name]: checked });
+  };
+
+  // Save changes
+  const saveChanges = () => {
+    updateMutation.mutate(
+      { userId: Id, updateData: candidate },
+      {
+        onSuccess: (updatedCandidate) => {
+          setCandidate(updatedCandidate); // ✅ Update local state with new data
+          setIsEditing(false); // ✅ Exit edit mode
+        },
+      }
+    );
+  };
+
+  // Cancel edit and restore initial state
+  const handleCancel = () => {
+    setCandidate(initialCandidate); // Restore initial state
+    setIsEditing(false); // Exit edit mode
+  };
+
+  if (isLoading) return <Spin tip="Loading profile..." />;
+  if (error) return <div>Error loading profile: {error.message}</div>;
+  if (!candidate) return <div>No candidate profile available</div>;
+
 
   return (
-    <div className="max-w-xl mx-auto mt-8 p-6 bg-white shadow-md rounded-lg">
-      <div className="flex flex-col items-center space-y-4">
-        <Avatar size={100} icon={<UserOutlined />} className="bg-gray-300" />
-        <Title level={3} className="text-center">
+    <div className="container mx-auto p-4">
+      <Card className="max-w-4xl mx-auto" bordered={false}>
+        <Card
+          title={
+            <div className="flex flex-row items-center justify-between">
+              <div className="flex items-center gap-8">
+                <Avatar size={64}>
+                  {candidate.firstName ? candidate.firstName[0].toUpperCase() : "?"}
+                  {candidate.name ? candidate.name[0].toUpperCase() : "?"}
+                </Avatar>
+                <div>
+                  <h1 className="text-3xl font-bold">
+                    {candidate.firstName} {candidate.name}
+                  </h1>
+                  <p className="text-gray-500">{candidate.town}</p>
+                </div>
+              </div>
+              <Button 
+  type="default" 
+  shape="circle" 
+  onClick={() => (isEditing ? saveChanges() : toggleEdit())} // ✅ Calls saveChanges() if editing
+>
+  {isEditing ? <SaveOutlined /> : <EditOutlined />}
+</Button>
+            </div>
+          }
+          bordered={false}
+        >
           {isEditing ? (
-            <Form.Item name="name" noStyle>
-              <Input placeholder="Name" className="text-center" />
-            </Form.Item>
+            <EditMode
+              candidate={candidate}
+              handleInputChange={handleInputChange}
+              handleSelectChange={handleSelectChange}
+              handleSwitchChange={handleSwitchChange}
+            />
           ) : (
-            profileData.name
+            <DisplayMode candidate={candidate} />
           )}
-        </Title>
-      </div>
+        </Card>
 
-      <Form
-        form={form}
-        initialValues={profileData}
-        layout="vertical"
-        className={isEditing ? "block mt-6" : "hidden"}
-      >
-        <Form.Item
-          label="Email"
-          name="email"
-          rules={[{ required: true, message: "Please enter your email" }]}
-        >
-          <Input type="email" className="w-full border border-gray-300 rounded-md p-2" />
-        </Form.Item>
-
-        <Form.Item
-          label="Phone"
-          name="phone"
-          rules={[{ required: true, message: "Please enter your phone number" }]}
-        >
-          <Input className="w-full border border-gray-300 rounded-md p-2" />
-        </Form.Item>
-
-        <Form.Item label="Bio" name="bio">
-          <Input.TextArea rows={4} className="w-full border border-gray-300 rounded-md p-2" />
-        </Form.Item>
-      </Form>
-
-      {!isEditing && (
-        <div className="mt-4 space-y-2">
-          <p><strong>Email:</strong> {profileData.email}</p>
-          <p><strong>Phone:</strong> {profileData.phone}</p>
-          <p><strong>Bio:</strong> {profileData.bio}</p>
-        </div>
-      )}
-
-      <div className="flex justify-center mt-6">
-        <Button
-          type="primary"
-          icon={isEditing ? <SaveOutlined /> : <EditOutlined />}
-          onClick={isEditing ? handleSaveClick : handleEditClick}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
-        >
-          {isEditing ? "Save" : "Edit Profile"}
-        </Button>
-      </div>
+        {/* Footer Buttons for Saving & Canceling */}
+        {isEditing && (
+          <div className="flex justify-end mt-4 space-x-4">
+            <Button type="default" onClick={handleCancel} icon={<CloseOutlined />}>
+              Annuler
+            </Button>
+            <Button type="primary" onClick={saveChanges} loading={updateMutation.isLoading} icon={<SaveOutlined />}>
+              Sauvegarder les modifications
+            </Button>
+          </div>
+        )}
+      </Card>
+      <CandidateMediaGallery candidate={candidate} />
     </div>
   );
-};
-
-export default ProfilePage;
+}
