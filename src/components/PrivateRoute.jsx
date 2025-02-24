@@ -17,6 +17,10 @@ const PrivateRoute = ({ children, allowedRoles }) => {
     );
   }
 
+  if (!isAuthenticated ) {
+    return children;
+  }
+
   if (!isAuthenticated) {
     // Redirect unauthenticated users to the login page
     return <Navigate to="/" state={{ from: location }} replace />;

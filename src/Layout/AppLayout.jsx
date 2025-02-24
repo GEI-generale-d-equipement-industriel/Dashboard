@@ -1,12 +1,13 @@
 import React from 'react';
 import { Layout, Drawer, Grid } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch,useSelector } from 'react-redux';
 // import { CloseOutlined } from '@ant-design/icons';
 import { removeAuthData } from '../store/authSlice';
 import AuthInterceptor from '../services/auth/AuthInterceptor';
 import FiltersSidebar from '../components/FiltersSidebar';
 import AppHeader from '../components/header/AppHeader'; // Import the extracted AppHeader
+import { useConversations } from '../Hooks/useConversations';
 import '../styles/AppLayout.css';
   
 const { Content, Sider } = Layout;
@@ -18,7 +19,7 @@ const AppLayout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
+  const userId = useSelector((state) => state.auth.id);
   const toggleDrawer = () => {
     setDrawerVisible(!drawerVisible);
   };
@@ -28,7 +29,19 @@ const AppLayout = ({ children }) => {
     AuthInterceptor.updateToken(null);
     navigate('/login', { replace: true });
   };
+  const {
+    data: conversations = [], // default to empty array if undefined
+  } = useConversations(userId);
 
+  
+  
+  // const conversations = [
+  //   { id: "1", name: "John Doe", lastMessage: "Hey, how are you?", avatar: "https://github.com/shadcn.png" },
+  //   { id: "2", name: "Jane Smith", lastMessage: "Can we meet tomorrow?", avatar: "https://github.com/shadcn.png" },
+  //   { id: "3", name: "Bob Johnson", lastMessage: "The project is done!", avatar: "https://github.com/shadcn.png" },
+  //   { id: "4", name: "Alice Brown", lastMessage: "Don't forget the meeting", avatar: "https://github.com/shadcn.png" },
+  //   { id: "5", name: "Charlie Davis", lastMessage: "Thanks for your help!", avatar: "https://github.com/shadcn.png" },
+  // ]
   return (
     <Layout className="min-h-screen">
       {/* Use the extracted AppHeader component */}
@@ -36,6 +49,7 @@ const AppLayout = ({ children }) => {
         handleLogout={handleLogout}
         toggleDrawer={toggleDrawer}
         screens={screens}
+        conversations={conversations}
       />
 
       {/* Close Button for Drawer

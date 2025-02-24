@@ -36,7 +36,7 @@ const TalentRecruiterForm = ({ onSubmit }) => {
     "Service en ligne",
     "Autres (à préciser)",
   ];
-const url =process.env.REACT_APP_API_BASE_URL;
+const url =process.env.REACT_APP_API_BASE_URL||"api";
 
 
 const handleLogoUpload = async ({ file }) => {
@@ -98,7 +98,7 @@ const handleLogoUpload = async ({ file }) => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+    <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-2xl">
       <h2 className="text-2xl font-bold text-center mb-6 text-black">
         Join as a Talent Recruiter
       </h2>
@@ -127,6 +127,7 @@ const handleLogoUpload = async ({ file }) => {
         <Form.Item
           label="Sector"
           name="sector"
+          
           rules={[{ required: true, message: "Please select a sector" }]}
         >
           <Select placeholder="Select a sector">

@@ -1,37 +1,50 @@
 import React, { useState } from "react";
 import LoginModal from "../components/Modal/Login.Modal";
-import JoinModal from "../components/Modal/Join.Modal";
+import SignupModal from "../components/Modal/Signup.Modal";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
   const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
-  const [isJoinModalVisible, setIsJoinModalVisible] = useState(false);
+  const [isJoinModalVisible, setIsJoinModalVisible] = useState(false); // not used now
 
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  // We'll use a URL param "signup=true" to trigger the Signup modal.
+  const isSignupModalVisible = searchParams.get("signup") === "true";
+
+  // Handlers for Login modal
   const showLoginModal = () => setIsLoginModalVisible(true);
   const closeLoginModal = () => setIsLoginModalVisible(false);
 
-  const showJoinModal = () => setIsJoinModalVisible(true);
-  const closeJoinModal = () => setIsJoinModalVisible(false);
+  // Handler for Signup modal (driven by URL param)
+  const closeSignupModal = () => {
+    searchParams.delete("signup");
+    navigate("/", { replace: true });
+  };
+
+  // Handler for "Join as a Creator" (redirect to external form)
+  const handleJoinCreator = () => {
+    window.location.href = "https://be-model.tn/form";
+  };
 
   return (
     <div className="bg-gray-900 min-h-screen text-white">
       {/* Header */}
       <header className="bg-gray-900 border-b border-gray-800 shadow-md">
         <div className="container mx-auto flex justify-between items-center px-6 py-4">
-          {/* Logo */}
           <a
             href="/"
             className="flex items-center space-x-3 hover:opacity-90 transition-opacity duration-300"
             aria-label="BeModel homepage"
           >
             <img
-              src="https://res.cloudinary.com/dqtwi6rca/image/upload/v1736505510/assets/loiqsnuqfzvz8xr8udvr.png"
+              src="/assets/BeModel.png"
               alt="BeModel logo showcasing brand empowerment"
-              className="h-5 w-24"
+              className="h-5 w-28"
               loading="lazy"
             />
           </a>
-
-          {/* Navigation */}
           <nav className="flex items-center space-x-6" aria-label="Main navigation">
             <a
               href="#about"
@@ -60,20 +73,47 @@ const LandingPage = () => {
       <main>
         <section className="py-20 text-center bg-gray-900">
           <div className="container mx-auto px-6">
-            <h1 className="text-5xl font-bold leading-tight text-white">
-              Empower Your Brand
+            <h1 className="text-5xl font-bold leading-tight">
+              <span className="text-white">Matching</span>{" "}
+              <span className="text-yellow-400">Brands</span>{" "}
+              <span className="text-white">&</span>{" "}
+              <span className="text-yellow-400">Creators</span>
             </h1>
             <p className="text-gray-400 mt-4 max-w-2xl mx-auto">
-              Connecting brands with models and influencers for impactful
-              content.
+              Connecting brands with models and influencers for impactful content.
             </p>
-            <button
-              className="mt-6 inline-block bg-yellow-500 text-black px-6 py-3 rounded-lg hover:bg-yellow-600 font-semibold shadow-md transition duration-300"
-              onClick={showJoinModal}
-              aria-label="Open Join Modal"
-            >
-              Join BeModel Now
-            </button>
+            <div className="mt-10 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Brand Column */}
+              <div className="flex flex-col items-center max-w-md mx-auto">
+                <img
+                  src="/assets/brand.webp"
+                  alt="Professional shoot for a brand"
+                  className="w-full h-auto rounded-lg shadow-md"
+                />
+                <button
+                  className="mt-6 inline-block bg-yellow-500 text-black px-6 py-3 rounded-lg hover:bg-yellow-600 font-semibold shadow-md transition duration-300"
+                  onClick={() => navigate('/brandform', { replace: true })}
+                  aria-label="Join as a Brand"
+                >
+                  Join as a Brand
+                </button>
+              </div>
+              {/* Creator Column */}
+              <div className="flex flex-col items-center max-w-md mx-auto">
+                <img
+                  src="/assets/creator.webp"
+                  alt="Collaboration with a creator"
+                  className="w-full h-auto rounded-lg shadow-md"
+                />
+                <button
+                  className="mt-6 inline-block bg-yellow-500 text-black px-6 py-3 rounded-lg hover:bg-yellow-600 font-semibold shadow-md transition duration-300"
+                  onClick={handleJoinCreator}
+                  aria-label="Join as a Creator"
+                >
+                  Join as a Creator
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -132,19 +172,13 @@ const LandingPage = () => {
 
       {/* Modals */}
       {isLoginModalVisible && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black bg-opacity-50 backdrop-blur-sm"
-          aria-hidden={!isLoginModalVisible}
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black bg-opacity-50 backdrop-blur-sm">
           <LoginModal onClose={closeLoginModal} />
         </div>
       )}
-      {isJoinModalVisible && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black bg-opacity-50 backdrop-blur-sm"
-          aria-hidden={!isJoinModalVisible}
-        >
-          <JoinModal onClose={closeJoinModal} />
+      {isSignupModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black bg-opacity-50 backdrop-blur-sm">
+          <SignupModal onClose={closeSignupModal} />
         </div>
       )}
     </div>

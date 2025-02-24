@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSelector } from "react-redux";
-import { Typography, Row, Col, Skeleton, Select, Button } from "antd";
+import { Typography, Row, Col, Skeleton, Select, Button,message } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 // import { useQueryClient } from "@tanstack/react-query";
 
@@ -10,6 +10,7 @@ import useFetchFileLinks from "../Hooks/useFetchFileLinks";
 import useInfiniteScroll from "react-infinite-scroll-hook";
 import useCandidates from "../Hooks/useCandidates";
 import { useFetchFavorites } from "../services/api/favoritesService";
+import { useGetCampaigns, useCreateCampaign } from "../services/api/campaignService";
 import CandidateCard from "./CandidateCard";
 import BackToTopButton from "../components/button/BackToTopButton";
 
@@ -71,6 +72,23 @@ const CandidateList = () => {
   const { data: favorites = [] } = useFetchFavorites(userId);
   const toggleFavorite = useToggleFavorite(userId, favorites);
 
+  const { data: campaigns = [] } = useGetCampaigns(userId);
+
+  const campaignProfileIds = useMemo(() => {
+    const allIds = new Set();
+    campaigns.forEach((campaign) => {
+      // Ensure the campaign has a `profiles` array
+      if (campaign?.profiles) {
+        campaign.profiles.forEach((profileId) => {
+          allIds.add(profileId);
+        });
+      }
+    });
+    return allIds;
+  }, [campaigns]);
+
+
+  const { mutate: createCampaign } = useCreateCampaign();
   const candidatesForCurrentPage = useMemo(() => {
     if (!data) return [];
     return Array.from(
@@ -115,6 +133,22 @@ const CandidateList = () => {
     rootMargin: "0px 0px 400px 0px",
   });
 
+  const handleCreateCampaign = (name, callback) => {
+    createCampaign(
+      { userId, name },
+      {
+        onSuccess: (newCampaign) => {
+          message.success("Campaign created successfully!");
+          if (callback && newCampaign?._id) {
+            callback(newCampaign._id);
+          }
+        },
+        onError: () => {
+          message.error("Failed to create campaign");
+        },
+      }
+    );
+  };
   useEffect(() => {
     const scrollPositionKey = `scrollPosition_${location.pathname}`;
     const restoreScrollPosition = () => {
@@ -213,17 +247,23 @@ const CandidateList = () => {
 
         {/* Candidate Grid */}
         <Row gutter={[16, 24]}>
-          {candidatesForCurrentPage.map((candidate) => (
-            <Col xs={12} sm={12} md={8} lg={6} key={candidate._id}>
+          {candidatesForCurrentPage.map((candidate) => 
+            {
+              const isCandidateInCampaign = campaignProfileIds.has(candidate._id);
+             
+              
+              return(<Col xs={12} sm={12} md={8} lg={6} key={candidate._id}>
               <CandidateCard
                 candidate={candidate}
                 fileLink={fileLinks[candidate._id]}
-                isFavorite={favoriteIds.includes(candidate._id)}
+                isFavorite={isCandidateInCampaign}
                 onToggleFavorite={(args) => toggleFavorite(args)}
                 tagColors={tagColors}
+                campaigns={campaigns}
+                onCreateCampaign={handleCreateCampaign}
               />
             </Col>
-          ))}
+          )})}
           {isFetchingNextPage &&
             [...Array(pageSize)].map((_, index) => (
               <Col xs={12} sm={12} md={8} lg={6} key={`loading-${index}`}>

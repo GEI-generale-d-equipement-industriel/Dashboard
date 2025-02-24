@@ -15,10 +15,12 @@ export const UserSessionProvider = ({ children }) => {
   const isAuthenticated = useSelector((state) => state.auth.token); // Assuming token is stored here
   const authInitialized = useSelector((state) => state.auth.authInitialized);
   const userId = useSelector((state) => state.auth.id);
+  const role = useSelector((state) => state.auth.role);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+
 
   useBroadcastChannel();
 
@@ -55,17 +57,22 @@ export const UserSessionProvider = ({ children }) => {
 
   useEffect(() => {
     if (authInitialized) {
+      const publicRoutes = ["/", "/brandform"]; // Add any other public paths if needed
+  
       if (isAuthenticated) {
         setIsLoggedIn(true);
         dispatch(fetchFavorites(userId));
         if (location.pathname === "/") {
-          const from = location.state?.from?.pathname || "/candidates";
+          // If the user is a candidate, redirect to /profile, otherwise default to /candidates
+          const defaultRoute = role === "candidate" ? `/profile/${userId}` : "/candidates";
+          const from = location.state?.from?.pathname || defaultRoute;
           navigate(from, { replace: true });
         }
       } else {
-        if (location.pathname !== "/") {
+        // Only redirect to "/" if the current route is not public
+        if (!publicRoutes.includes(location.pathname)) {
           setIsLoggedIn(false);
-          navigate("/home", { replace: true });
+          navigate("/", { replace: true });
         }
       }
     }
@@ -77,6 +84,7 @@ export const UserSessionProvider = ({ children }) => {
     location.pathname,
     location.state,
     userId,
+    role  
   ]);
 
   if (!authInitialized) {

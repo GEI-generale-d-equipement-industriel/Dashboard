@@ -1,34 +1,68 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
-import { Spin, Row, Col, Button } from 'antd';
-import { useFetchCampaignProfiles } from '../services/api/campaignService';
-import CandidateCard from '../components/CandidateCard';
+import { useParams,useLocation } from 'react-router-dom';
+import { Spin, Button,notification } from 'antd';
+import { useFetchCampaignProfiles,useUpdateCampaignProfile } from '../services/api/campaignService';
+import CandidateGrid from '../components/Cards/CandidateGrid';
 import { useNavigate } from 'react-router-dom';
+import useFileLinks from '../Hooks/useFetchFileLinks';
+import queryString from 'query-string';
+import useHandleRemoveCandidate from '../Hooks/useHandleRemoveCandidate';
 const CampaignsPage = () => {
   const { campaignId } = useParams();
+  const location = useLocation(); // This gives you access to the query string
+  const { source } = queryString.parse(location.search); 
   const { data: profiles = [], isLoading, error } = useFetchCampaignProfiles(campaignId);
+  const { mutate: updateCampaignProfiles } = useUpdateCampaignProfile();
+ 
+  const handleRemoveCandidate = (profileId) => {
+    if (!campaignId || !profileId) {
+      notification.error({
+        message: 'Error',
+        description: 'Invalid campaign or profile ID.',
+      });
+      return;
+    }
 
+    updateCampaignProfiles(
+      { campaignId, profileId, action: 'remove' },
+      {
+        onSuccess: () => {
+          notification.success({
+            message: 'Removed Successfully',
+            description: 'The candidate has been removed from the campaign.',
+          });
+        },
+        onError: () => {
+          notification.error({
+            message: 'Remove Failed',
+            description: 'An error occurred while removing the candidate.',
+          });
+        },
+      }
+    );
+  };
+const fileLinks = useFileLinks(profiles);
 const navigate = useNavigate();
   if (isLoading) return <Spin tip="Loading profiles..." />;
   if (error) return <p>Error loading campaign profiles.</p>;
-  const tagColors = ["orange", "red", "purple", "gold"];
+  
+  
   return (
     <div className="p-4 min-h-screen bg-gray-100">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Profiles in Campaign</h2>
-        <Button onClick={() => navigate(-1)} type="default">Back to Campaigns</Button>
+        <h1 className="text-xl font-semibold">{source}</h1>
+        <Button onClick={() => navigate(-1)} type="default">
+          Go Back
+        </Button>
       </div>
-      {profiles.length === 0 ? (
-        <p>No profiles found in this campaign.</p>
-      ) : (
-        <Row gutter={[16, 24]}>
-          {profiles.map((profile) => (
-            <Col key={profile._id} xs={24} sm={12} md={8} lg={6}>
-              <CandidateCard candidate={profile}  tagColors= {tagColors}/>
-            </Col>
-          ))}
-        </Row>
-      )}
+
+      <CandidateGrid
+        candidates={profiles}
+        fileLinks={fileLinks}
+        onRemoveCandidate={(profileId) => handleRemoveCandidate(profileId)}
+        // title={source}
+        emptyMessage="No profiles found in this campaign."
+      />
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, {  useState, useMemo } from "react";
-import { Layout, Skeleton, Card, Row, Col, Form } from "antd";
+import { Layout, Skeleton, Card, Row, Col, Form,message } from "antd";
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useQuery } from "@tanstack/react-query";
@@ -14,12 +14,16 @@ import CandidateActions from "../Modules/CandidatesModules/CandidateActions";
 
 import useToggleFavorite from "../Hooks/useToggleFavorite";
 import { useFetchFavorites } from "../services/api/favoritesService";
-
+import { useGetCampaigns,useCreateCampaign } from "../services/api/campaignService";
+import { use } from "react";
 const { Content } = Layout;
 
 const CandidateDetails = () => {
   const { id } = useParams();
   const userId = useSelector((state) => state.auth.id);
+  const role =useSelector((state) => state.auth.role);
+  
+  
 
   // const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
@@ -37,6 +41,8 @@ const CandidateDetails = () => {
     enabled: !!id,
   });
 
+  const { data: campaigns = [] } = useGetCampaigns(userId);
+  const { mutate: createCampaign } = useCreateCampaign();
   // Fetch favorites
   const { data: favorites = [] } = useFetchFavorites(userId);
   const toggleFavorite = useToggleFavorite(userId, favorites);
@@ -45,21 +51,42 @@ const CandidateDetails = () => {
   const imageFiles = useMemo(() => {
     return (
       candidate?.files?.filter(
-        (file) => file.contentType && file.contentType.startsWith("image/")
+        (file) => file.contentType && file.contentType.startsWith("image/")&&!file.filename.includes("video") 
       ) || []
     );
   }, [candidate]);
 
   // Determine if the candidate is a favorite
-  const isFavorite = useMemo(
-    () => favorites.some((fav) => fav._id === candidate?._id),
-    [favorites, candidate]
-  );
 
+const campaignProfileIds = useMemo(() => {
+    const allIds = new Set();
+    campaigns.forEach((campaign) => {
+      // Ensure the campaign has a `profiles` array
+      if (campaign?.profiles) {
+        campaign.profiles.forEach((profileId) => {
+          allIds.add(profileId);
+        });
+      }
+    });
+    return allIds;
+  }, [campaigns]);
+  
+    const isFavorite = campaignProfileIds.has(candidate?._id);
   const handleEditToggle = () => {
     setIsEditing((prev) => !prev);
   };
-
+  const handleCreateCampaign = (name, callback) => {
+    createCampaign({ userId, name }, {
+      onSuccess: (newCampaign) => {
+        message.success('Campaign created successfully!');
+        // If a callback is provided and newCampaign has an _id, invoke the callback.
+        if (callback && newCampaign?._id) {
+          callback(newCampaign._id);
+        }
+      },
+      onError: () => message.error('Failed to create campaign'),
+    });
+  };
   // const handleSave = async (values) => {
   //   const currentValues = form.getFieldsValue();
   //   const initialValues = form.getFieldsValue(true);
@@ -132,6 +159,7 @@ const CandidateDetails = () => {
                 form={form}
                 bmi={bmi}
                 role={userId.role}
+                
               />
               <CandidateActions
                 isEditing={isEditing}
@@ -143,7 +171,10 @@ const CandidateDetails = () => {
                     action: isFavorite ? "remove" : "add",
                   })
                 }
-                role={userId.role}
+                role={role}
+                candidateId={candidate._id}
+  campaigns={campaigns}               // an array of campaigns
+  onCreateCampaign={handleCreateCampaign}
               />
             </Card>
           </Col>

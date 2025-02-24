@@ -18,7 +18,8 @@ const CampaignList = () => {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [campaignName, setCampaignName] = useState('');
-
+  
+  
   const handleCreateCampaign = () => {
     if (!campaignName.trim()) return;
     createCampaign(
@@ -80,50 +81,48 @@ const CampaignList = () => {
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
           {campaigns.map((campaign) => {
-            // We'll assume there's a cover image or fallback
-            const coverUrl = campaign.coverImageUrl || '/defaultCover.jpg';
+            const firstChar = campaign.name.charAt(0).toUpperCase();
 
             return (
               <div
                 key={campaign._id}
-                className="relative w-full pb-[100%] bg-gray-200 overflow-hidden group"
-                onClick={() => navigate(`/campaigns/${campaign._id}`)}
+                className="relative w-full pb-[100%] bg-gray-200 overflow-hidden group cursor-pointer"
+                onClick={() => navigate(`/campaigns/${campaign._id}?source=${campaign.name}`)}
               >
-                <div className="absolute inset-0">
-                  <img
-                    src={coverUrl}
-                    alt={campaign.name}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="absolute inset-0  flex items-center justify-center ">
+                  <span className="text-xl font-bold text-gray-700 truncate text-center">{firstChar}</span>
+                </div>
 
-                  {/* Hover overlay */}
-                  <div
-                    className="
-                      absolute
-                      inset-0
-                      bg-black/40
-                      opacity-0
-                      group-hover:opacity-100
-                      flex
-                      items-center
-                      justify-center
-                      text-white
-                      text-center
-                      transition-opacity
-                    "
-                  >
-                    <div>
-                      <h3 className="font-bold text-lg">{campaign.name}</h3>
-                      <p className="mb-2">
-                        {campaign.profiles?.length ?? 0} saved
-                      </p>
-                      <Button
-                        danger
-                        onClick={() => handleDeleteCampaign(campaign._id)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
+                {/* Hover overlay */}
+                <div
+                  className="
+                    absolute
+                    inset-0
+                    bg-black/40
+                    opacity-0
+                    group-hover:opacity-100
+                    flex
+                    items-center
+                    justify-center
+                    text-white
+                    text-center
+                    transition-opacity
+                  "
+                >
+                  <div>
+                    <h3 className="font-bold text-lg">{campaign.name}</h3>
+                    <p className="mb-2">
+                      {campaign.profiles?.length ?? 0} saved
+                    </p>
+                    <Button
+                      danger
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevents the parent onClick from firing
+                        handleDeleteCampaign(campaign._id);
+                      }}
+                    >
+                      Delete
+                    </Button>
                   </div>
                 </div>
               </div>
