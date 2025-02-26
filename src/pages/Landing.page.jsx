@@ -78,10 +78,10 @@ const LandingPage = () => {
               Matching <span className="text-yellow-500">Brands</span> &{" "}
               <span className="text-yellow-500">Creators</span>
             </h1>
-            <p className="text-gray-400 mt-4 max-w-2xl mx-auto">
+            <p className="text-gray-400 mt-4 max-w-2xl mx-auto mb-6">
             The only platform you need for content creation.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto ">
             <div className="flex flex-col items-center">
                 <img
                   src="/assets/brand.webp"
@@ -114,7 +114,7 @@ const LandingPage = () => {
         </section>
 
         {/* Why Choose Us */}
-        <section className="py-8 bg-gray-100">
+        <section className="py-8 bg-white">
           <div className="container mx-auto px-6">
             <h2 className="text-2xl font-semibold text-center text-gray-600 mb-6">Used by Leading Brands</h2>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-8 items-center justify-items-center">
@@ -206,7 +206,8 @@ const LandingPage = () => {
                   image: "/assets/user4.png",
                   text: "Aamelt 2 shooting maa market contactewni aal BeModel. Nes el kol professionnel w ambiance behia.",
                 },
-              ].map((testimonial, index) => (
+               
+              ].map((testimonial, index) => (  
                 <div key={index} className="flex flex-col items-center">
                 
                 <div className="bg-gray-200 rounded-lg p-6 min-h-[200px] w-full shadow-2xl">
