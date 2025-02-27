@@ -138,12 +138,12 @@ const CandidateCard = React.memo(
                 to={`/candidate/${candidate._id}`}
                 className="font-bold text-lg text-gray-800 hover:underline"
               >
-                {candidate.firstName} {candidate.name}
+                {candidate.firstName.charAt(0).toUpperCase()+candidate.firstName.slice(1)} {candidate.name[0].toUpperCase()}
               </Link>
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <span>{age} ans</span>
-                <span>•</span>
-                <span>{height.toFixed(2)}m</span>
+                <span >•</span>
+                <span>{height.toFixed(2)} m</span>
                 {genderIcon}
               </div>
             </div>
@@ -203,10 +203,10 @@ const CandidateCard = React.memo(
                   );
                 })}
             </div>
-            <div className="flex justify-between items-center">
+            {/* <div className="flex justify-between items-center">
               <BmiIndicateur bmi={bmi} />
               
-            </div>
+            </div> */}
           </div>
         </Card>
 

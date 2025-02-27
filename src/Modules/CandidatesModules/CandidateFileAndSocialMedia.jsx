@@ -15,7 +15,7 @@ const { Title } = Typography;
 const CandidateFilesAndSocialMedia = ({ candidate }) => {
   const mediaFiles = candidate?.files?.filter(
     (file) =>
-      file.contentType?.startsWith("audio/") ||
+      file.contentType?.startsWith("audio/") &&
       file.contentType?.startsWith("video/")
   );
 

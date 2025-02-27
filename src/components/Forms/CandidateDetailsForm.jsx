@@ -18,7 +18,12 @@ const { Title } = Typography;
 const CandidateDetailsForm = ({ candidate, isEditing, form, bmi, role }) => {
  
 
+  const year=parseInt(candidate?.birthDate?.substring(0,4))
+  const currentYear = new Date().getFullYear();
+  const age = currentYear - (candidate.birthYear?candidate.birthYear:year || 2000);
 
+  console.log(age);
+  
   // Allow editing only if the role is 'admin'
   const canEdit = role === 'admin' && isEditing;
   const formattedHeight = parseFloat(candidate.height).toFixed(2); // Two decimal places
@@ -68,13 +73,13 @@ const CandidateDetailsForm = ({ candidate, isEditing, form, bmi, role }) => {
             <Col span={12}>
               <Form.Item>
                 <span>
-                  <strong>Birth Year:</strong>{' '}
+                  <strong>Age:</strong>{' '}
                   {canEdit ? (
                     <Input />
                   ) : (
                     <>
                       <CalendarOutlined style={{ color: '#faad14', marginRight: '8px' }} />
-                      {candidate.birthYear? candidate.birthYear:  candidate.birthDate.substring(0, 10)}
+                      {age}
                     </>
                   )}
                 </span>
@@ -196,6 +201,24 @@ const CandidateDetailsForm = ({ candidate, isEditing, form, bmi, role }) => {
                     <>
                       <BgColorsOutlined style={{ color: '#ff7a45', marginRight: '8px' }} />
                       {candidate.hairType?.[0]}
+                    </>
+                  )}
+                </span>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item>
+                <span>
+                  <strong>Hair Color:</strong>{' '}
+                  {canEdit ? (
+                    <Select>
+                      <Select.Option value="straight">Straight</Select.Option>
+                      <Select.Option value="curly">Curly</Select.Option>
+                    </Select>
+                  ) : (
+                    <>
+                      <BgColorsOutlined style={{ color: '#ff7a45', marginRight: '8px' }} />
+                      {candidate.hairColor?.[0]}
                     </>
                   )}
                 </span>
