@@ -1,8 +1,8 @@
 // src/components/CandidateProfile/EditMode.jsx
-import React, { useState, useEffect } from "react";
-import { Input, Radio, Select, Switch,DatePicker ,Checkbox,Button} from "antd";
+import React from "react";
+import { Input, Radio, Select, Switch,DatePicker ,Checkbox} from "antd";
 import dayjs from "dayjs";
-const { TextArea } = Input;
+
 const { Option } = Select;
 
 export default function EditMode({
@@ -12,20 +12,19 @@ export default function EditMode({
   handleSwitchChange,
 }) {
 
-  const [initialCandidate, setInitialCandidate] = useState(candidate);
-  const [currentCandidate, setCurrentCandidate] = useState(candidate);
+
 
   // Update initial state when candidate changes (useful for dynamic data loading)
-  useEffect(() => {
-    setInitialCandidate(candidate);
-    setCurrentCandidate(candidate);
-  }, [candidate]);
+  // useEffect(() => {
+  //   setInitialCandidate(candidate);
+  //   setCurrentCandidate(candidate);
+  // }, [candidate]);
 
   // Reset to initial state when cancel is clicked
-  const handleCancel = () => {
-    setCurrentCandidate(initialCandidate);
-    handleSelectChange("all", initialCandidate); // Pass initial state to parent function
-  };
+  // const handleCancel = () => {
+  //   setCurrentCandidate(initialCandidate);
+  //   handleSelectChange("all", initialCandidate); // Pass initial state to parent function
+  // };
 
 
   const tunisianTowns = [

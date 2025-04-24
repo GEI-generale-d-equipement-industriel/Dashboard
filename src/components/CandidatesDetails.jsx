@@ -42,10 +42,10 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import BmiIndicateur from "./BmiIndicateur";
-import {
-  useUpdateFavorites,
-  useFetchFavorites,
-} from "../services/api/favoritesService";
+// import {
+//   useUpdateFavorites,
+//   useFetchFavorites,
+// } from "../services/api/favoritesService";
 import isEqual from "lodash/isEqual";
 import ImageGallery from "./ImageGallery/ImagesGallery";
 const { Content } = Layout;
@@ -105,8 +105,8 @@ const CandidateDetails = () => {
 
   // const fileLinks = useFetchFileLinks(candidate ? [candidate] : []);
 
-  const { data: favorites = [] } = useFetchFavorites(userId);
-  const { mutate: updateFavorite } = useUpdateFavorites();
+  // const { data: favorites = [] } = useFetchFavorites(userId);
+  // const { mutate: updateFavorite } = useUpdateFavorites();
 
   // Extracting image files based on content type
   const imageFiles =
@@ -120,11 +120,11 @@ const CandidateDetails = () => {
     setIsFavorite(favoriteStatus); // Set the initial favorite status based on cached favorites
   }, [candidate, userId, queryClient]);
 
-  useEffect(() => {
-    if (candidate && favorites) {
-      setIsFavorite(favorites.some((fav) => fav._id === candidate._id));
-    }
-  }, [candidate, favorites]);
+  // useEffect(() => {
+  //   if (candidate && favorites) {
+  //     setIsFavorite(favorites.some((fav) => fav._id === candidate._id));
+  //   }
+  // }, [candidate, favorites]);
 
   const handleLikeToggle = () => {
     // Get the userId from state or context
@@ -149,34 +149,35 @@ const CandidateDetails = () => {
     const isCurrentlyFavorite = favorites.some(
       (fav) => fav._id === candidate._id
     );
-    const updatedFavorites = isCurrentlyFavorite
-      ? favorites.filter((fav) => fav._id !== candidate._id) // Remove from favorites
-      : [...favorites, candidate]; // Add to favorites
+
+    // const updatedFavorites = isCurrentlyFavorite
+    //   ? favorites.filter((fav) => fav._id !== candidate._id) // Remove from favorites
+    //   : [...favorites, candidate]; // Add to favorites
 
     setIsFavorite(!isCurrentlyFavorite);
 
-    updateFavorite(
-      { userId, favorites: updatedFavorites },
-      {
-        onSuccess: () => {
-          notification.success({
-            message: isCurrentlyFavorite
-              ? "Removed from Favorites"
-              : "Added to Favorites",
-            placement: "topRight",
-            duration: 2,
-          });
-          queryClient.invalidateQueries(["favorites", userId]); // Refetch favorites after updating
-        },
-        onError: () => {
-          setIsFavorite(isCurrentlyFavorite);
-          notification.error({
-            message: "Error",
-            description: "Failed to update favorites.",
-          });
-        },
-      }
-    );
+    // updateFavorite(
+    //   { userId, favorites: updatedFavorites },
+    //   {
+    //     onSuccess: () => {
+    //       notification.success({
+    //         message: isCurrentlyFavorite
+    //           ? "Removed from Favorites"
+    //           : "Added to Favorites",
+    //         placement: "topRight",
+    //         duration: 2,
+    //       });
+    //       queryClient.invalidateQueries(["favorites", userId]); // Refetch favorites after updating
+    //     },
+    //     onError: () => {
+    //       setIsFavorite(isCurrentlyFavorite);
+    //       notification.error({
+    //         message: "Error",
+    //         description: "Failed to update favorites.",
+    //       });
+    //     },
+    //   }
+    // );
   };
 
   const handleSave = async (values) => {

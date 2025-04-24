@@ -16,7 +16,7 @@ import Unauthorized from "./pages/Unauthorized.page";
 import FeedBack from "./pages/FeedBack.page";
 import CampaignsPage from "./pages/Campaigns.page";
 import BrandForm from "./pages/BrandForm.page";
-import SignupPage from "./pages/SingUp.page";
+import SignupPage from "./pages/SingUp.page";  
 import ChatPage from "./pages/Chat.page";
 function App() {
   return (  

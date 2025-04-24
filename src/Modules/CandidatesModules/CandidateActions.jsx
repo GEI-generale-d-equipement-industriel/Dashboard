@@ -9,6 +9,7 @@ import { useUpdateCampaignProfile } from "../../services/api/campaignService";
 import { useRemoveCandidate } from "../../Hooks/useCandidates";
 import { useSelector } from "react-redux";
 import { MdBookmarkBorder,MdBookmarkAdded } from "react-icons/md";
+
 const CandidateActions = ({
   isEditing,
   handleEditToggle,
@@ -197,57 +198,82 @@ const CandidateActions = ({
     }
   };
   return (
-    <div className="mt-4 flex justify-center space-x-4">
-      {isEditing ? (
-        <>
-          {canEdit && (
-            <>
-              <Button type="primary" onClick={handleUpload} disabled={loading}>
-                {loading ? <Spin indicator={<LoadingOutlined />} /> : "Save"}
-              </Button>
-              <Button onClick={handleEditToggle} disabled={loading}>
-                Cancel
-              </Button>
-            </>
-          )}
-        </>
-      ) : (
-        <>
-          {canEdit && (
-            <>
-              <Button type="primary" onClick={handleEditClick}>
-                Add a new photo
-              </Button>
+    <div className="relative">
+      {/* Bookmark Button - Positioned absolutely in top right */}
+      <div className="absolute top-0 right-0 z-10">
+        <Button
+          type="text"
+          icon={
+            isFavorite ? (
+              <MdBookmarkAdded className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
+            ) : (
+              <MdBookmarkBorder className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500" />
+            )
+          }
+          onClick={handleHeartClick}
+          className="hover:bg-gray-50 rounded-full p-2"
+        />
+      </div>
 
-              <Popconfirm
-                title="Are you sure to delete this candidate?"
-                description="This action cannot be undone."
-                onConfirm={handleDeleteCandidate}
-                okText="Yes, Delete"
-                cancelText="No"
-                icon={<QuestionCircleOutlined style={{ color: "red" }} />}
-              >
-                <Button danger>Delete</Button>
-              </Popconfirm>
-            </>
-          )}
+      {/* Main Actions Container */}
+      <div className="mt-6 flex flex-wrap justify-center gap-4">
+        {isEditing ? (
+          <>
+            {canEdit && (
+              <>
+                <Button 
+                  type="primary" 
+                  onClick={handleUpload} 
+                  disabled={loading}
+                  className="min-w-[120px]"
+                >
+                  {loading ? <Spin indicator={<LoadingOutlined />} /> : "Save"}
+                </Button>
+                <Button 
+                  onClick={handleEditToggle} 
+                  disabled={loading}
+                  className="min-w-[120px]"
+                >
+                  Cancel
+                </Button>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            {canEdit && (
+              <>
+                <Button 
+                  type="primary" 
+                  onClick={handleEditClick}
+                  className="min-w-[120px]"
+                >
+                  Add a new photo
+                </Button>
 
-<Button
-  type="text"
-  icon={
-    isFavorite ? (
-      <MdBookmarkAdded className="w-8 h-8 text-blue-600" />
-    ) : (
-      <MdBookmarkBorder className="w-8 h-8 text-gray-500" />
-    )
-  }
-  onClick={handleHeartClick}
-/>
-<Button type="primary" onClick={handleSendMessageClick}>
-        Send Message
-      </Button>
-        </>
-      )}
+                <Popconfirm
+                  title="Are you sure to delete this candidate?"
+                  description="This action cannot be undone."
+                  onConfirm={handleDeleteCandidate}
+                  okText="Yes, Delete"
+                  cancelText="No"
+                  icon={<QuestionCircleOutlined style={{ color: "red" }} />}
+                >
+                  <Button danger className="min-w-[120px]">Delete</Button>
+                </Popconfirm>
+              </>
+            )}
+
+            <Button 
+              type="primary" 
+              onClick={handleSendMessageClick}
+              className="min-w-[120px]"
+            >
+              Send Message
+            </Button>
+          </>
+        )}
+      </div>
 
       <CampaignSelectionModal
         visible={isModalVisible}
@@ -260,13 +286,24 @@ const CandidateActions = ({
       {/* Upload Modal */}
       <Modal
         title="Upload Files"
-        visible={isUploadModalVisible}
+        open={isUploadModalVisible}
         onCancel={() => setUploadModalVisible(false)}
         footer={[
-          <Button key="cancel" onClick={() => setUploadModalVisible(false)} disabled={loading}>
+          <Button 
+            key="cancel" 
+            onClick={() => setUploadModalVisible(false)} 
+            disabled={loading}
+            className="min-w-[100px]"
+          >
             Cancel
           </Button>,
-          <Button key="upload" type="primary" onClick={handleUpload} disabled={loading}>
+          <Button 
+            key="upload" 
+            type="primary" 
+            onClick={handleUpload} 
+            disabled={loading}
+            className="min-w-[100px]"
+          >
             {loading ? <Spin indicator={<LoadingOutlined />} /> : "Upload"}
           </Button>,
         ]}
@@ -276,18 +313,22 @@ const CandidateActions = ({
           beforeUpload={() => false}
           fileList={fileList}
           onChange={handleFileChange}
-          disabled={loading} // Disable file selection during upload
+          disabled={loading}
+          className="w-full"
         >
-          <Button icon={<UploadOutlined />} disabled={loading}>
+          <Button 
+            icon={<UploadOutlined />} 
+            disabled={loading}
+            className="w-full"
+          >
             Select Files
           </Button>
         </Upload>
 
-        {/* Loading Spinner */}
         {loading && (
           <div className="text-center mt-4">
             <Spin size="large" />
-            <p>Uploading...</p>
+            <p className="mt-2 text-gray-600">Uploading...</p>
           </div>
         )}
       </Modal>

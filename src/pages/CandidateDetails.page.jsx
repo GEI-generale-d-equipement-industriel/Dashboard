@@ -7,15 +7,17 @@ import axios from "axios";
 // import isEqual from "lodash/isEqual";
 
 import CandidateHeader from "../components/Headers/CandidateHeader";
-import CandidateImageGallery from "../components/ImageGallery/CandidateImageGallery";
+// import CandidateImageGallery from "../components/ImageGallery/CandidateImageGallery";
 import CandidateDetailsForm from "../components/Forms/CandidateDetailsForm";
 import CandidateFilesAndSocialMedia from "../Modules/CandidatesModules/CandidateFileAndSocialMedia";
 import CandidateActions from "../Modules/CandidatesModules/CandidateActions";
 
-import useToggleFavorite from "../Hooks/useToggleFavorite";
-import { useFetchFavorites } from "../services/api/favoritesService";
+import Images from "../components/ImageGallery/images";
+
+// import CandidateMediaGallery from "../components/Items/CandidateMediaGallery";
+// import useToggleFavorite from "../Hooks/useToggleFavorite";
+// import { useFetchFavorites } from "../services/api/favoritesService";
 import { useGetCampaigns,useCreateCampaign } from "../services/api/campaignService";
-import { use } from "react";
 const { Content } = Layout;
 
 const CandidateDetails = () => {
@@ -44,17 +46,17 @@ const CandidateDetails = () => {
   const { data: campaigns = [] } = useGetCampaigns(userId);
   const { mutate: createCampaign } = useCreateCampaign();
   // Fetch favorites
-  const { data: favorites = [] } = useFetchFavorites(userId);
-  const toggleFavorite = useToggleFavorite(userId, favorites);
+  // const { data: favorites = [] } = useFetchFavorites(userId);
+  // const toggleFavorite = useToggleFavorite(userId, favorites);
 
   // Extract image files
-  const imageFiles = useMemo(() => {
-    return (
-      candidate?.files?.filter(
-        (file) => file.contentType && file.contentType.startsWith("image/")&&!file.filename.includes("video") 
-      ) || []
-    );
-  }, [candidate]);
+  // const imageFiles = useMemo(() => {
+  //   return (
+  //     candidate?.files?.filter(
+  //       (file) => file.contentType && file.contentType.startsWith("image/")&&!file.filename.includes("video") 
+  //     ) || []
+  //   );
+  // }, [candidate]);
 
   // Determine if the candidate is a favorite
 
@@ -137,17 +139,45 @@ const campaignProfileIds = useMemo(() => {
 
   return (
     <Layout style={{ backgroundColor: "#f9fafb", minHeight: "100vh" }}>
-      <Content style={{ padding: "8px", maxWidth: "1200px", margin: "0 auto" }}>
+      <Content style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
         <CandidateHeader />
 
         {/* Main Row: Image Gallery and Candidate Details */}
-        <Row gutter={[32, 32]} justify="center" align="top">
-          <Col xs={24} md={12} style={{ paddingRight: "64px" }}>
-            <CandidateImageGallery imageFiles={imageFiles} />
+        <Row 
+          gutter={[24, 24]} 
+          justify="center" 
+          align="top"
+          style={{ marginTop: "24px" }}
+        >
+          <Col 
+            xs={24} 
+            sm={24} 
+            md={12} 
+            lg={12} 
+            xl={12}
+            style={{ 
+              padding: { xs: "0", md: "0 32px 0 0" }
+            }}
+          >
+            <Card style={{ height: "100%" }}>
+              <Images candidate={candidate} />
+              {/* <CandidateImageGallery imageFiles={imageFiles} /> */}
+            </Card>
+            
           </Col>
-          <Col xs={24} md={12} style={{ paddingLeft: "64px" }}>
+          <Col 
+            xs={24} 
+            sm={24} 
+            md={12} 
+            lg={12} 
+            xl={12}
+            style={{ 
+              padding: { xs: "0", md: "0 0 0 32px" }
+            }}
+          >
             <Card
               style={{
+                height: "100%",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
@@ -159,22 +189,21 @@ const campaignProfileIds = useMemo(() => {
                 form={form}
                 bmi={bmi}
                 role={userId.role}
-                
               />
               <CandidateActions
                 isEditing={isEditing}
                 handleEditToggle={handleEditToggle}
                 isFavorite={isFavorite}
-                handleLikeToggle={() =>
-                  toggleFavorite({
-                    candidateId: candidate._id,
-                    action: isFavorite ? "remove" : "add",
-                  })
-                }
+                // handleLikeToggle={() =>
+                //   toggleFavorite({
+                //     candidateId: candidate._id,
+                //     action: isFavorite ? "remove" : "add",
+                //   })
+                // }
                 role={role}
                 candidateId={candidate._id}
-  campaigns={campaigns}               // an array of campaigns
-  onCreateCampaign={handleCreateCampaign}
+                campaigns={campaigns}
+                onCreateCampaign={handleCreateCampaign}
               />
             </Card>
           </Col>
@@ -183,10 +212,12 @@ const campaignProfileIds = useMemo(() => {
         {/* Second Row: Files and Social Media */}
         <Row
           gutter={[24, 24]}
-          style={{ marginTop: "24px", paddingBottom: "24px" }}
+          style={{ marginTop: "24px", marginBottom: "24px" }}
         >
           <Col span={24}>
-            <CandidateFilesAndSocialMedia candidate={candidate} />
+            <Card>
+              <CandidateFilesAndSocialMedia candidate={candidate} />
+            </Card>
           </Col>
         </Row>
       </Content>

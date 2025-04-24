@@ -22,7 +22,7 @@ const CandidateDetailsForm = ({ candidate, isEditing, form, bmi, role }) => {
   const currentYear = new Date().getFullYear();
   const age = currentYear - (candidate.birthYear?candidate.birthYear:year || 2000);
 
-  console.log(age);
+  
   
   // Allow editing only if the role is 'admin'
   const canEdit = role === 'admin' && isEditing;
@@ -30,7 +30,7 @@ const CandidateDetailsForm = ({ candidate, isEditing, form, bmi, role }) => {
   const formattedWeight = parseFloat(candidate.weight).toFixed(); // One decimal place
 
   
-  return (
+  return (  
     <div style={{ padding: '1px' }}>
       <Form
         form={form}
@@ -81,7 +81,7 @@ const CandidateDetailsForm = ({ candidate, isEditing, form, bmi, role }) => {
                       <CalendarOutlined style={{ color: '#faad14', marginRight: '8px' }} />
                       {age}
                     </>
-                  )}
+                  )}  
                 </span>
               </Form.Item>
             </Col>

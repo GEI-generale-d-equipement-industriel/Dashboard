@@ -2,7 +2,7 @@
 import React, { createContext, useEffect, useContext, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
-import { fetchFavorites } from "../store/favoritesSlice";
+// import { fetchFavorites } from "../store/favoritesSlice";
 import useBroadcastChannel from "./useBroadcastChannel";
 import { setAuthData, setAuthInitialized } from "../store/authSlice";
 import { getCookie } from "../utils/cookieUtils";
@@ -61,8 +61,8 @@ export const UserSessionProvider = ({ children }) => {
   
       if (isAuthenticated) {
         setIsLoggedIn(true);
-        dispatch(fetchFavorites(userId));
-        if (document.visibilityState === "visible" && location.pathname === "/") {
+        // dispatch(fetchFavorites(userId));
+        if (location.pathname === "/") {
           // If the user is a candidate, redirect to /profile, otherwise default to /candidates
           const defaultRoute = role === "candidate" ? `/profile/${userId}` : "/candidates";
           const from = location.state?.from?.pathname || defaultRoute;
@@ -72,9 +72,7 @@ export const UserSessionProvider = ({ children }) => {
         // Only redirect to "/" if the current route is not public
         if (!publicRoutes.includes(location.pathname)) {
           setIsLoggedIn(false);
-          if (document.visibilityState === "visible") {
-            navigate("/", { replace: true });
-          }
+          navigate("/", { replace: true });
         }
       }
     }

@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
-import { Form, Input, Button,  Alert } from 'antd';
+import { Form, Input, Button, Alert } from 'antd';
 import { MailOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AuthInterceptor from '../../services/auth/AuthInterceptor';
 import { setAuthData } from '../../store/authSlice';
 import { useDispatch } from 'react-redux';
-
+import { useUserSession } from '../../context/UserSessionContext';
+import axios from 'axios';
 //const { Title } = Typography;
 
 const LoginModal = ({ onClose }) => {
+  const { setAuthState } = useUserSession();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const location = useLocation();
+  const apiUrl = process.env.REACT_APP_API_BASE_URL|| '/api';
   const api = AuthInterceptor.getInstance();
-
   const onFinish = async (values) => {
     setLoading(true);
     setErrorMessage('');
@@ -36,8 +38,17 @@ const LoginModal = ({ onClose }) => {
       } else {
         throw new Error('Invalid response data');
       }
+    
     } catch (error) {
-      setErrorMessage('Invalid username or password. Please try again.');
+      console.error("Login error:", error);
+      
+      if (error.response) {
+        setErrorMessage(error.response.data?.message || 'Server error occurred. Please try again.');
+      } else if (error.request) {
+        setErrorMessage('No response from server. Please check your connection.');
+      } else {
+        setErrorMessage('Error setting up the request. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

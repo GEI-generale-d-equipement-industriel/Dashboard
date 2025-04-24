@@ -1,6 +1,6 @@
 import React from 'react'
 import { Tabs } from 'antd';
-import FavoriteCandidates from '../Modules/FavoritesCandidates/FavoritesCandidates.module';
+// import FavoriteCandidates from '../Modules/FavoritesCandidates/FavoritesCandidates.module';
 import CampaignList from '../Modules/CampaignList/CampaignList.module';
 
 const { TabPane } = Tabs;
@@ -12,9 +12,9 @@ const Favorites = () => {
         <TabPane tab="Collections" key="collections">
             <CampaignList />
           </TabPane>
-          <TabPane tab="Favorites" key="favorites">
+          {/* <TabPane tab="Favorites" key="favorites">
             <FavoriteCandidates />
-          </TabPane>
+          </TabPane> */}
 
           
         </Tabs>

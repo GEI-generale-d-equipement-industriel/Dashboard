@@ -6,7 +6,7 @@ import CandidateGrid from '../components/Cards/CandidateGrid';
 import { useNavigate } from 'react-router-dom';
 import useFileLinks from '../Hooks/useFetchFileLinks';
 import queryString from 'query-string';
-import useHandleRemoveCandidate from '../Hooks/useHandleRemoveCandidate';
+// import useHandleRemoveCandidate from '../Hooks/useHandleRemoveCandidate';
 const CampaignsPage = () => {
   const { campaignId } = useParams();
   const location = useLocation(); // This gives you access to the query string

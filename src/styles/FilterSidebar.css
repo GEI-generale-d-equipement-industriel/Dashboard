@@ -2,84 +2,194 @@
 
 /* Sidebar Container */
 .filters-sidebar {
-    padding: 16px;
-    background-color: #ffffff;
-    height: 100%;
-    overflow: auto;
-    border-radius: 8px;
-    font-family: 'Libre Franklin', sans-serif;
-    border: 1px solid #e0e0e0;
+  width: 320px;
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 1px solid #e5e7eb;
+  background-color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.filters-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filters-sidebar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.filters-sidebar::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.filters-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Filters Title */
+.filters-title {
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 16px;
+  color: #f0b71d;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
+}
+
+/* Clear Filters */
+.clear-filters-container {
+  margin-bottom: 24px;
+}
+
+.clear-filters-button {
+  width: 100%;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Filter Sections */
+.filter-section {
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.filter-section:last-child {
+  border-bottom: none;
+}
+
+.filter-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333333;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
+}
+
+.filter-title:hover {
+  color: #f0b71d;
+}
+
+.caret-icon {
+  font-size: 14px;
+  margin-left: 8px;
+}
+
+/* Search Input */
+.search-input {
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+/* Checkbox Group */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  margin-top: 16px;
+}
+
+/* Age Slider */
+.age-slider {
+  margin-top: 16px;
+}
+
+.age-range {
+  display: flex;
+  justify-content: space-between;
+  color: #666666;
+  margin-top: 8px;
+}
+
+/* Ant Design component overrides */
+.filters-sidebar .ant-select-selector {
+  border-radius: 6px !important;
+}
+
+.filters-sidebar .ant-slider {
+  margin: 10px 0;
+}
+
+.filters-sidebar .ant-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filters-sidebar .ant-input-number {
+  border-radius: 6px;
+}
+
+.filters-sidebar .ant-select-multiple .ant-select-selection-item {
+  border-radius: 4px;
+}
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+  .filters-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
   }
-  
-  /* Filters Title */
-  .filters-title {
-    font-size: 24px;
-    text-align: center;
-    margin-bottom: 16px;
-    color: #f0b71d;
-    border-bottom: 1px solid #e0e0e0;
-    padding-bottom: 8px;
-  }
-  
-  /* Clear Filters */
-  .clear-filters-container {
-    margin-bottom: 24px;
-  }
-  
-  .clear-filters-button {
-    width: 100%;
-    border-radius: 8px;
-    font-weight: 600;
-  }
-  
-  /* Filter Sections */
-  .filter-section {
-    margin-bottom: 24px;
-  }
-  
-  .filter-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #333333;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-    border-bottom: 1px solid #e0e0e0;
-    padding-bottom: 8px;
-  }
-  
-  .filter-title:hover {
-    color: #f0b71d;
-  }
-  
-  .caret-icon {
-    font-size: 14px;
-    margin-left: 8px;
-  }
-  
-  /* Search Input */
-  .search-input {
-    border-radius: 8px;
-    margin-top: 16px;
-  }
-  
-  /* Checkbox Group */
-  .checkbox-group {
-    display: flex;
-    flex-direction: column;
-    margin-top: 16px;
-  }
-  
-  /* Age Slider */
-  .age-slider {
-    margin-top: 16px;
-  }
-  
-  .age-range {
-    display: flex;
-    justify-content: space-between;
-    color: #666666;
-    margin-top: 8px;
-  }
+}
+
+/* Transitions */
+.filter-section > div {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Input styles */
+.filters-sidebar input::placeholder {
+  color: #9ca3af;
+}
+
+.filters-sidebar .ant-input-affix-wrapper {
+  border-radius: 6px;
+}
+
+/* Button styles */
+.filters-sidebar .ant-btn {
+  border-radius: 6px;
+}
+
+/* Slider styles */
+.filters-sidebar .ant-slider-handle {
+  border-color: #1890ff;
+}
+
+.filters-sidebar .ant-slider-track {
+  background-color: #1890ff;
+}
+
+.filters-sidebar .ant-slider:hover .ant-slider-track {
+  background-color: #40a9ff;
+}
+
+/* Checkbox styles */
+.filters-sidebar .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #1890ff;
+  border-color: #1890ff;
+}
+
+/* Select styles */
+.filters-sidebar .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: #e6f7ff;
+}
+
+.filters-sidebar .ant-select-selection-placeholder {
+  color: #9ca3af;
+}
+
+/* Divider styles */
+.filters-sidebar .ant-divider {
+  margin: 16px 0;
+  border-top-color: #e5e7eb;
+}
   

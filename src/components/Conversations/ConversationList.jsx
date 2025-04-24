@@ -1,8 +1,9 @@
+// ConversationList.jsx
 import React from 'react';
-import { Avatar } from 'antd';
+import { Avatar, Badge, Empty } from 'antd';
 import { useSelector } from 'react-redux';
+import { UserOutlined } from '@ant-design/icons';
 
-// Helper function to generate initials from a name
 const getInitials = (name) => {
   if (!name) return "";
   return name.slice(0, 2).toUpperCase();
@@ -10,78 +11,127 @@ const getInitials = (name) => {
 
 const ConversationList = ({ conversations, selectedConversation, onSelectConversation }) => {
   const userId = useSelector((state) => state.auth.id);
+  
+  const truncateMessage = (text) => {
+    if (!text) return "";
+    if (text.length > 30) {
+      return text.substring(0, 30) + "...";
+    }
+    return text;
+  };
+  
+  const truncateUser = (text) => {
+    if (!text) return "";
+    if (text.length > 15) {
+      return text.substring(0, 15) + "...";
+    }
+    return text;
+  };
+
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return "";
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    
+    // If today, show time
+    if (diff < 24 * 60 * 60 * 1000) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    // If this week, show day name
+    if (diff < 7 * 24 * 60 * 60 * 1000) {
+      return date.toLocaleDateString([], { weekday: 'short' });
+    }
+    // Otherwise show date
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  };
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Conversations</h2>
-      <ul>
-        {conversations.map((conv) => {
-          if (!conv || !conv.participants) {
-            return null; // Skip if conversation or participants is undefined
-          }
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="p-4 border-b flex-shrink-0">
+        <h2 className="text-xl font-bold text-gray-800">Conversations</h2>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto p-2" style={{ maxHeight: 'calc(100vh - 64px)' }}>
+        {conversations.length === 0 ? (
+          <Empty 
+            description="No conversations yet" 
+            className="mt-8"
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          />
+        ) : (
+          <ul className="space-y-2">
+            {conversations.map((conv) => {
+              if (!conv || !conv.participants) return null;
 
-          // For a one-to-one conversation, find the "other" participant (not the current user).
-          let otherParticipant = null;
-          if (Array.isArray(conv.participants)) {
-            otherParticipant = conv.participants.find((p) => {
-              if (!p) return false;
-              // Check the ID fields:
-              if (p.id) return p.id !== userId;
-              if (p._id) return p._id.toString() !== userId;
-              return false;
-            });
-          }
+              const otherParticipant = conv.participants.find(p => 
+                p?.id !== userId && p?._id?.toString() !== userId
+              );
 
-          // If we found the other participant, build the display data from their info.
-          let avatarSrc = null;
-          let initials = "";
-          let displayedUsername = "Conversation"; // Default fallback
-          
-          if (otherParticipant) {
-            // If we stored an 'avatar' in the participant object, use that, else null
-            avatarSrc = otherParticipant.avatar || null;
-            // If there's a username, use it for both the displayed name and fallback initials
-            
-            if (otherParticipant.username) {
-              
-              
-              displayedUsername = otherParticipant.username;
-              initials = getInitials(otherParticipant.username);
-            }
-          }
+              // Avatar handling
+              const avatarSrc = otherParticipant?.avatar || null;
+              const displayedUsername = otherParticipant?.username || "Conversation";
+              const initials = getInitials(displayedUsername);
 
-          // Determine last message text. If you store a 'lastMessage' property, use that,
-          // otherwise take the text of the last message from 'conv.messages'
-          let lastMessage = "";
-          if (conv.lastMessage) {
-            lastMessage = conv.lastMessage;
-          } else if (Array.isArray(conv.messages) && conv.messages.length > 0) {
-            const lastMsg = conv.messages[conv.messages.length - 1];
-            lastMessage = lastMsg.text;
-          }
+              // Message handling
+              const lastMessage = conv.lastMessage || 
+                (conv.messages?.length > 0 ? conv.messages[conv.messages.length - 1]?.text : "");
+              const lastMessageSender = conv.messages?.length > 0 
+                ? conv.messages[conv.messages.length - 1]?.sender 
+                : "";
+              const lastMessageTime = conv.messages?.length > 0 
+                ? conv.messages[conv.messages.length - 1]?.timestamp 
+                : conv.updatedAt || conv.createdAt;
 
-          return (
-            <li
-              key={conv._id}
-              onClick={() => onSelectConversation(conv)}
-              className={`flex items-center p-3 rounded-lg cursor-pointer mb-2 
-              transition-colors duration-200 hover:bg-gray-100
-              ${selectedConversation && selectedConversation._id === conv._id ? 'bg-gray-200' : ''}`}
-            >
-              {/* Avatar with fallback initials if no avatarSrc is found */}
-              <Avatar src={avatarSrc} size="large" className="mr-4">
-                {!avatarSrc && initials}
-              </Avatar>
-              <div>
-                <p className="font-semibold text-lg">{displayedUsername}</p>
-                <p className="text-sm text-gray-500 truncate" style={{ maxWidth: 200 }}>
-                  {lastMessage}
-                </p>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+              const isLastMessageFromOther = lastMessageSender !== userId;
+              const isUnread = isLastMessageFromOther && !conv.readStatus?.[userId];
+
+              return (
+                <li
+                  key={conv._id}
+                  onClick={() => onSelectConversation(conv)}
+                  className={`flex items-center w-full p-3 rounded-lg cursor-pointer
+                    transition-all duration-200 hover:bg-gray-50
+                    ${selectedConversation?._id === conv._id ? 'bg-blue-50 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}`}
+                >
+                  <div className="relative">
+                    <Avatar 
+                      src={avatarSrc} 
+                      size="large" 
+                      className="mr-3"
+                      icon={!avatarSrc && <UserOutlined />}
+                    >
+                      {!avatarSrc && initials}
+                    </Avatar>
+                    {isUnread && (
+                      <Badge
+                        status="processing"
+                        className="absolute -top-1 -right-1"
+                        style={{ transform: 'scale(0.8)' }}
+                      />
+                    )}
+                  </div>
+
+                  <div className="flex-grow min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className={`font-semibold text-base ${isUnread ? 'text-gray-900' : 'text-gray-700'}`}>
+                        {truncateUser(displayedUsername)}
+                      </p>
+                      <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                        {formatTimestamp(lastMessageTime)}
+                      </span>
+                    </div>
+
+                    <p className={`text-sm text-gray-500 truncate ${isUnread ? 'font-medium' : ''}`}>
+                      {truncateMessage(lastMessage)}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
 };

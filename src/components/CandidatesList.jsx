@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { Typography, Row, Col, Skeleton, Select, Button,message } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 // import { useQueryClient } from "@tanstack/react-query";
-
+  
 import useToggleFavorite from "../Hooks/useToggleFavorite";
 import useFetchFileLinks from "../Hooks/useFetchFileLinks";
 import useInfiniteScroll from "react-infinite-scroll-hook";
@@ -69,8 +69,8 @@ const CandidateList = () => {
     fetchNextPage,
   } = useCandidates(filters, pageSize);
 
-  const { data: favorites = [] } = useFetchFavorites(userId);
-  const toggleFavorite = useToggleFavorite(userId, favorites);
+  // const { data: favorites = [] } = useFetchFavorites(userId);
+  // const toggleFavorite = useToggleFavorite(userId, favorites);
 
   const { data: campaigns = [] } = useGetCampaigns(userId);
 
@@ -100,30 +100,36 @@ const CandidateList = () => {
 
   const fileLinks = useFetchFileLinks(candidatesForCurrentPage);
 
-  const favoriteIds = useMemo(() => favorites.map((fav) => fav._id), [favorites]);
+  const updateQueryParams = (newParams) => {
+    const params = new URLSearchParams(location.search);
+    Object.entries(newParams).forEach(([key, value]) => {
+        if (value) {
+            params.set(key, value);
+        } else {
+            params.delete(key);
+        }
+    });
+    navigate({ search: params.toString() });
+};
+  // const favoriteIds = useMemo(() => favorites.map((fav) => fav._id), [favorites]);
 
   const tagColors = ["orange", "red", "purple", "gold"];
 
   const handleSortByChange = (value) => {
     setSortBy(value);
-    const params = new URLSearchParams(location.search);
-    if (value) {
-      params.set("sortBy", value);
-    } else {
-      params.delete("sortBy");
-    }
-    navigate({ search: params.toString() });
+    // Reset to first page when sorting changes
+    window.scrollTo(0, 0);
+    updateQueryParams({ 
+      sortBy: value,
+      sortOrder: value ? sortOrder : undefined // Clear sort order if no sort by
+    });
   };
 
   const handleSortOrderChange = (value) => {
     setSortOrder(value);
-    const params = new URLSearchParams(location.search);
-    if (value) {
-      params.set("sortOrder", value);
-    } else {
-      params.delete("sortOrder");
-    }
-    navigate({ search: params.toString() });
+    // Reset to first page when sort order changes
+    window.scrollTo(0, 0);
+    updateQueryParams({ sortOrder: value });
   };
 
   const [sentryRef] = useInfiniteScroll({
@@ -202,7 +208,7 @@ const CandidateList = () => {
           })}
         </script>
       </Helmet>
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-2">
         {/* Sorting Controls */}
         <Row gutter={[16, 24]} className="mb-4" justify="end">
           <Col>
@@ -211,6 +217,7 @@ const CandidateList = () => {
               onChange={handleSortByChange}
               style={{ width: 120 }}
               placeholder="Sort By"
+              loading={isFetchingNextPage}
             >
               <Option value="">None</Option>
               <Option value="name">Name</Option>
@@ -222,6 +229,8 @@ const CandidateList = () => {
               value={sortOrder}
               onChange={handleSortOrderChange}
               style={{ width: 120 }}
+              disabled={!sortBy}
+              loading={isFetchingNextPage}
             >
               <Option value="asc">Ascending</Option>
               <Option value="desc">Descending</Option>
@@ -232,8 +241,10 @@ const CandidateList = () => {
               onClick={() => {
                 setSortBy("");
                 setSortOrder("asc");
+                window.scrollTo(0, 0);
                 navigate({ search: "" });
               }}
+              loading={isFetchingNextPage}
             >
               Reset Sorting
             </Button>
@@ -257,7 +268,7 @@ const CandidateList = () => {
                 candidate={candidate}
                 fileLink={fileLinks[candidate._id]}
                 isFavorite={isCandidateInCampaign}
-                onToggleFavorite={(args) => toggleFavorite(args)}
+                // onToggleFavorite={(args) => toggleFavorite(args)}
                 tagColors={tagColors}
                 campaigns={campaigns}
                 onCreateCampaign={handleCreateCampaign}

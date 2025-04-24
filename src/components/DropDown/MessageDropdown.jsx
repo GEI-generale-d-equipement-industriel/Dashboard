@@ -1,18 +1,39 @@
 // MessagesDropdown.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react'; // Import useEffect
 import { Dropdown, Badge, Button, Avatar, Menu } from 'antd';
 import { MessageOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
+import { useConversations } from '../../Hooks/useConversations'; // Import the custom hook
+import { useSelector } from 'react-redux';
+export default function MessagesDropdown() {
+  const userId = useSelector((state) => state.auth.id);
+  
+  const { conversations} = useConversations(userId);
 
-export default function MessagesDropdown({ conversations = [], badgeCount = 0 }) {
+// console.log(conversations);
+
+  const badgeCount = conversations.length
+
 
   function getLastMessage(conv) {
-    if (conv.messages && conv.messages.length > 0) {
-      const lastMsg = conv.messages[conv.messages.length - 1];
-      return lastMsg.text || 'No messages';
-    }
-    return 'No messages';
+    const lastMsg = conv.messages?.[conv.messages.length - 1];
+    return lastMsg?.text || 'No messages';
   }
+
+  // --- Responsiveness: Dynamic Placement ---
+  const [placement, setPlacement] = useState('bottomRight');
+
+  useEffect(() => {
+    const handleResize = () => {
+      setPlacement(window.innerWidth < 640 ? 'bottom' : 'bottomRight');
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  // --- End Responsiveness: Dynamic Placement ---
+
+
 
   const menuItems = [
     {
@@ -22,23 +43,20 @@ export default function MessagesDropdown({ conversations = [], badgeCount = 0 })
     },
     { key: 'divider-1', type: 'divider' },
     ...conversations.slice(0, 5).map((conversation) => {
-      const convoId = conversation._id;
-      const displayName = conversation.receiverName || 'Conversation';
-      const avatarUrl = conversation.receiverAvatar || null;
       const lastMsgText = getLastMessage(conversation);
-
       return {
-        key: convoId,
+        key: conversation._id,
         label: (
-          // Clicking this <Link> navigates to /chat?conversationId=<convoId>
-          <Link to={`/chat?conversationId=${convoId}`} className="block">
+          <Link to={`/chat?conversationId=${conversation._id}`} className="block">
             <div className="flex items-center space-x-3 py-2">
-              <Avatar src={avatarUrl} className="bg-gray-200">
-                {!avatarUrl && displayName[0]?.toUpperCase()}
+              <Avatar src={conversation.receiverAvatar} className="bg-gray-200">
+                {conversation.receiverName?.[0]?.toUpperCase()}
               </Avatar>
               <div className="overflow-hidden">
-                <p className="font-medium truncate">{displayName}</p>
-                <p className="text-sm text-gray-500 truncate">{lastMsgText}</p>
+                <p className="font-medium truncate">{conversation.receiverName}</p>
+                <p className="text-sm text-gray-500 truncate">
+                  {lastMsgText.slice(0, 22) + (lastMsgText.length > 22 ? '...' : '')}
+                </p>
               </div>
             </div>
           </Link>
@@ -56,18 +74,31 @@ export default function MessagesDropdown({ conversations = [], badgeCount = 0 })
     },
   ];
 
-  const menu = <Menu className="w-80" items={menuItems} />;
+    // --- Responsiveness: Conditional Width ---
+    // const menu = (
+    //   <Menu
+    //     className="w-full sm:w-80 max-w-screen-sm" // Responsive width
+    //     items={menuItems}
+    //   />
+    // );
+    // --- End Responsiveness: Conditional Width ---
 
-  return (
-    <Dropdown overlay={menu} placement="bottomRight" trigger={['click']}>
-      <Badge count={badgeCount} overflowCount={99} style={{ cursor: 'pointer' }}>
-        <Button
-          type="text"
-          shape="circle"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          icon={<MessageOutlined style={{ fontSize: 24, color: '#f0b71d' }}/> }
-        />
-      </Badge>
-    </Dropdown>
-  );
+
+    return (
+      <Dropdown
+        overlay={<Menu className="w-full sm:w-80" items={menuItems} />}
+        placement={placement}
+        trigger={['click']}
+      >
+        <Badge count={badgeCount} overflowCount={99} style={{ cursor: 'pointer' }}>
+          <Button
+            type="text"
+            shape="circle"
+            icon={<MessageOutlined style={{ fontSize: 24, color: '#f0b71d' }} />}
+            aria-label="Messages"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          />
+        </Badge>
+      </Dropdown>
+    )
 }

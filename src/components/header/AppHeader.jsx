@@ -1,18 +1,50 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom'; // Add this
 import { Layout, Menu, Button, Avatar, Dropdown } from 'antd';
 import { MenuOutlined, UserOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
-import { useSelector } from 'react-redux'; // Import useSelector to get the auth state
+import { useSelector } from 'react-redux';
 import MessagesDropdown from '../DropDown/MessageDropdown';
+
 const { Header } = Layout;
 
+// Centralized navigation configuration
+const NAV_ITEMS = [
+  { key: '1', path: '/candidates', label: 'Home' },
+  { key: '2', path: '/favorites', label: 'Favorites' },
+];
+
+// Style constants
+const linkStyle = {
+  color: '#f0b71d',
+  fontFamily: 'Libre Franklin, sans-serif',
+  fontWeight: '600',
+  fontSize: '16px',
+  transition: 'all 0.3s ease',
+};
+
 const AppHeader = ({ handleLogout, toggleDrawer, screens, conversations }) => {
-  // Get user role from Redux store
+  const location = useLocation();
   const userRole = useSelector((state) => state.auth.role);
   
-  // Profile menu items (default for all roles)
-  let profileMenu = {
+  // Determine selected menu keys based on current path
+  const selectedKeys = NAV_ITEMS
+    .filter(item => location.pathname === item.path)
+    .map(item => item.key);
+
+  // Profile menu configuration
+  const profileMenu = {
     items: [
+      ...(userRole !== 'candidate' ? [
+        {
+          key: 'profile',
+          label: <Link to="/profile">Profile</Link>,
+        },
+        {
+          key: 'settings',
+          label: <Link to="/settings">Settings</Link>,
+        },
+      ] : []),
       {
         key: 'logout',
         label: (
@@ -24,103 +56,18 @@ const AppHeader = ({ handleLogout, toggleDrawer, screens, conversations }) => {
     ],
   };
 
-  // If the user is **not** a candidate, add extra profile menu options
-  if (userRole !== 'candidate') {
-    profileMenu.items.unshift(
-      {
-        key: 'profile',
-        label: <Link to="/under-construction">Profile</Link>,
-      },
-      {
-        key: 'settings',
-        label: <Link to="/under-construction">Settings</Link>,
-      }
-    );
-  }
+  // Generate navigation menu items
+  const navigationMenuItems = NAV_ITEMS.map(item => ({
+    key: item.key,
+    label: (
+      <Link to={item.path} style={linkStyle}>
+        {item.label}
+      </Link>
+    ),
+  }));
 
-  // Navigation menu items (only for non-candidates)
-  const navigationMenuItems = userRole !== 'candidate' ? [
-    {
-      key: '1',
-      label: (
-        <Link
-          to="/candidates"
-          style={{
-            color: '#f0b71d',
-            fontFamily: 'Libre Franklin, sans-serif',
-            fontWeight: '600',
-            fontSize: '16px',
-          }}
-        >
-          Home
-        </Link>
-      ),
-    },
-    {
-      key: '2',
-      label: (
-        <Link
-          to="/favorites"
-          style={{
-            color: '#f0b71d',
-            fontFamily: 'Libre Franklin, sans-serif',
-            fontWeight: '600',
-            fontSize: '16px',
-          }}
-        >
-          Favorites
-        </Link>
-      ),
-    },
-  ] : [];
-
-  // Messages menu items (only for non-candidates)
-  // const messagesMenuItems = userRole !== 'candidate' ? [
-  //   {
-  //     key: 'label',
-  //     label: (
-  //       <div className="px-4 py-2 font-semibold">
-  //         Recent Messages
-  //       </div>
-  //     ),
-  //     disabled: true,
-  //   },
-  //   {
-  //     key: 'divider-1',
-  //     type: 'divider',
-  //   },
-  //   ...conversations.slice(0, 5).map((conversation) => ({
-  //     key: conversation.id,
-  //     label: (
-  //       <div className="flex items-center space-x-3 py-2">
-  //         <Avatar src={conversation.avatar} className="bg-gray-200">
-  //           {conversation.name[0]}
-  //         </Avatar>
-  //         <div className="overflow-hidden">
-  //           <p className="font-medium truncate">{conversation.name}</p>
-  //           <p className="text-sm text-gray-500 truncate">{conversation.lastMessage}</p>
-  //         </div>
-  //       </div>
-  //     ),
-  //   })),
-  //   {
-  //     key: 'divider-2',
-  //     type: 'divider',
-  //   },
-  //   {
-  //     key: 'see-all',
-  //     label: (
-  //       <Link
-  //         to="/chat"
-  //         className="block w-full text-center text-blue-500 hover:text-blue-600"
-  //       >
-  //         See all messages
-  //       </Link>
-  //     ),
-  //   },
-  // ] : [];
-
-  // const messagesMenu = userRole !== 'candidate' ? <Menu className="w-80" items={messagesMenuItems} /> : null;
+  // Dynamic logo link based on user role
+  const logoLink = userRole === 'candidate' ? '/dashboard' : '/candidates';
 
   return (
     <Header
@@ -134,84 +81,54 @@ const AppHeader = ({ handleLogout, toggleDrawer, screens, conversations }) => {
         padding: '0 16px',
       }}
     >
-      {/* Logo */}
-      <div
-        className="logo"
-        style={{
-          width: 120,
-          height: 64,
-          marginRight: 24,
-        }}
-      >
-        <Link to="/candidates">
-          <img
-            src="/assets/BeModel.png"
-            alt="logo"
-            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-          />
-        </Link>
-      </div>
+      {/* Logo with dynamic link */}
+      <div className="hidden md:block w-[120px] h-[64px] mr-6">
+  <Link to={logoLink}>
+    <img
+      src="/assets/BeModel.png"
+      alt="logo"
+      className="w-full h-full object-contain"
+    />
+  </Link>
+</div>
 
-      {/* Navigation Menu (Only for non-candidates) */}
+      {/* Navigation Menu */}
       {userRole !== 'candidate' && (  
         <Menu
           mode="horizontal"
           theme="dark"
           items={navigationMenuItems}
-          style={{
-            flex: 1,
-            minWidth: 0,
-            backgroundColor: 'transparent',
-            borderBottom: 'none',
-          }}
+          selectedKeys={selectedKeys}
+          className="flex-1 min-w-0 bg-transparent border-none 
+          [&_.ant-menu-item]:!bg-transparent [&_.ant-menu-item-selected]:after:!border-b-2 
+          [&_.ant-menu-item-selected]:after:!border-amber-500 [&_.ant-menu-item-selected>a]:!text-amber-500" 
         />
       )}
 
       {/* Right-Side Actions */}
       <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto', gap: '24px' }}>
-        {/* Messages (Only for non-candidates) */}
-        {/* {userRole !== 'candidate' && (
-          <Dropdown overlay={messagesMenu} placement="bottomRight" trigger={['click']}>
-            <Badge
-              count={5}
-              offset={[0, 0]}
-              style={{ cursor: 'pointer' }}
-            >
-              <Button
-                type="text"
-                shape="circle"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                icon={
-                  <MessageOutlined
-                    style={{ fontSize: 24, color: '#f0b71d' }}
-                  />
-                }
-              />
-            </Badge>
-          </Dropdown>
-        )} */}
-         <MessagesDropdown
-            conversations={conversations}
-            badgeCount={conversations.length} // or pass an unread count
-          />
+        <MessagesDropdown
+          conversations={conversations}
+          badgeCount={conversations.length}
+        />
 
-        {/* Profile Dropdown (Always Visible) */}
+        {/* Profile Dropdown */}
         <Dropdown menu={profileMenu} trigger={['click']}>
           <Avatar
             style={{
               backgroundColor: '#f0b71d',
               cursor: 'pointer',
-              marginLeft: 'auto', // Ensures it's always at the end
+              marginLeft: 'auto',
             }}
           >
             <UserOutlined style={{ fontSize: 18 }} />
           </Avatar>
         </Dropdown>
 
-        {/* Mobile Menu Toggle (only if screens.lg is false AND user is NOT a candidate) */}
+        {/* Mobile Menu Toggle */}
         {!screens.lg && userRole !== 'candidate' && (
           <Button
-            type="primary"
+            type="text"
             ghost
             icon={<MenuOutlined style={{ color: '#ffffff', fontSize: 20 }} />}
             onClick={toggleDrawer}

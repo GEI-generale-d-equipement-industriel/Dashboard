@@ -3,10 +3,13 @@ import ImageGallery from './ImagesGallery'; // Adjust the import path accordingl
 
 const CandidateImageGallery = ({ imageFiles }) => {
   return (
-    <div style={{ width: '120%', maxWidth: '600px' }}>
+    <div className="w-full max-w-full">
       <ImageGallery
         images={imageFiles}
-        containerStyle={{ width: '100%' }}
+        containerStyle={{ 
+          width: '100%',
+          maxWidth: '100%'
+        }}
         thumbnailSize={60}
         mainImageHeight={500} // Fixed height for stability
       />

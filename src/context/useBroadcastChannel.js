@@ -1,4 +1,3 @@
-// src/context/useBroadcastChannel.js
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setAuthData, removeAuthData } from '../store/authSlice';

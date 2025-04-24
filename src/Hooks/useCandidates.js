@@ -11,8 +11,8 @@ const useCandidates = (filters, pageSize) => {
   
   const transformedFilters = {
     searchTerm: filters.searchTerm || undefined,
-    sortBy: filters.sortBy || "createdAt",
-    sortOrder: filters.sortOrder || "desc",
+    sortBy: filters.sortBy && ['name', 'createdAt'].includes(filters.sortBy) ? filters.sortBy : "createdAt",
+    sortOrder: filters.sortOrder && ['asc', 'desc'].includes(filters.sortOrder) ? filters.sortOrder : "desc",
     ageRange: filters.selectedAgeRange ? `${filters.selectedAgeRange[0]}-${filters.selectedAgeRange[1]}` : undefined,
     heightRange: filters.selectedHeightRange ? `${filters.selectedHeightRange[0]}-${filters.selectedHeightRange[1]}` : undefined,
     weightRange: filters.selectedWeightRange ? `${filters.selectedWeightRange[0]}-${filters.selectedWeightRange[1]}` : undefined,

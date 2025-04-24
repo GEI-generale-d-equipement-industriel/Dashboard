@@ -3,7 +3,7 @@ import { Card, Button, Tooltip, Tag, message } from 'antd';
 import { Link } from 'react-router-dom';
 import CampaignSelectionModal from './Modal/Campaings.Modal';
 import { useUpdateCampaignProfile } from '../services/api/campaignService';
-import BmiIndicateur from './BmiIndicateur';
+// import BmiIndicateur from './BmiIndicateur';
 import { ManOutlined,WomanOutlined } from '@ant-design/icons';
 import { MdBookmarkBorder,MdBookmarkAdded } from "react-icons/md";
 // Mapping for interest names (optional)
@@ -11,6 +11,7 @@ const interestShortNames = {
   'Modèle pour shooting': 'Model',
   'Modèle pour shooting en studio':'Model',
   'Créateur UGC': 'UGC',
+  "Voix-off":"Voix"
   // Add more mappings if needed
 };
 
@@ -38,9 +39,9 @@ const CandidateCard = React.memo(
     const year=parseInt(candidate?.birthDate?.substring(0,4))
     const currentYear = new Date().getFullYear();
     const age = currentYear - (candidate.birthYear?candidate.birthYear:year || 2000);
-    const weight = parseFloat(candidate.weight) || 0;
+    // const weight = parseFloat(candidate.weight) || 0;
     const height = parseFloat(candidate.height) || 1;
-    const bmi = weight / (height * height);
+    // const bmi = weight / (height * height);
 
     /**
      * Clicking the bookmark icon:
@@ -140,7 +141,7 @@ const CandidateCard = React.memo(
               >
                 {candidate.firstName.charAt(0).toUpperCase()+candidate.firstName.slice(1)} {candidate.name[0].toUpperCase()}
               </Link>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-xs text-gray-500 font-bold">
                 <span>{age} ans</span>
                 <span >•</span>
                 <span>{height.toFixed(2)} m</span>
@@ -148,6 +149,7 @@ const CandidateCard = React.memo(
               </div>
             </div>
             <Tooltip
+            className='absolute top-2 right-2'
               title={
                 isFavorite
                   ? "Remove candidate from all campaigns"
@@ -184,8 +186,8 @@ const CandidateCard = React.memo(
           </div>
 
           {/* Footer */}
-          <div className="p-4 space-y-2">
-            <div className="flex gap-2 sm:flex-nowrap flex-wrap">
+          <div className="p-2 space-y-2">
+            <div className="flex gap-2 flex-wrap min-h-[52px] overflow-hidden">
               {candidate.interest
                 ?.flatMap((interest) => interest.split(","))
                 .map((interestItem, index) => {
