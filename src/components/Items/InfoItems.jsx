@@ -1,10 +1,14 @@
-// src/components/CandidateProfile/InfoItem.jsx
 import React from "react";
+import { cn } from "../../utils/utils";
 
-export default function InfoItem({ label, value }) {
+
+const InfoItem = ({ label, value, className }) => {
   return (
-    <div>
-      <span className="font-medium">{label}:</span> {value}
+    <div className={cn("space-y-2", className)}>
+      <p className="text-sm font-medium text-gray-500">{label}</p>
+      <div className="text-base font-normal text-gray-900">{value || "-"}</div>
     </div>
   );
-}
+};
+  
+export default InfoItem;

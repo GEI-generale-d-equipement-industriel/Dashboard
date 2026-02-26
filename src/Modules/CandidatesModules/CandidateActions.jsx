@@ -1,6 +1,15 @@
-import React, { useState,useEffect } from "react";
-import { Button, message, Popconfirm, Upload, Modal, Spin } from "antd";
-import { UploadOutlined,  QuestionCircleOutlined, LoadingOutlined } from "@ant-design/icons";
+import React, { useState, useEffect } from "react";
+import { Button, message, Popconfirm, Upload, Modal, Spin, Tooltip } from "antd";
+import {
+  UploadOutlined,
+  QuestionCircleOutlined,
+  LoadingOutlined,
+  DeleteOutlined,
+  MessageOutlined,
+  PlusOutlined,
+  SaveOutlined,
+  CloseOutlined,
+} from "@ant-design/icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -8,13 +17,14 @@ import CampaignSelectionModal from "../../components/Modal/Campaings.Modal";
 import { useUpdateCampaignProfile } from "../../services/api/campaignService";
 import { useRemoveCandidate } from "../../Hooks/useCandidates";
 import { useSelector } from "react-redux";
-import { MdBookmarkBorder,MdBookmarkAdded } from "react-icons/md";
+import { MdBookmarkBorder, MdBookmarkAdded } from "react-icons/md";
+
 const CandidateActions = ({
   isEditing,
   handleEditToggle,
   isFavorite,
   role,
-  candidateId,  
+  candidateId,
   campaigns,
   onCreateCampaign,
 }) => {
@@ -54,11 +64,9 @@ const CandidateActions = ({
     if (candidateId) {
       fetchUser(candidateId).then((data) => {
         setCandidateUser(data);
-        
       });
     }
   }, [candidateId]);
-
 
   const removeFromAllCampaigns = () => {
     const campaignsWithCandidate = campaigns.filter((c) =>
@@ -72,18 +80,10 @@ const CandidateActions = ({
 
     campaignsWithCandidate.forEach((campaign) => {
       updateCampaignProfile(
+        { campaignId: campaign._id, profileId: candidateId, action: "remove" },
         {
-          campaignId: campaign._id,
-          profileId: candidateId,
-          action: "remove",
-        },
-        {
-          onSuccess: () => {
-            message.success(`Candidate removed from ${campaign.name}!`);
-          },
-          onError: () => {
-            message.error(`Failed to remove candidate from "${campaign.name}".`);
-          },
+          onSuccess: () => message.success(`Candidate removed from ${campaign.name}!`),
+          onError: () => message.error(`Failed to remove candidate from "${campaign.name}".`),
         }
       );
     });
@@ -91,30 +91,18 @@ const CandidateActions = ({
 
   const handleConfirmCampaignAdd = (campaignId) => {
     const chosenCampaign = campaigns.find((c) => c._id === campaignId);
-    
-
     updateCampaignProfile(
-           {
-             campaignId,
-             profileId: candidateId,
-             action: 'add',
-           },
-           {
-             onSuccess: () => {
-               // Display a specific message if we have the campaign's name;
-               // otherwise, use a generic message.
-               if (chosenCampaign) {
-                 message.success(`Candidate added to campaign ${chosenCampaign.name}!`);
-               } else {
-                 message.success("Candidate added to the new campaign!");
-               }
-             },
-             onError: () => {
-               message.error('Failed to add candidate to campaign.');
-             },
-           }
-         );
-
+      { campaignId, profileId: candidateId, action: "add" },
+      {
+        onSuccess: () =>
+          message.success(
+            chosenCampaign
+              ? `Candidate added to campaign ${chosenCampaign.name}!`
+              : "Candidate added to the new campaign!"
+          ),
+        onError: () => message.error("Failed to add candidate to campaign."),
+      }
+    );
     setModalVisible(false);
   };
 
@@ -124,50 +112,33 @@ const CandidateActions = ({
         message.success("Candidate deleted successfully!");
         navigate("/candidates");
       },
-      onError: () => {
-        message.error("Failed to delete candidate.");
-      },
+      onError: () => message.error("Failed to delete candidate."),
     });
   };
 
-  // Open file upload modal when editing
   const handleEditClick = () => {
     handleEditToggle();
     setUploadModalVisible(true);
   };
 
-  // Handle file selection
-  const handleFileChange = ({ fileList }) => {
-    setFileList(fileList);
-  };
+  const handleFileChange = ({ fileList }) => setFileList(fileList);
 
-  // Handle file upload using Axios
   const handleUpload = async () => {
     if (fileList.length === 0) {
       message.error("Please select a file to upload.");
       return;
     }
-
-    setLoading(true); // Show spinner
-
+    setLoading(true);
     const formData = new FormData();
-    fileList.forEach((file) => {
-      formData.append("files", file.originFileObj);
-    });
-
+    fileList.forEach((file) => formData.append("files", file.originFileObj));
     try {
       const response = await axios.patch(`${Url}/candidates/${candidateId}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
-
       if (response.status === 200 || response.status === 201) {
         message.success("Files uploaded successfully!");
         setFileList([]);
         setUploadModalVisible(false);
-
-        // ✅ Re-fetch candidate data to display the new photo immediately
         queryClient.invalidateQueries(["candidate", candidateId]);
       } else {
         throw new Error("Upload failed.");
@@ -175,7 +146,7 @@ const CandidateActions = ({
     } catch (error) {
       message.error(error.response?.data?.message || "Error uploading files.");
     } finally {
-      setLoading(false); // Hide spinner
+      setLoading(false);
     }
   };
 
@@ -189,66 +160,114 @@ const CandidateActions = ({
         participants: [userId, candidateUser],
       });
       const conversation = response.data;
-      // Navigate to Chat page with conversationId and candidateId as query parameters.
       navigate(`/chat?conversationId=${conversation._id}&candidateId=${candidateUser}`);
     } catch (error) {
       console.error("Error finding/creating conversation:", error);
       message.error("Could not initiate conversation.");
     }
   };
+
   return (
-    <div className="mt-4 flex justify-center space-x-4">
+    <div className="w-full">
+      {/* ── Bookmark pill ─────────────────────────────────────────────────── */}
+      <div className="flex gap-2 w-full mb-4">
+        <Tooltip title={isFavorite ? "Retirer des campagnes" : "Ajouter à une campagne"}>
+          <button
+            onClick={handleHeartClick}
+            className={`
+              flex items-center gap-1.5 px-4 py-2.5  rounded-full text-sm font-bold border transition-all duration-200
+              ${isFavorite
+                ? "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                : "bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50"
+              }
+            `}
+          >
+            {isFavorite
+              ? <MdBookmarkAdded className="w-4 h-4" />
+              : <MdBookmarkBorder className="w-4 h-4" />
+            }
+            {/* <span>{isFavorite ? "Sauvegardé" : "Sauvegarder"}</span> */}
+          </button>
+        </Tooltip>
+      
+
+      {/* ── Action buttons ────────────────────────────────────────────────── */}
       {isEditing ? (
-        <>
+        /* Editing state */
+        <div className="flex gap-3 w-full">
           {canEdit && (
-            <>
-              <Button type="primary" onClick={handleUpload} disabled={loading}>
-                {loading ? <Spin indicator={<LoadingOutlined />} /> : "Save"}
-              </Button>
-              <Button onClick={handleEditToggle} disabled={loading}>
-                Cancel
-              </Button>
-            </>
-          )}
-        </>
-      ) : (
-        <>
-          {canEdit && (
-            <>
-              <Button type="primary" onClick={handleEditClick}>
-                Add a new photo
-              </Button>
-
-              <Popconfirm
-                title="Are you sure to delete this candidate?"
-                description="This action cannot be undone."
-                onConfirm={handleDeleteCandidate}
-                okText="Yes, Delete"
-                cancelText="No"
-                icon={<QuestionCircleOutlined style={{ color: "red" }} />}
+            <div className="flex-1">
+              <button
+                onClick={handleUpload}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold shadow-sm shadow-blue-200 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Button danger>Delete</Button>
-              </Popconfirm>
-            </>
+                {loading
+                  ? <Spin indicator={<LoadingOutlined style={{ color: "#fff" }} />} />
+                  : <><SaveOutlined /> Enregistrer</>
+                }
+              </button>
+            </div>
+          )}
+          {canEdit && (
+            <div className="flex-1">
+              <button
+                onClick={handleEditToggle}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold border border-slate-200 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <CloseOutlined /> Annuler
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Default state */
+        <div className="flex gap-3 w-full">
+          {/* Send message – always visible */}
+          <div className="flex-1">
+            <button
+              onClick={handleSendMessageClick}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold shadow-sm shadow-blue-200 transition-all duration-200"
+            >
+              <MessageOutlined /> Message
+            </button>
+          </div>
+
+          {/* Add photo – admin only */}
+          {canEdit && (
+            <div className="flex-1">
+              <button
+                onClick={handleEditClick}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-sm font-semibold transition-all duration-200"
+              >
+                <PlusOutlined /> Photo
+              </button>
+            </div>
           )}
 
-<Button
-  type="text"
-  icon={
-    isFavorite ? (
-      <MdBookmarkAdded className="w-8 h-8 text-blue-600" />
-    ) : (
-      <MdBookmarkBorder className="w-8 h-8 text-gray-500" />
-    )
-  }
-  onClick={handleHeartClick}
-/>
-<Button type="primary" onClick={handleSendMessageClick}>
-        Send Message
-      </Button>
-        </>
+          {/* Delete – admin only */}
+          {canEdit && (
+            <div className="flex-1">
+              <Popconfirm
+                title="Supprimer ce candidat ?"
+                description="Cette action est irréversible."
+                onConfirm={handleDeleteCandidate}
+                okText="Oui, supprimer"
+                cancelText="Annuler"
+                icon={<QuestionCircleOutlined style={{ color: "#ef4444" }} />}
+                okButtonProps={{ danger: true }}
+              >
+                <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-red-200 hover:bg-red-50 hover:border-red-300 text-red-500 hover:text-red-600 text-sm font-semibold transition-all duration-200">
+                  <DeleteOutlined />
+                </button>
+              </Popconfirm>
+            </div>
+          )}
+        </div>
       )}
 
+      {/* ── Campaign selection modal ───────────────────────────────────────── */}
       <CampaignSelectionModal
         visible={isModalVisible}
         onClose={() => setModalVisible(false)}
@@ -257,17 +276,32 @@ const CandidateActions = ({
         onCreateCampaign={onCreateCampaign}
       />
 
-      {/* Upload Modal */}
+      {/* ── Upload modal ──────────────────────────────────────────────────── */}
       <Modal
-        title="Upload Files"
-        visible={isUploadModalVisible}
+        title={
+          <div className="flex items-center gap-2 text-slate-700 font-semibold">
+            <UploadOutlined />
+            <span>Ajouter des fichiers</span>
+          </div>
+        }
+        open={isUploadModalVisible}
         onCancel={() => setUploadModalVisible(false)}
         footer={[
-          <Button key="cancel" onClick={() => setUploadModalVisible(false)} disabled={loading}>
-            Cancel
+          <Button
+            key="cancel"
+            onClick={() => setUploadModalVisible(false)}
+            disabled={loading}
+          >
+            Annuler
           </Button>,
-          <Button key="upload" type="primary" onClick={handleUpload} disabled={loading}>
-            {loading ? <Spin indicator={<LoadingOutlined />} /> : "Upload"}
+          <Button
+            key="upload"
+            type="primary"
+            onClick={handleUpload}
+            disabled={loading}
+            icon={loading ? <Spin indicator={<LoadingOutlined />} /> : <UploadOutlined />}
+          >
+            {loading ? "Envoi en cours..." : "Envoyer"}
           </Button>,
         ]}
       >
@@ -276,21 +310,23 @@ const CandidateActions = ({
           beforeUpload={() => false}
           fileList={fileList}
           onChange={handleFileChange}
-          disabled={loading} // Disable file selection during upload
+          disabled={loading}
+          className="w-full"
+          listType="picture"
         >
-          <Button icon={<UploadOutlined />} disabled={loading}>
-            Select Files
+          <Button icon={<UploadOutlined />} disabled={loading} className="w-full">
+            Sélectionner des fichiers
           </Button>
         </Upload>
 
-        {/* Loading Spinner */}
         {loading && (
-          <div className="text-center mt-4">
+          <div className="text-center mt-6">
             <Spin size="large" />
-            <p>Uploading...</p>
+            <p className="mt-2 text-slate-500 text-sm">Envoi en cours...</p>
           </div>
         )}
       </Modal>
+      </div>
     </div>
   );
 };

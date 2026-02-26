@@ -5,7 +5,7 @@ const url = process.env.REACT_APP_API_BASE_URL || '/api';
 
 // Fetch user's favorite candidates
 export const fetchFavorites = async (userId) => {
-  const { data } = await axios.get(`${url}/user/${userId}/favorites`);
+  const { data } = await axios.get(`${url}/user/${userId}/favorites`,);
   return data;
 };
 

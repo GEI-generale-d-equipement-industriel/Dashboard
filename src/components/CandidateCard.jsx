@@ -3,14 +3,15 @@ import { Card, Button, Tooltip, Tag, message } from 'antd';
 import { Link } from 'react-router-dom';
 import CampaignSelectionModal from './Modal/Campaings.Modal';
 import { useUpdateCampaignProfile } from '../services/api/campaignService';
-import BmiIndicateur from './BmiIndicateur';
-import { ManOutlined,WomanOutlined } from '@ant-design/icons';
-import { MdBookmarkBorder,MdBookmarkAdded } from "react-icons/md";
+// import BmiIndicateur from './BmiIndicateur';
+import { ManOutlined, WomanOutlined } from '@ant-design/icons';
+import { MdBookmarkBorder, MdBookmarkAdded } from "react-icons/md";
 // Mapping for interest names (optional)
 const interestShortNames = {
   'Modèle pour shooting': 'Model',
-  'Modèle pour shooting en studio':'Model',
+  'Modèle pour shooting en studio': 'Model',
   'Créateur UGC': 'UGC',
+  "Voix-off": "Voix"
   // Add more mappings if needed
 };
 
@@ -23,7 +24,7 @@ const CandidateCard = React.memo(
     campaigns,
     onCreateCampaign,   // callback for creating new campaigns from the modal
   }) => {
-   
+
     const { mutate: updateCampaignProfile } = useUpdateCampaignProfile();
 
     // Local state for campaign selection modal visibility
@@ -35,12 +36,12 @@ const CandidateCard = React.memo(
 
 
     // Compute candidate stats
-    const year=parseInt(candidate?.birthDate?.substring(0,4))
+    const year = parseInt(candidate?.birthDate?.substring(0, 4))
     const currentYear = new Date().getFullYear();
-    const age = currentYear - (candidate.birthYear?candidate.birthYear:year || 2000);
-    const weight = parseFloat(candidate.weight) || 0;
+    const age = currentYear - (candidate.birthYear ? candidate.birthYear : year || 2000);
+    // const weight = parseFloat(candidate.weight) || 0;
     const height = parseFloat(candidate.height) || 1;
-    const bmi = weight / (height * height);
+    // const bmi = weight / (height * height);
 
     /**
      * Clicking the bookmark icon:
@@ -117,98 +118,114 @@ const CandidateCard = React.memo(
       );
       setModalVisible(false);
     };
-    
+
 
 
     // Determine the gender icon (using lucide‑react)
     const genderIcon =
       candidate.gender === 'Femme' ? (
-        <WomanOutlined className="w-8 h-8 text-pink-500 absolute top-1 left-2 bg-white rounded-full p-2 border" />
+        <div className="text-pink-500 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm flex items-center justify-center">
+          <WomanOutlined className="text-base" />
+        </div>
       ) : (
-        <ManOutlined className="w-8 h-8 text-blue-500 absolute top-1 left-2 bg-white rounded-full p-2 border" />
+        <div className="text-blue-500 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm flex items-center justify-center">
+          <ManOutlined className="text-base" />
+        </div>
       );
 
     return (
       <>
-       <Card className="w-full rounded-lg shadow-md">
-          {/* Header */}
-          <div className="flex items-center justify-between p-2">
-            <div className="text-left">
-              <Link
-                to={`/candidate/${candidate._id}`}
-                className="font-bold text-lg text-gray-800 hover:underline"
-              >
-                {candidate.firstName} {candidate.name}
-              </Link>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <span>{age} ans</span>
-                <span>•</span>
-                <span>{height.toFixed(2)}m</span>
-                {genderIcon}
-              </div>
-            </div>
-            <Tooltip
-              title={
-                isFavorite
-                  ? "Remove candidate from all campaigns"
-                  : "Add candidate to a campaign"
-              }
-            >
-              <Button
-                type="text"
-                icon={
-                  isFavorite ? (
-                    <MdBookmarkAdded className="w-8 h-8 text-blue-600" />
-                  ) : (
-                    <MdBookmarkBorder className="w-8 h-8 text-gray-500" />
-                  )
-                }
-                onClick={handleBookmarkClick}
-              />
-            </Tooltip>
-          </div>
-
-          {/* Candidate Image */}
-          <div className="relative w-full h-64">
-            <Link to={`/candidate/${candidate._id}`}>
+        <div className="group relative w-full bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col h-full">
+          {/* Image Section */}
+          <div className="relative w-full aspect-[4/5] overflow-hidden bg-gray-50">
+            <Link to={`/candidate/${candidate._id}`} className="block w-full h-full">
               <img
                 src={fileLink || candidate.profileImage || defaultImage}
                 alt={`${candidate.firstName} ${candidate.name}'s profile`}
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = defaultImage;
                 }}
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
             </Link>
+
+            {/* Bookmark Button Floating Top Right */}
+            <div className="absolute top-3 right-3 z-10">
+              <Tooltip
+                title={
+                  isFavorite
+                    ? "Remove from campaigns"
+                    : "Add to a campaign"
+                }
+                placement="left"
+              >
+                <button
+                  onClick={handleBookmarkClick}
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:bg-white hover:scale-105 transition-all duration-200 focus:outline-none"
+                >
+                  {isFavorite ? (
+                    <MdBookmarkAdded className="w-5 h-5 text-blue-600" />
+                  ) : (
+                    <MdBookmarkBorder className="w-5 h-5 text-gray-700 hover:text-blue-600 transition-colors" />
+                  )}
+                </button>
+              </Tooltip>
+            </div>
+
+            {/* Gender Badge Floating Top Left */}
+            <div className="absolute top-3 left-3 z-10">
+              {genderIcon}
+            </div>
           </div>
 
-          {/* Footer */}
-          <div className="p-4 space-y-2">
-            <div className="flex gap-2 sm:flex-nowrap flex-wrap">
+          {/* Content Section */}
+          <div className="p-4 flex flex-col flex-grow">
+            <Link
+              to={`/candidate/${candidate._id}`}
+              className="font-bold text-lg text-gray-900 hover:text-blue-600 transition-colors line-clamp-1 mb-1.5"
+            >
+              {candidate.firstName.charAt(0).toUpperCase() + candidate.firstName.slice(1)} {candidate.name?.[0]?.toUpperCase()}.
+            </Link>
+
+            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium mb-4">
+              <span className="flex items-center gap-1 bg-gray-50 px-2.5 py-1 rounded-md">
+                <span className="font-semibold text-gray-900">{age}</span> ans
+              </span>
+              <span className="flex items-center gap-1 bg-gray-50 px-2.5 py-1 rounded-md">
+                <span className="font-semibold text-gray-900">{height.toFixed(2)}</span> m
+              </span>
+            </div>
+
+            {/* Tags Footer */}
+            <div className="mt-auto pt-3 border-t border-gray-100 flex gap-1.5 flex-wrap">
               {candidate.interest
                 ?.flatMap((interest) => interest.split(","))
+                .slice(0, 3) // Preview up to 3 tags
                 .map((interestItem, index) => {
                   const trimmed = interestItem.trim();
-                  const shortInterest =
-                    interestShortNames[trimmed] || trimmed;
+                  const shortInterest = interestShortNames[trimmed] || trimmed;
+                  // Provide some subtle colors based on index
+                  const bgColors = ["bg-blue-50 text-blue-700 border-blue-100", "bg-purple-50 text-purple-700 border-purple-100", "bg-emerald-50 text-emerald-700 border-emerald-100"];
+                  const colorClass = bgColors[index % bgColors.length];
                   return (
-                    <Tag
+                    <span
                       key={index}
-                      color={tagColors[index % tagColors.length]}
-                      className=" text-xs sm:text-sm  font-bold px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-xl sm:rounded-2xl max-w-[80px] sm:max-w-none  "
+                      className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${colorClass}`}
                     >
                       {shortInterest}
-                    </Tag>
+                    </span>
                   );
                 })}
-            </div>
-            <div className="flex justify-between items-center">
-              <BmiIndicateur bmi={bmi} />
-              
+              {candidate.interest && candidate.interest.flatMap((i) => i.split(",")).length > 3 && (
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
+                  +{candidate.interest.flatMap((i) => i.split(",")).length - 3}
+                </span>
+              )}
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Campaign Selection Modal */}
         <CampaignSelectionModal

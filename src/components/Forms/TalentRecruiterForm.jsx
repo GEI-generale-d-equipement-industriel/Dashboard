@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Form, Input, Select, Button, Upload, Spin, message } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { UploadOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import axios from "axios";
 import CustomModal from "../Modal/Custom.Modal";
+import { useNavigate } from "react-router-dom";
 
 const { Option } = Select;
 
 const TalentRecruiterForm = ({ onSubmit }) => {
+  const navigate = useNavigate();
   const [form] = Form.useForm();
   const [isUploading, setIsUploading] = useState(false);
   const [logoUrl, setLogoUrl] = useState("");
@@ -45,19 +47,25 @@ const handleLogoUpload = async ({ file }) => {
     setIsUploading(true);
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("voiceUrl", file);
 
     try {
       const response = await axios.post(`${url}/migration/upload-file`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        transformRequest: [(data) => data],
       });
-      setLogoUrl(response.data.url); // Update logo URL
-      message.success("Logo uploaded successfully!");
+
+      if (response.data && response.data.url) {
+        setLogoUrl(response.data.url);
+        message.success("Logo uploaded successfully!");
+      } else {
+        throw new Error("Invalid response format");
+      }
     } catch (error) {
       console.error("Error uploading logo:", error);
-      message.error("Failed to upload logo.");
+      message.error(error.response?.data?.message || "Failed to upload logo.");
     } finally {
       setIsUploading(false);
     }
@@ -75,13 +83,35 @@ const handleLogoUpload = async ({ file }) => {
 
     try {
         const response = await axios.post(`${url}/user`, formData);
+        
+        // Send email notification
+        const emailData = {
+          from: "content@be-model.tn",
+          to: "content@be-model.tn",
+          subject: "New Talent Recruiter Registration",
+          html: `
+            <h2>New Talent Recruiter Registration</h2>
+            <p>A new company has registered as a talent recruiter:</p>
+            <ul>
+              <li><strong>Company Name:</strong> ${values.companyName}</li>
+              <li><strong>Fiscal ID:</strong> ${values.fiscalId}</li>
+              <li><strong>Sector:</strong> ${values.sector}</li>
+              <li><strong>Email:</strong> ${values.email}</li>
+              <li><strong>Username:</strong> ${values.username}</li>
+              <li><strong>Phone:</strong> ${values.phone}</li>
+              <li><strong>Website:</strong> ${values.website || 'Not provided'}</li>
+            </ul>
+          `
+        };
+
+        await axios.post(`${url}/email/send`, emailData);
+        
         message.success("Company registered successfully!");
   
         // If your parent wants the new user data
-        onSubmit(response.data);
+        // onSubmit(response.data);
   
-        // **Show the success modal** immediately
-       
+        // Show the success modal
         setIsModalOpen(true);
       } catch (error) {
       console.error("Error registering company:", error);
@@ -97,40 +127,43 @@ const handleLogoUpload = async ({ file }) => {
     
   };
 
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   return (
-    <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-2xl">
-      <h2 className="text-2xl font-bold text-center mb-6 text-black">
-        Join as a Talent Recruiter
-      </h2>
+    <div className="bg-white">
       <Form
         form={form}
         layout="vertical"
         onFinish={handleSubmit}
         initialValues={{ sector: "" }}
+        className="space-y-6"
       >
-        <Form.Item
-          label="Company Name"
-          name="companyName"
-          rules={[{ required: true, message: "Please enter your company name" }]}
-        >
-          <Input placeholder="Enter your company name" />
-        </Form.Item>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Form.Item
+            label="Company Name"
+            name="companyName"
+            rules={[{ required: true, message: "Please enter your company name" }]}
+          >
+            <Input placeholder="Enter your company name" className="rounded-lg" />
+          </Form.Item>
 
-        <Form.Item
-          label="Fiscal ID"
-          name="fiscalId"
-          rules={[{ required: true, message: "Please enter your fiscal ID" }]}
-        >
-          <Input placeholder="Enter your fiscal ID" />
-        </Form.Item>
+          <Form.Item
+            label="Fiscal ID"
+            name="fiscalId"
+            rules={[{ required: true, message: "Please enter your fiscal ID" }]}
+          >
+            <Input placeholder="Enter your fiscal ID" className="rounded-lg" />
+          </Form.Item>
+        </div>
 
         <Form.Item
           label="Sector"
           name="sector"
-          
           rules={[{ required: true, message: "Please select a sector" }]}
         >
-          <Select placeholder="Select a sector">
+          <Select placeholder="Select a sector" className="rounded-lg">
             {sectors.map((sector) => (
               <Option key={sector} value={sector}>
                 {sector}
@@ -139,94 +172,112 @@ const handleLogoUpload = async ({ file }) => {
           </Select>
         </Form.Item>
 
-        <Form.Item
-          label="Email"
-          name="email"
-          rules={[
-            { required: true, message: "Please enter your email" },
-            { type: "email", message: "Please enter a valid email address" },
-          ]}
-        >
-          <Input placeholder="Enter your email address" />
-        </Form.Item>
-        <Form.Item
-          label="User Name"
-          name="username"
-          rules={[
-            { required: true, message: "Please enter your username" },
-            { type: "username", message: "Please enter a valid username address" },
-          ]}
-        >
-          <Input placeholder="Enter your username address" />
-        </Form.Item>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Form.Item
+            label="Email"
+            name="email"
+            rules={[
+              { required: true, message: "Please enter your email" },
+              { type: "email", message: "Please enter a valid email address" },
+            ]}
+          >
+            <Input placeholder="Enter your email address" className="rounded-lg" />
+          </Form.Item>
 
-        <Form.Item
-          label="Password"
-          name="password"
-          rules={[{ required: true, message: "Please enter your password" }]}
-        >
-          <Input.Password placeholder="Enter your password" />
-        </Form.Item>
+          <Form.Item
+            label="User Name"
+            name="username"
+            rules={[
+              { required: true, message: "Please enter your username" },
+              { type: "username", message: "Please enter a valid username address" },
+            ]}
+          >
+            <Input placeholder="Enter your username address" className="rounded-lg" />
+          </Form.Item>
+        </div>
 
-        <Form.Item
-          label="Phone"
-          name="phone"
-          rules={[{ required: true, message: "Please enter your phone number" }]}
-        >
-          <Input placeholder="Enter your phone number" />
-        </Form.Item>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Form.Item
+            label="Password"
+            name="password"
+            rules={[{ required: true, message: "Please enter your password" }]}
+          >
+            <Input.Password placeholder="Enter your password" className="rounded-lg" />
+          </Form.Item>
+
+          <Form.Item
+            label="Phone"
+            name="phone"
+            rules={[{ required: true, message: "Please enter your phone number" }]}
+          >
+            <Input placeholder="Enter your phone number" className="rounded-lg" />
+          </Form.Item>
+        </div>
 
         <Form.Item label="Website" name="website">
-          <Input placeholder="Enter your website URL" />
+          <Input placeholder="Enter your website URL" className="rounded-lg" />
         </Form.Item>
 
         <Form.Item
           label="Company Logo"
           name="logo"
           valuePropName="file"
+          className="flex flex-col item-centre justify-centre border-2  border-dashed border-gray-300 rounded-lg p-6"
         >
-        <Upload
+          
+          <Upload
             accept="image/*"
             customRequest={handleLogoUpload}
             showUploadList={false}
+            className="w-full h-32 flex flex-col items-center justify-center "
           >
-            <Button icon={<UploadOutlined />} disabled={isUploading}>
+            <Button 
+              // icon={<UploadOutlined />} 
+              disabled={isUploading}
+              className="w-full h-32 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100"
+            >
               {isUploading ? (
-                <Spin size="small" className="mr-2" />
+                <Spin size="large" />
               ) : (
-                <span>Upload Logo</span>
+                <>
+                  <UploadOutlined className="text-2xl mb-2" />
+                  <span>Click to Upload Logo</span>
+                </>
               )}
             </Button>
           </Upload>
           {logoUrl && (
-            <img
-              src={logoUrl}
-              alt="Logo Preview"
-              className="mt-4 w-32 h-32 object-cover border rounded"
-            />
+            <div className="mt-4 flex justify-center">
+              <img
+                src={logoUrl}
+                alt="Logo Preview"
+                className="w-32 h-32 object-cover border rounded-lg shadow-md"
+              />
+            </div>
           )}
         </Form.Item>
 
-        <Form.Item className="mt-8">
-        <Button
+        <div className="flex space-x-4 mt-8">
+          <Button
             type="primary"
             htmlType="submit"
-            block
             disabled={isUploading || isSubmitting}
+            className="flex-1 bg-blue-600 hover:bg-blue-700"
           >
             {isSubmitting ? "Submitting..." : "Submit"}
           </Button>
-        </Form.Item>
+        </div>
       </Form>
-      {/* <CustomSpinner spinning={spinning} percent={percent}/> */}
+
       <CustomModal
         isOpen={isModalOpen}
         onClose={closeModal}
         title="Félicitations"
       >
-        <p>
+        <p className="text-center text-gray-700">
           Votre formulaire a été soumis avec succès ! Merci de votre
-          participation.<br></br>Un membre de notre équipe examinera votre
+          participation.<br /><br />
+          Un membre de notre équipe examinera votre
           profil et vous contactera dans les plus brefs délais.
         </p>
       </CustomModal>

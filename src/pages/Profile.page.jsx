@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Avatar, Button, Card, Spin } from "antd";
-import { EditOutlined, SaveOutlined, CloseOutlined } from "@ant-design/icons";
-
+import {  Button,  Spin } from "antd";
+import { Edit, Save, X } from "lucide-react";
 import DisplayMode from "../components/Items/DisplayMode";
 import EditMode from "../components/Items/EditMode";
 import CandidateMediaGallery from "../components/Items/CandidateMediaGallery";
+import Avatar from "../components/Items/Avatar";
 import { useParams } from "react-router-dom"; 
 import { useUserWithLinkedCandidate, useUpdateUserProfile } from "../Hooks/useUserPRofile";
 
@@ -73,34 +73,61 @@ export default function CandidateProfile() {
 
 
   return (
-    <div className="container mx-auto p-4">
-      <Card className="max-w-4xl mx-auto" bordered={false}>
-        <Card
-          title={
-            <div className="flex flex-row items-center justify-between">
-              <div className="flex items-center gap-8">
-                <Avatar size={64}>
-                  {candidate.firstName ? candidate.firstName[0].toUpperCase() : "?"}
-                  {candidate.name ? candidate.name[0].toUpperCase() : "?"}
-                </Avatar>
-                <div>
-                  <h1 className="text-3xl font-bold">
-                    {candidate.firstName} {candidate.name}
-                  </h1>
-                  <p className="text-gray-500">{candidate.town}</p>
-                </div>
+    <div className="container max-w-5xl mx-auto p-4 md:p-6 mb-16">
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Avatar 
+                firstName={candidate.firstName} 
+                lastName={candidate.name}
+                size="lg" 
+              />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {candidate.firstName} {candidate.name}
+                </h1>
+                <p className="text-gray-500">{candidate.town}</p>
               </div>
-              <Button 
-  type="default" 
-  shape="circle" 
-  onClick={() => (isEditing ? saveChanges() : toggleEdit())} // ✅ Calls saveChanges() if editing
->
-  {isEditing ? <SaveOutlined /> : <EditOutlined />}
-</Button>
             </div>
-          }
-          bordered={false}
-        >
+            
+            <div className="flex items-center gap-3 ml-auto">
+              {isEditing ? (
+                <>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCancel}
+                    className="gap-2"
+                  >
+                    <X className="h-4 w-4" />
+                    <span className="hidden sm:inline">Annuler</span>
+                  </Button>
+                  <Button 
+                    onClick={saveChanges} 
+                    className="gap-2"
+                    disabled={updateMutation.isLoading}
+                  >
+                    <Save className="h-4 w-4" />
+                    <span className="hidden sm:inline">Sauvegarder</span>
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  onClick={toggleEdit}
+                  className="gap-2"
+                >
+                  <Edit className="h-4 w-4" />
+                  <span className="hidden sm:inline">Modifier</span>
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
           {isEditing ? (
             <EditMode
               candidate={candidate}
@@ -111,20 +138,10 @@ export default function CandidateProfile() {
           ) : (
             <DisplayMode candidate={candidate} />
           )}
-        </Card>
+        </div>
+      </div>
 
-        {/* Footer Buttons for Saving & Canceling */}
-        {isEditing && (
-          <div className="flex justify-end mt-4 space-x-4">
-            <Button type="default" onClick={handleCancel} icon={<CloseOutlined />}>
-              Annuler
-            </Button>
-            <Button type="primary" onClick={saveChanges} loading={updateMutation.isLoading} icon={<SaveOutlined />}>
-              Sauvegarder les modifications
-            </Button>
-          </div>
-        )}
-      </Card>
+      {/* Media Gallery */}
       <CandidateMediaGallery candidate={candidate} />
     </div>
   );

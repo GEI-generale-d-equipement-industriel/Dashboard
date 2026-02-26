@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSelector } from "react-redux";
-import { Typography, Row, Col, Skeleton, Select, Button,message } from "antd";
+import { Typography, Row, Col, Skeleton, Select, Button, message } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 // import { useQueryClient } from "@tanstack/react-query";
 
@@ -37,7 +37,7 @@ const CandidateList = () => {
   //   const [minStr, maxStr] = str.split("-");
   //   return [Number(minStr), Number(maxStr)];
   // };
-  
+
   const filters = useMemo(() => {
     return {
       searchTerm: queryParams.get('searchTerm') || '',
@@ -69,8 +69,8 @@ const CandidateList = () => {
     fetchNextPage,
   } = useCandidates(filters, pageSize);
 
-  const { data: favorites = [] } = useFetchFavorites(userId);
-  const toggleFavorite = useToggleFavorite(userId, favorites);
+  // const { data: favorites = [] } = useFetchFavorites(userId);
+  // const toggleFavorite = useToggleFavorite(userId, favorites);
 
   const { data: campaigns = [] } = useGetCampaigns(userId);
 
@@ -100,30 +100,36 @@ const CandidateList = () => {
 
   const fileLinks = useFetchFileLinks(candidatesForCurrentPage);
 
-  const favoriteIds = useMemo(() => favorites.map((fav) => fav._id), [favorites]);
+  const updateQueryParams = (newParams) => {
+    const params = new URLSearchParams(location.search);
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
+    });
+    navigate({ search: params.toString() });
+  };
+  // const favoriteIds = useMemo(() => favorites.map((fav) => fav._id), [favorites]);
 
   const tagColors = ["orange", "red", "purple", "gold"];
 
   const handleSortByChange = (value) => {
     setSortBy(value);
-    const params = new URLSearchParams(location.search);
-    if (value) {
-      params.set("sortBy", value);
-    } else {
-      params.delete("sortBy");
-    }
-    navigate({ search: params.toString() });
+    // Reset to first page when sorting changes
+    window.scrollTo(0, 0);
+    updateQueryParams({
+      sortBy: value,
+      sortOrder: value ? sortOrder : undefined // Clear sort order if no sort by
+    });
   };
 
   const handleSortOrderChange = (value) => {
     setSortOrder(value);
-    const params = new URLSearchParams(location.search);
-    if (value) {
-      params.set("sortOrder", value);
-    } else {
-      params.delete("sortOrder");
-    }
-    navigate({ search: params.toString() });
+    // Reset to first page when sort order changes
+    window.scrollTo(0, 0);
+    updateQueryParams({ sortOrder: value });
   };
 
   const [sentryRef] = useInfiniteScroll({
@@ -202,62 +208,77 @@ const CandidateList = () => {
           })}
         </script>
       </Helmet>
-      <div className="container mx-auto px-4">
-        {/* Sorting Controls */}
-        <Row gutter={[16, 24]} className="mb-4" justify="end">
-          <Col>
+      
+      <div className="container mx-auto px-4 max-w-7xl">
+        {/* Header and Title */}
+        {/* <div className="mb-8 md:mb-12 text-center relative pt-4">
+          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl mb-4">
+            Découvrez nos <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Talents</span>
+          </h1>
+          <p className="max-w-2xl mx-auto text-lg text-gray-500">
+            Explorez notre réseau diversifié de modèles professionnels, d'influenceurs et de créateurs UGC prêts pour votre prochaine campagne.
+          </p>
+        </div> */}
+
+        {/* Controls Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8 gap-4">
+          <div className="text-sm text-gray-500 font-medium">
+            <span className="text-gray-900 font-bold text-base bg-gray-100 px-2 py-1 rounded-md mr-1">{candidatesForCurrentPage.length || 0}</span> talents affichés
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3">
             <Select
               value={sortBy}
               onChange={handleSortByChange}
-              style={{ width: 120 }}
-              placeholder="Sort By"
+              style={{ width: 140 }}
+              placeholder="Trier par"
+              loading={isFetchingNextPage}
+              size="large"
             >
-              <Option value="">None</Option>
-              <Option value="name">Name</Option>
-              <Option value="createdAt">Date</Option>
+              <Option value="">Défaut</Option>
+              <Option value="name">Nom</Option>
+              <Option value="createdAt">Date d'ajout</Option>
             </Select>
-          </Col>
-          <Col>
             <Select
               value={sortOrder}
               onChange={handleSortOrderChange}
-              style={{ width: 120 }}
+              style={{ width: 140 }}
+              disabled={!sortBy}
+              loading={isFetchingNextPage}
+              size="large"
             >
-              <Option value="asc">Ascending</Option>
-              <Option value="desc">Descending</Option>
+              <Option value="asc">Ascendant</Option>
+              <Option value="desc">Descendant</Option>
             </Select>
-          </Col>
-          <Col>
             <Button
               onClick={() => {
                 setSortBy("");
                 setSortOrder("asc");
+                window.scrollTo(0, 0);
                 navigate({ search: "" });
               }}
+              loading={isFetchingNextPage}
+              size="large"
+              type="default"
+              className="border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400"
             >
-              Reset Sorting
+              Réinitialiser
             </Button>
-          </Col>
-        </Row>
-
-        {/* Title */}
-        <Title level={2} className="text-gray-500 text-center mb-8">
-          Candidates List
-        </Title>
+          </div>
+        </div>
 
         {/* Candidate Grid */}
-        <Row gutter={[16, 24]}>
+        <Row gutter={[24, 32]}>
           {candidatesForCurrentPage.map((candidate) => 
             {
               const isCandidateInCampaign = campaignProfileIds.has(candidate._id);
              
               
-              return(<Col xs={12} sm={12} md={8} lg={6} key={candidate._id}>
+              return(<Col xs={24} sm={12} md={8} lg={6} xl={6} key={candidate._id} className="flex">
               <CandidateCard
                 candidate={candidate}
                 fileLink={fileLinks[candidate._id]}
                 isFavorite={isCandidateInCampaign}
-                onToggleFavorite={(args) => toggleFavorite(args)}
+                // onToggleFavorite={(args) => toggleFavorite(args)}
                 tagColors={tagColors}
                 campaigns={campaigns}
                 onCreateCampaign={handleCreateCampaign}
@@ -266,15 +287,18 @@ const CandidateList = () => {
           )})}
           {isFetchingNextPage &&
             [...Array(pageSize)].map((_, index) => (
-              <Col xs={12} sm={12} md={8} lg={6} key={`loading-${index}`}>
-                <Skeleton active />
+              <Col xs={24} sm={12} md={8} lg={6} xl={6} key={`loading-${index}`}>
+                <div className="w-full h-full min-h-[400px] bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col">
+                   <div className="w-full aspect-[4/5] bg-gray-100 rounded-xl mb-4 animate-pulse"></div>
+                   <Skeleton active paragraph={{ rows: 2 }} title={{ width: '60%' }} />
+                </div>
               </Col>
             ))}
         </Row>
         <div ref={sentryRef}></div>
       </div>
       <BackToTopButton />
-    </div>
+    </div >
   );
 };
 

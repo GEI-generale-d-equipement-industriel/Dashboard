@@ -20,6 +20,7 @@ export default function CandidateImageGallery({ images, candidateId }) {
             src={images[currentIndex] || "/placeholder.svg"}
             alt={`Candidate image ${currentIndex + 1}`}
             className="w-full h-full object-cover"
+            
           />
         </div>
       ) : (
