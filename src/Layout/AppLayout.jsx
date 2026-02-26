@@ -9,7 +9,7 @@ import FiltersSidebar from '../components/FiltersSidebar';
 import AppHeader from '../components/header/AppHeader'; // Import the extracted AppHeader
 import { useConversations } from '../Hooks/useConversations';
 import '../styles/AppLayout.css';
-  
+
 const { Content, Sider } = Layout;
 const { useBreakpoint } = Grid;
 
@@ -52,17 +52,7 @@ const AppLayout = ({ children }) => {
         {isFilterVisible && screens.lg && (
           <Sider
             width={320}
-            className="site-sidebar"
-            style={{
-              backgroundColor: '#fff',
-              position: 'fixed',
-              height: 'calc(100vh - 64px)',
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              top: 64,
-              left: 0,
-              borderRight: '1px solid #f0f0f0',
-            }}
+            className="site-sidebar bg-white fixed top-[64px] left-0 h-[calc(100vh-64px)] overflow-y-auto overflow-x-hidden border-r border-gray-100 z-10 shadow-sm"
           >
             <FiltersSidebar />
           </Sider>
@@ -84,19 +74,10 @@ const AppLayout = ({ children }) => {
 
         {/* Content Area */}
         <Layout
-          style={{
-            marginLeft: screens.lg && isFilterVisible ? '320px' : 0,
-            minHeight: 'calc(100vh - 64px)',
-            background: '#fcfcfc',
-          }}
+          className={`transition-all duration-300 min-h-[calc(100vh-64px)] bg-[#fcfcfc] ${screens.lg && isFilterVisible ? 'ml-[320px]' : 'ml-0'}`}
         >
           <Content
-            style={{
-              padding: '24px',
-              minHeight: 280,
-              background: '#fcfcfc',
-              borderRadius: '20px',
-            }}
+            className="p-4 sm:p-6 lg:p-8 min-h-[280px] bg-[#fcfcfc] rounded-3xl"
           >
             {children}
           </Content>
