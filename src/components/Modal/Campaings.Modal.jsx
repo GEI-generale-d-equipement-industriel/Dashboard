@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Button, Input } from 'antd';
-import { PlusOutlined, LeftOutlined } from '@ant-design/icons';
+import { Modal } from 'antd';
+import { ArrowLeft, Plus } from 'lucide-react';
 
 const CampaignSelectionModal = ({
   visible,
@@ -9,100 +9,108 @@ const CampaignSelectionModal = ({
   onConfirm,
   onCreateCampaign,
 }) => {
-  // “list” shows the grid of existing campaigns;
-  // “new” shows the campaign creation view.
+  // "list" shows the existing campaigns; "new" shows the creation form.
   const [creationStep, setCreationStep] = useState('list');
   const [newCampaignName, setNewCampaignName] = useState('');
 
-  const handleCreateCampaign = () => {
-    if (newCampaignName.trim()) {
-      onCreateCampaign(newCampaignName, (newCampaignId) => {
-        onConfirm(newCampaignId);
-        handleClose();
-      });
-    }
-  };
-
-  // Reset internal state when closing the modal
   const handleClose = () => {
     setCreationStep('list');
     setNewCampaignName('');
     onClose();
   };
 
+  const handleCreateCampaign = (event) => {
+    event?.preventDefault();
+    const name = newCampaignName.trim();
+    if (!name) return;
+    onCreateCampaign(name, (newCampaignId) => {
+      onConfirm(newCampaignId);
+      handleClose();
+    });
+  };
+
+  const title =
+    creationStep === 'new' ? (
+      <div className="bm-modal-title">
+        <button
+          type="button"
+          className="bm-icon-btn"
+          onClick={() => setCreationStep('list')}
+          aria-label="Retour"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <span>Nouvelle campagne</span>
+      </div>
+    ) : (
+      <div className="bm-modal-title">
+        <span>Ajouter à une campagne</span>
+      </div>
+    );
+
   return (
     <Modal
-      // When in “new” mode, we show a header with a back button and title.
-      title={
-        creationStep === 'new' ? (
-          <div className="flex items-center">
-            <Button
-              type="link"
-              icon={<LeftOutlined />}
-              onClick={() => setCreationStep('list')}
-              style={{ padding: 0 }}
-            />
-            <span className="flex-1 text-center">New Campaign</span>
-          </div>
-        ) : (
-          'Select a Campaign'
-        )
-      }
+      title={title}
       open={visible}
       onCancel={handleClose}
-      footer={null} // We are handling actions inside the modal content.
+      footer={null}
+      destroyOnClose
+      width={520}
+      className="bm-modal"
     >
       {creationStep === 'list' && (
-        <div className="grid grid-cols-3 gap-4 py-4">
+        <div className="bm-campaigns">
           {campaigns?.map((campaign) => (
             <button
               key={campaign._id}
-              className="flex flex-col items-center space-y-2 p-4  rounded hover:bg-gray-100"
+              type="button"
+              className="bm-campaign"
               onClick={() => {
                 onConfirm(campaign._id);
                 handleClose();
               }}
             >
-              <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
-                {/* Optionally, if you have campaign images you could render an <img> here. */}
-                <span className="text-xl font-bold">
-                  {campaign.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <span className="text-sm text-gray-700 truncate text-center">
-                {campaign.name}
+              <span className="bm-campaign__badge">{campaign.name.charAt(0).toUpperCase()}</span>
+              <span className="bm-campaign__name">{campaign.name}</span>
+              <span className="bm-campaign__count">
+                {campaign.profiles?.length || 0} profil{(campaign.profiles?.length || 0) > 1 ? 's' : ''}
               </span>
             </button>
           ))}
           <button
-            className="flex flex-col items-center justify-center space-y-2 p-4 rounded hover:bg-gray-100"
+            type="button"
+            className="bm-campaign bm-campaign--new"
             onClick={() => setCreationStep('new')}
           >
-            <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center">
-              <PlusOutlined style={{ fontSize: '24px', color: '#aaa' }} />
-            </div>
-            <span className="text-sm text-gray-700">New Campaign</span>
+            <span className="bm-campaign__badge">
+              <Plus size={20} />
+            </span>
+            <span className="bm-campaign__name">Nouvelle campagne</span>
           </button>
         </div>
       )}
 
       {creationStep === 'new' && (
-        <div className="py-4">
-          <Input
-            placeholder="Campaign name"
+        <form className="bm-form" onSubmit={handleCreateCampaign}>
+          <label className="bm-form__label" htmlFor="bm-campaign-name">
+            Nom de la campagne
+          </label>
+          <input
+            id="bm-campaign-name"
+            className="bm-input"
+            placeholder="Ex. Lancement été 2026"
             value={newCampaignName}
-            onChange={(e) => setNewCampaignName(e.target.value)}
-            className="mb-4"
+            onChange={(event) => setNewCampaignName(event.target.value)}
+            autoFocus
           />
-          <Button
-            type="primary"
-            onClick={handleCreateCampaign}
-            block
+          <button
+            type="submit"
+            className="bm-btn bm-btn--primary bm-btn--block"
             disabled={!newCampaignName.trim()}
           >
-            Create Campaign
-          </Button>
-        </div>
+            Créer et ajouter
+          </button>
+        </form>
       )}
     </Modal>
   );

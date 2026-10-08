@@ -1,193 +1,236 @@
 import React from 'react';
-import { Form, Select, Input, Tag } from 'antd';
-import {
-  ManOutlined,
-  WomanOutlined,
-  CalendarOutlined,
-  PhoneOutlined,
-  EnvironmentOutlined,
-  BgColorsOutlined,
-  SkinOutlined,
-  DatabaseOutlined,
-} from '@ant-design/icons';
+import { message } from 'antd';
+import { ManOutlined, WomanOutlined } from '@ant-design/icons';
+import { Calendar, Check, Copy, Database, MapPin, Phone } from 'lucide-react';
 
-// A clean stat/info card
-const InfoItem = ({ icon, label, value, color = '#6366f1' }) => (
-  <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
-    <div
-      className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-white text-base shadow-sm"
-      style={{ background: color }}
-    >
-      {icon}
-    </div>
-    <div className="min-w-0">
-      <p className="text-xs text-slate-400 font-medium uppercase tracking-wide m-0 leading-none mb-1">{label}</p>
-      <p className="text-sm font-semibold text-slate-800 m-0 truncate">{value || <span className="text-slate-300 font-normal italic">—</span>}</p>
-    </div>
+import {
+  BMI_ZONES,
+  SWATCHES,
+  getAge,
+  getBmiZone,
+  getHeight,
+  getInterests,
+  getWeight,
+  splitList,
+  titleCase,
+} from '../../utils/candidate';
+
+const EMPTY = <span className="bm-dl__empty">Non renseigné</span>;
+
+const Stat = ({ label, value, unit, hint }) => (
+  <div className="bm-stat">
+    <span className="bm-stat__label">{label}</span>
+    <span className="bm-stat__value">
+      {value ?? '—'}
+      {value != null && unit && <small>{unit}</small>}
+    </span>
+    {hint && <span className="bm-stat__hint">{hint}</span>}
   </div>
 );
 
-// Section header
-const SectionLabel = ({ children }) => (
-  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 mt-5 first:mt-0">{children}</h3>
+const Row = ({ label, children }) => (
+  <div className="bm-dl__row">
+    <dt>{label}</dt>
+    <dd>{children || EMPTY}</dd>
+  </div>
 );
 
-const CandidateDetailsForm = ({ candidate, isEditing, form, bmi, role }) => {
-  const year = parseInt(candidate?.birthDate?.substring(0, 4));
-  const currentYear = new Date().getFullYear();
-  const age = currentYear - (candidate.birthYear ? candidate.birthYear : year || 2000);
+const Section = ({ title, children }) => (
+  <section className="bm-section">
+    <h2 className="bm-section__title">{title}</h2>
+    <dl className="bm-dl">{children}</dl>
+  </section>
+);
 
-  const canEdit = role === 'admin' && isEditing;
-  const formattedHeight = parseFloat(candidate.height).toFixed(2);
-  const formattedWeight = parseFloat(candidate.weight).toFixed();
-  const bmiValue = bmi ? bmi.toFixed(1) : null;
+// Values with an optional colour swatch, e.g. hair or eye colour.
+const Swatched = ({ values, palette }) => {
+  if (!values.length) return EMPTY;
+  return (
+    <span className="bm-swatched">
+      {values.map((value) => (
+        <span key={value} className="bm-swatched__item">
+          {palette?.[value] && (
+            <span className="bm-chip__swatch" style={{ background: palette[value] }} />
+          )}
+          {value}
+        </span>
+      ))}
+    </span>
+  );
+};
 
-  const isFemme = candidate.gender?.toLowerCase() === 'femme';
+const BmiScale = ({ bmi }) => {
+  const zone = getBmiZone(bmi);
+  // Map 14 → 38 onto 0 → 100% of the bar.
+  const position = Math.min(100, Math.max(0, ((bmi - 14) / (38 - 14)) * 100));
 
   return (
-    <div className="flex flex-col gap-1">
-      {/* Name + Gender badge */}
-      <div className="flex flex-col items-center gap-2 pb-4 border-b border-slate-100 mb-1">
-        <h2 className="text-2xl font-extrabold text-slate-800 m-0 tracking-tight">
-          {candidate.firstName} {candidate.name}
-        </h2>
-        <div className="flex items-center gap-2">
-          {isFemme ? (
-            <Tag color="pink" icon={<WomanOutlined />} className="rounded-full px-3 font-semibold">
-              Femme
-            </Tag>
-          ) : (
-            <Tag color="blue" icon={<ManOutlined />} className="rounded-full px-3 font-semibold">
-              Homme
-            </Tag>
-          )}
-          {candidate.town && (
-            <Tag icon={<EnvironmentOutlined />} className="rounded-full px-3 font-semibold text-slate-600 border-slate-200 bg-white">
-              {candidate.town}
-            </Tag>
-          )}
-        </div>
+    <div className="bm-bmi" aria-label={`IMC ${bmi.toFixed(1)} : ${zone.label}`}>
+      <div className="bm-bmi__bar">
+        {BMI_ZONES.map((z) => (
+          <span key={z.key} style={{ background: z.color }} />
+        ))}
+        <i className="bm-bmi__marker" style={{ left: `${position}%` }} />
       </div>
+      <span className="bm-bmi__label" style={{ color: zone.color }}>
+        {zone.label}
+      </span>
+    </div>
+  );
+};
 
-      <Form form={form} initialValues={candidate} layout="vertical">
-        {/* --- Identity --- */}
-        <SectionLabel>Identité</SectionLabel>
-        <div className="grid grid-cols-2 gap-3">
-          <InfoItem
-            icon={<CalendarOutlined />}
-            label="Âge"
-            value={`${age} ans`}
-            color="#f59e0b"
-          />
-          <InfoItem
-            icon={<PhoneOutlined />}
-            label="Téléphone"
-            value={canEdit ? <Input size="small" defaultValue={candidate.phone} /> : candidate.phone}
-            color="#10b981"
-          />
-          <InfoItem
-            icon={<EnvironmentOutlined />}
-            label="Ville"
-            value={canEdit ? <Input size="small" defaultValue={candidate.town} /> : candidate.town}
-            color="#3b82f6"
-          />
-          <InfoItem
-            icon={<DatabaseOutlined />}
-            label="Source"
-            value={candidate.source ?? 'N/A'}
-            color="#8b5cf6"
-          />
-        </div>
+const formatDate = (value) => {
+  const date = value ? new Date(value) : null;
+  return date && !Number.isNaN(date.getTime())
+    ? date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+};
 
-        {/* --- Physical --- */}
-        <SectionLabel>Caractéristiques Physiques</SectionLabel>
-        <div className="grid grid-cols-2 gap-3">
-          <InfoItem
-            icon={<span className="text-xs font-bold">↕</span>}
-            label="Taille"
-            value={`${formattedHeight} m`}
-            color="#06b6d4"
-          />
-          <InfoItem
-            icon={<span className="text-xs font-bold">⚖</span>}
-            label="Poids"
-            value={`${formattedWeight} kg`}
-            color="#ec4899"
-          />
-          {bmiValue && (
-            <InfoItem
-              icon={<span className="text-xs font-bold">BMI</span>}
-              label="IMC"
-              value={bmiValue}
-              color={parseFloat(bmiValue) < 18.5 ? '#f59e0b' : parseFloat(bmiValue) < 25 ? '#10b981' : '#ef4444'}
-            />
-          )}
-          <InfoItem
-            icon={<SkinOutlined />}
-            label="Couleur de peau"
-            value={candidate.skinColor?.[0]}
-            color="#d97706"
-          />
-        </div>
+const CandidateDetailsForm = ({ candidate, bmi, actions }) => {
+  const [copied, setCopied] = React.useState(false);
 
-        {/* --- Appearance --- */}
-        <SectionLabel>Apparence</SectionLabel>
-        <div className="grid grid-cols-2 gap-3">
-          <InfoItem
-            icon={<BgColorsOutlined />}
-            label="Couleur des cheveux"
-            value={candidate.hairColor?.[0]}
-            color="#7c3aed"
-          />
-          <InfoItem
-            icon={<BgColorsOutlined />}
-            label="Type de cheveux"
-            value={candidate.hairType?.[0]}
-            color="#db2777"
-          />
-          {candidate.eyeColor?.length > 0 && (
-            <InfoItem
-              icon={<span className="text-xs font-bold">👁</span>}
-              label="Couleur des yeux"
-              value={candidate.eyeColor?.[0]}
-              color="#0284c7"
-            />
-          )}
-          {candidate.facialHair && (
-            <InfoItem
-              icon={<span className="text-xs font-bold">🧔</span>}
-              label="Pilosité faciale"
-              value={candidate.facialHair?.[0]}
-              color="#57534e"
-            />
+  const age = getAge(candidate);
+  const height = getHeight(candidate);
+  const weight = getWeight(candidate);
+  const bmiValue = Number.isFinite(bmi) ? bmi : null;
+
+  const isFemme = candidate.gender?.toLowerCase() === 'femme';
+  const interests = getInterests(candidate);
+  const signs = splitList(candidate.signs);
+  const facialHair = splitList(candidate.facialHair);
+  const memberSince = formatDate(candidate.createdAt);
+
+  const copyPhone = async () => {
+    try {
+      await navigator.clipboard.writeText(candidate.phone);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch (error) {
+      message.error('Impossible de copier le numéro.');
+    }
+  };
+
+  return (
+    <div className="bm-profile">
+      {/* ── Identity ─────────────────────────────────────────────────────── */}
+      <header className="bm-identity">
+        <div className="bm-identity__badges">
+          <span className={`bm-badge ${isFemme ? 'bm-badge--female' : 'bm-badge--male'}`}>
+            {isFemme ? <WomanOutlined /> : <ManOutlined />}
+            {isFemme ? 'Femme' : 'Homme'}
+          </span>
+          {candidate.town && (
+            <span className="bm-badge">
+              <MapPin size={13} />
+              {candidate.town}
+            </span>
           )}
         </div>
 
-        {/* --- Interests/Signs --- */}
-        {(candidate.interests?.length > 0 || candidate.signs?.length > 0) && (
-          <>
-            <SectionLabel>Profil</SectionLabel>
-            <div className="flex flex-wrap gap-2">
-              {candidate.interests?.map((interest, i) => (
-                <Tag key={i} color="geekblue" className="rounded-full px-3 text-xs font-medium">
-                  {interest}
-                </Tag>
-              ))}
-              {candidate.signs?.map((sign, i) => (
-                <Tag key={i} color="purple" className="rounded-full px-3 text-xs font-medium">
-                  {sign}
-                </Tag>
-              ))}
-              {candidate.selectedVeilStatus && (
-                <Tag color="gold" className="rounded-full px-3 text-xs font-medium">Voilée</Tag>
-              )}
-              {candidate.selectedPregnancyStatus && (
-                <Tag color="green" className="rounded-full px-3 text-xs font-medium">Enceinte</Tag>
-              )}
-            </div>
-          </>
+        <h1 className="bm-identity__name">
+          {titleCase(candidate.firstName)} <span>{titleCase(candidate.name)}</span>
+        </h1>
+
+        {interests.length > 0 && (
+          <div className="bm-identity__tags">
+            {interests.map((interest) => (
+              <span key={interest} className="bm-tag bm-tag--lg">
+                {interest}
+              </span>
+            ))}
+          </div>
         )}
-      </Form>
+      </header>
+
+      {/* ── Key figures ──────────────────────────────────────────────────── */}
+      <div className="bm-stats">
+        <Stat label="Âge" value={age} unit=" ans" />
+        <Stat label="Taille" value={height?.toFixed(2)} unit=" m" />
+        <Stat label="Poids" value={weight && Math.round(weight)} unit=" kg" />
+        <Stat label="IMC" value={bmiValue?.toFixed(1)} />
+      </div>
+      {bmiValue && <BmiScale bmi={bmiValue} />}
+
+      {/* ── Actions (message, campaign, admin tools) ─────────────────────── */}
+      {actions && <div className="bm-profile__actions">{actions}</div>}
+
+      {/* ── Details ──────────────────────────────────────────────────────── */}
+      <div className="bm-sections">
+        <Section title="Contact & origine">
+          <Row label="Téléphone">
+            {candidate.phone && (
+              <span className="bm-phone">
+                <a href={`tel:${candidate.phone}`}>
+                  <Phone size={14} />
+                  {candidate.phone}
+                </a>
+                <button
+                  type="button"
+                  className="bm-icon-btn bm-icon-btn--sm"
+                  onClick={copyPhone}
+                  aria-label="Copier le numéro"
+                  title="Copier le numéro"
+                >
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                </button>
+              </span>
+            )}
+          </Row>
+          <Row label="Ville">{candidate.town}</Row>
+          <Row label="Source">
+            {candidate.source && (
+              <span className="bm-inline-icon">
+                <Database size={14} />
+                {candidate.source}
+              </span>
+            )}
+          </Row>
+          <Row label="Membre depuis">
+            {memberSince && (
+              <span className="bm-inline-icon">
+                <Calendar size={14} />
+                {memberSince}
+              </span>
+            )}
+          </Row>
+        </Section>
+
+        <Section title="Apparence">
+          <Row label="Cheveux">
+            <Swatched values={splitList(candidate.hairColor)} palette={SWATCHES.hair} />
+          </Row>
+          <Row label="Type de cheveux">{splitList(candidate.hairType).join(', ')}</Row>
+          <Row label="Yeux">
+            <Swatched values={splitList(candidate.eyeColor)} palette={SWATCHES.eye} />
+          </Row>
+          <Row label="Peau">
+            <Swatched values={splitList(candidate.skinColor)} palette={SWATCHES.skin} />
+          </Row>
+          {!isFemme && <Row label="Pilosité faciale">{facialHair.join(', ')}</Row>}
+        </Section>
+
+        {(signs.length > 0 || candidate.veiled || candidate.pregnant) && (
+          <Section title="Particularités">
+            <Row label="Signes distinctifs">
+              {signs.length > 0 && (
+                <span className="bm-identity__tags">
+                  {signs.map((sign) => (
+                    <span key={sign} className="bm-tag">
+                      {sign}
+                    </span>
+                  ))}
+                </span>
+              )}
+            </Row>
+            {isFemme && (
+              <>
+                <Row label="Voilée">{candidate.veiled ? 'Oui' : 'Non'}</Row>
+                <Row label="Enceinte">{candidate.pregnant ? 'Oui' : 'Non'}</Row>
+              </>
+            )}
+          </Section>
+        )}
+      </div>
     </div>
   );
 };

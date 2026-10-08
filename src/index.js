@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import store from './store';
 import App from './App';
 import "./styles/index.css"
+import "./styles/bemodel.css"
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 //  import 'antd/dist/antd.css';
 
