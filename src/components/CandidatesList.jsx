@@ -1,95 +1,87 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useContext, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSelector } from "react-redux";
-import { Typography, Row, Col, Skeleton, Select, Button, message } from "antd";
-import { useLocation, useNavigate } from "react-router-dom";
-// import { useQueryClient } from "@tanstack/react-query";
-
-import useToggleFavorite from "../Hooks/useToggleFavorite";
-import useFetchFileLinks from "../Hooks/useFetchFileLinks";
+import { useLocation } from "react-router-dom";
+import { Select, message } from "antd";
 import useInfiniteScroll from "react-infinite-scroll-hook";
-import useCandidates from "../Hooks/useCandidates";
-import { useFetchFavorites } from "../services/api/favoritesService";
-import { useGetCampaigns, useCreateCampaign } from "../services/api/campaignService";
+import { AlertTriangle, SearchX, SlidersHorizontal, X } from "lucide-react";
+
+import BmTheme from "./ui/BmTheme";
 import CandidateCard from "./CandidateCard";
-import BackToTopButton from "../components/button/BackToTopButton";
+import BackToTopButton from "./button/BackToTopButton";
+import useCandidates from "../Hooks/useCandidates";
+import useCandidateFilters from "../Hooks/useCandidateFilters";
+import useFetchFileLinks from "../Hooks/useFetchFileLinks";
+import FiltersDrawerContext from "../context/FiltersDrawerContext";
+import { useGetCampaigns, useCreateCampaign } from "../services/api/campaignService";
 
-const { Title } = Typography;
-const { Option } = Select;
+const PAGE_SIZE = 12;
+const NO_CAMPAIGNS = [];
 
-const pageSize = 10;
+const SORT_OPTIONS = [
+  { value: "createdAt:desc", label: "Plus récents" },
+  { value: "createdAt:asc", label: "Plus anciens" },
+  { value: "name:asc", label: "Nom (A → Z)" },
+  { value: "name:desc", label: "Nom (Z → A)" },
+];
+
+const SkeletonCard = () => (
+  <div className="bm-card bm-card--skeleton" aria-hidden="true">
+    <div className="bm-card__media bm-skeleton" />
+    <div className="bm-card__tags">
+      <span className="bm-skeleton bm-skeleton--tag" />
+      <span className="bm-skeleton bm-skeleton--tag" />
+    </div>
+  </div>
+);
 
 const CandidateList = () => {
   const userId = useSelector((state) => state.auth.id);
   const location = useLocation();
-  const navigate = useNavigate();
-  // const queryClient = useQueryClient();
+  const { open: openFilters } = useContext(FiltersDrawerContext);
+  const { filters, chips, activeCount, update, clearAll } = useCandidateFilters();
 
-  const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
-  const initialSortBy = queryParams.get("sortBy") || "createdAt";
-  const initialSortOrder = queryParams.get("sortOrder") || "desc";
+  // Shape expected by useCandidates / the API.
+  const queryFilters = useMemo(
+    () => ({
+      searchTerm: filters.searchTerm.trim(),
+      sortBy: filters.sortBy,
+      sortOrder: filters.sortOrder,
+      selectedAgeRange: filters.ageRange,
+      selectedHeightRange: filters.heightRange,
+      selectedWeightRange: filters.weightRange,
+      selectedInterests: filters.interests,
+      selectedSex: filters.sex,
+      selectedTown: filters.town.join(","),
+      selectedEyeColor: filters.eyeColor,
+      selectedHairColor: filters.hairColor,
+      selectedHairType: filters.hairType,
+      selectedSkinColor: filters.skinColor,
+      selectedFacialHair: filters.facialHair,
+      selectedPregnancyStatus: filters.pregnant,
+      selectedVeilStatus: filters.veiled,
+      selectedSign: filters.signs,
+      selectedRegistrationType: filters.registrationType,
+      selectedSource: filters.source,
+    }),
+    [filters]
+  );
 
-  const [sortBy, setSortBy] = React.useState(initialSortBy);
-  const [sortOrder, setSortOrder] = React.useState(initialSortOrder);
+  const { data, isLoading, isError, isFetchingNextPage, hasNextPage, fetchNextPage, refetch } =
+    useCandidates(queryFilters, PAGE_SIZE);
 
-  // const parseRange = (str, defaultMin, defaultMax) => {
-  //   if (!str) return [defaultMin, defaultMax];
-  //   const [minStr, maxStr] = str.split("-");
-  //   return [Number(minStr), Number(maxStr)];
-  // };
-
-  const filters = useMemo(() => {
-    return {
-      searchTerm: queryParams.get('searchTerm') || '',
-      sortBy,
-      sortOrder,
-      selectedAgeRange: queryParams.get('ageRange') ? queryParams.get('ageRange').split('-').map(Number) : [0, 60],
-      selectedHeightRange: queryParams.get('heightRange') ? queryParams.get('heightRange').split('-').map(Number) : [0, 2.5],
-      selectedWeightRange: queryParams.get('weightRange') ? queryParams.get('weightRange').split('-').map(Number) : [0, 120],
-      selectedInterests: queryParams.get('interests') ? queryParams.get('interests').split(',') : [],
-      selectedSex: queryParams.get('sex') ? queryParams.get('sex').split(',') : [],
-      selectedTown: queryParams.get('town') || '',
-      selectedEyeColor: queryParams.get('eyeColor') ? queryParams.get('eyeColor').split(',') : [],
-      selectedHairColor: queryParams.get('hairColor') ? queryParams.get('hairColor').split(',') : [],
-      selectedHairType: queryParams.get('hairType') ? queryParams.get('hairType').split(',') : [],
-      selectedSkinColor: queryParams.get('skinColor') ? queryParams.get('skinColor').split(',') : [],
-      selectedFacialHair: queryParams.get('facialHair') ? queryParams.get('facialHair').split(',') : [],
-      selectedPregnancyStatus: queryParams.get('pregnant') === 'true',
-      selectedVeilStatus: queryParams.get('veiled') === 'true',
-      selectedSign: queryParams.get('signs') ? queryParams.get('signs').split(',') : [],
-      selectedRegistrationType: queryParams.get('registrationType') || '',
-      selectedSource: queryParams.get('source') || '',
-    };
-  }, [queryParams, sortBy, sortOrder]);
-
-  const {
-    data,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-  } = useCandidates(filters, pageSize);
-
-  // const { data: favorites = [] } = useFetchFavorites(userId);
-  // const toggleFavorite = useToggleFavorite(userId, favorites);
-
-  const { data: campaigns = [] } = useGetCampaigns(userId);
+  const { data: campaigns = NO_CAMPAIGNS } = useGetCampaigns(userId);
+  const { mutate: createCampaign } = useCreateCampaign();
 
   const campaignProfileIds = useMemo(() => {
-    const allIds = new Set();
+    const ids = new Set();
     campaigns.forEach((campaign) => {
-      // Ensure the campaign has a `profiles` array
-      if (campaign?.profiles) {
-        campaign.profiles.forEach((profileId) => {
-          allIds.add(profileId);
-        });
-      }
+      campaign?.profiles?.forEach((profileId) => ids.add(profileId));
     });
-    return allIds;
+    return ids;
   }, [campaigns]);
 
-
-  const { mutate: createCampaign } = useCreateCampaign();
-  const candidatesForCurrentPage = useMemo(() => {
+  const candidates = useMemo(() => {
     if (!data) return [];
     return Array.from(
       new Map(
@@ -98,44 +90,14 @@ const CandidateList = () => {
     );
   }, [data]);
 
-  const fileLinks = useFetchFileLinks(candidatesForCurrentPage);
-
-  const updateQueryParams = (newParams) => {
-    const params = new URLSearchParams(location.search);
-    Object.entries(newParams).forEach(([key, value]) => {
-      if (value) {
-        params.set(key, value);
-      } else {
-        params.delete(key);
-      }
-    });
-    navigate({ search: params.toString() });
-  };
-  // const favoriteIds = useMemo(() => favorites.map((fav) => fav._id), [favorites]);
-
-  const tagColors = ["orange", "red", "purple", "gold"];
-
-  const handleSortByChange = (value) => {
-    setSortBy(value);
-    // Reset to first page when sorting changes
-    window.scrollTo(0, 0);
-    updateQueryParams({
-      sortBy: value,
-      sortOrder: value ? sortOrder : undefined // Clear sort order if no sort by
-    });
-  };
-
-  const handleSortOrderChange = (value) => {
-    setSortOrder(value);
-    // Reset to first page when sort order changes
-    window.scrollTo(0, 0);
-    updateQueryParams({ sortOrder: value });
-  };
+  const total = Number(data?.pages?.[0]?.meta?.total ?? candidates.length);
+  const fileLinks = useFetchFileLinks(candidates);
 
   const [sentryRef] = useInfiniteScroll({
     loading: isFetchingNextPage,
-    hasNextPage,
+    hasNextPage: Boolean(hasNextPage),
     onLoadMore: fetchNextPage,
+    disabled: isError,
     rootMargin: "0px 0px 400px 0px",
   });
 
@@ -144,161 +106,193 @@ const CandidateList = () => {
       { userId, name },
       {
         onSuccess: (newCampaign) => {
-          message.success("Campaign created successfully!");
-          if (callback && newCampaign?._id) {
-            callback(newCampaign._id);
-          }
+          message.success("Campagne créée avec succès !");
+          if (callback && newCampaign?._id) callback(newCampaign._id);
         },
-        onError: () => {
-          message.error("Failed to create campaign");
-        },
+        onError: () => message.error("Échec de la création de la campagne"),
       }
     );
   };
+
+  const handleSortChange = (value) => {
+    const [sortBy, sortOrder] = value.split(":");
+    window.scrollTo(0, 0);
+    update({ sortBy, sortOrder });
+  };
+
   useEffect(() => {
     const scrollPositionKey = `scrollPosition_${location.pathname}`;
-    const restoreScrollPosition = () => {
-      const scrollY = parseInt(localStorage.getItem(scrollPositionKey), 10);
-      if (!isNaN(scrollY)) {
-        window.scrollTo(0, scrollY);
-      }
-    };
+    const scrollY = parseInt(localStorage.getItem(scrollPositionKey), 10);
+    if (!isNaN(scrollY)) window.scrollTo(0, scrollY);
 
-    const handleScroll = () => {
-      const scrollPositionKey = `scrollPosition_${location.pathname}`;
-      localStorage.setItem(scrollPositionKey, window.scrollY);
-    };
-
+    const handleScroll = () => localStorage.setItem(scrollPositionKey, window.scrollY);
     window.addEventListener("scroll", handleScroll);
-    restoreScrollPosition();
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [location.pathname]);
 
-  return (
-    <div className="min-h-screen py-6" style={{ background: "#fcfcfc" }}>
-      <Helmet>
-        <title>Candidates List - BeModel</title>
-        <meta name="description" content="Explore a diverse list of candidates, including professional models and influencers, ready for collaboration." />
-        <meta name="keywords" content="candidates, models, influencers, collaborations" />
-        <meta property="og:title" content="Candidates List - BeModel" />
-        <meta property="og:description" content="Explore a diverse list of candidates, including professional models and influencers, ready for collaboration." />
-        <meta property="og:url" content={`${window.location.origin}/candidates`} />
-       
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "ItemList",
-            "name": "Candidates List",
-            "description": "Explore a diverse list of candidates, including professional models and influencers.",
-            "url": `${window.location.origin}/candidates`,
-            "numberOfItems": candidatesForCurrentPage.length,
-            "itemListElement": candidatesForCurrentPage.map((candidate, index) => ({
-              "@type": "ListItem",
-              "position": index + 1,
-              "item": {
-                "@type": "Person",
-                "name": candidate.name,
-                "url": `${window.location.origin}/candidate/${candidate._id}`,
-                "image": fileLinks[candidate._id],
-              },
-            })),
-          })}
-        </script>
-      </Helmet>
-      
-      <div className="container mx-auto px-4 max-w-7xl">
-        {/* Header and Title */}
-        {/* <div className="mb-8 md:mb-12 text-center relative pt-4">
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl mb-4">
-            Découvrez nos <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Talents</span>
-          </h1>
-          <p className="max-w-2xl mx-auto text-lg text-gray-500">
-            Explorez notre réseau diversifié de modèles professionnels, d'influenceurs et de créateurs UGC prêts pour votre prochaine campagne.
-          </p>
-        </div> */}
+  const isEmpty = !isLoading && !isError && candidates.length === 0;
 
-        {/* Controls Bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8 gap-4">
-          <div className="text-sm text-gray-500 font-medium">
-            <span className="text-gray-900 font-bold text-base bg-gray-100 px-2 py-1 rounded-md mr-1">{candidatesForCurrentPage.length || 0}</span> talents affichés
+  return (
+    <BmTheme>
+      <div className="bm-page bm-list">
+        <Helmet>
+          <title>Candidates List - BeModel</title>
+          <meta
+            name="description"
+            content="Explore a diverse list of candidates, including professional models and influencers, ready for collaboration."
+          />
+          <meta name="keywords" content="candidates, models, influencers, collaborations" />
+          <meta property="og:title" content="Candidates List - BeModel" />
+          <meta
+            property="og:description"
+            content="Explore a diverse list of candidates, including professional models and influencers, ready for collaboration."
+          />
+          <meta property="og:url" content={`${window.location.origin}/candidates`} />
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "ItemList",
+              name: "Candidates List",
+              description:
+                "Explore a diverse list of candidates, including professional models and influencers.",
+              url: `${window.location.origin}/candidates`,
+              numberOfItems: candidates.length,
+              itemListElement: candidates.map((candidate, index) => ({
+                "@type": "ListItem",
+                position: index + 1,
+                item: {
+                  "@type": "Person",
+                  name: candidate.name,
+                  url: `${window.location.origin}/candidate/${candidate._id}`,
+                  image: fileLinks[candidate._id],
+                },
+              })),
+            })}
+          </script>
+        </Helmet>
+
+        <div className="bm-container">
+          <header className="bm-list__intro">
+            <p className="bm-eyebrow">Catalogue</p>
+            <h1 className="bm-display">Découvrez nos talents</h1>
+            <p className="bm-lead">
+              Modèles, créateurs UGC et voix-off. Filtrez, comparez et ajoutez les profils qui
+              vous plaisent à vos campagnes.
+            </p>
+          </header>
+
+          <div className="bm-toolbar">
+            <div className="bm-toolbar__count" aria-live="polite">
+              {isLoading ? (
+                <span className="bm-skeleton bm-skeleton--text" />
+              ) : (
+                <>
+                  <strong>{total}</strong> talent{total > 1 ? "s" : ""}
+                  {activeCount > 0 && <span className="bm-toolbar__sub"> · résultats filtrés</span>}
+                </>
+              )}
+            </div>
+
+            <div className="bm-toolbar__actions">
+              <button
+                type="button"
+                className="bm-btn bm-btn--ghost bm-toolbar__filters-btn"
+                onClick={openFilters}
+              >
+                <SlidersHorizontal size={16} />
+                <span className="bm-hide-sm">Filtres</span>
+                {activeCount > 0 && <span className="bm-count bm-count--gold">{activeCount}</span>}
+              </button>
+              <Select
+                value={`${filters.sortBy}:${filters.sortOrder}`}
+                onChange={handleSortChange}
+                options={SORT_OPTIONS}
+                size="large"
+                className="bm-toolbar__sort"
+                popupMatchSelectWidth={false}
+                aria-label="Trier par"
+              />
+            </div>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Select
-              value={sortBy}
-              onChange={handleSortByChange}
-              style={{ width: 140 }}
-              placeholder="Trier par"
-              loading={isFetchingNextPage}
-              size="large"
-            >
-              <Option value="">Défaut</Option>
-              <Option value="name">Nom</Option>
-              <Option value="createdAt">Date d'ajout</Option>
-            </Select>
-            <Select
-              value={sortOrder}
-              onChange={handleSortOrderChange}
-              style={{ width: 140 }}
-              disabled={!sortBy}
-              loading={isFetchingNextPage}
-              size="large"
-            >
-              <Option value="asc">Ascendant</Option>
-              <Option value="desc">Descendant</Option>
-            </Select>
-            <Button
-              onClick={() => {
-                setSortBy("");
-                setSortOrder("asc");
-                window.scrollTo(0, 0);
-                navigate({ search: "" });
-              }}
-              loading={isFetchingNextPage}
-              size="large"
-              type="default"
-              className="border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400"
-            >
-              Réinitialiser
-            </Button>
-          </div>
+
+          {chips.length > 0 && (
+            <div className="bm-active" role="list" aria-label="Filtres actifs">
+              {chips.map((chip) => (
+                <button
+                  key={chip.id}
+                  type="button"
+                  role="listitem"
+                  className="bm-pill"
+                  onClick={() => update(chip.patch)}
+                  aria-label={`Retirer le filtre ${chip.label}`}
+                >
+                  {chip.label}
+                  <X size={13} />
+                </button>
+              ))}
+              <button type="button" className="bm-link" onClick={clearAll}>
+                Tout effacer
+              </button>
+            </div>
+          )}
+
+          {isError && (
+            <div className="bm-state" role="alert">
+              <span className="bm-state__icon bm-state__icon--danger">
+                <AlertTriangle size={26} />
+              </span>
+              <h2>Impossible de charger les talents</h2>
+              <p>Vérifiez votre connexion puis réessayez.</p>
+              <button type="button" className="bm-btn bm-btn--primary" onClick={() => refetch()}>
+                Réessayer
+              </button>
+            </div>
+          )}
+
+          {isEmpty && (
+            <div className="bm-state">
+              <span className="bm-state__icon">
+                <SearchX size={26} />
+              </span>
+              <h2>Aucun talent ne correspond</h2>
+              <p>Essayez d'élargir votre recherche ou de retirer certains filtres.</p>
+              {activeCount > 0 && (
+                <button type="button" className="bm-btn bm-btn--primary" onClick={clearAll}>
+                  Effacer les filtres
+                </button>
+              )}
+            </div>
+          )}
+
+          {!isError && !isEmpty && (
+            <div className="bm-grid">
+              {candidates.map((candidate) => (
+                <CandidateCard
+                  key={candidate._id}
+                  candidate={candidate}
+                  fileLink={fileLinks[candidate._id]}
+                  isFavorite={campaignProfileIds.has(candidate._id)}
+                  campaigns={campaigns}
+                  onCreateCampaign={handleCreateCampaign}
+                />
+              ))}
+              {(isLoading || isFetchingNextPage) &&
+                [...Array(isLoading ? PAGE_SIZE : 4)].map((_, index) => (
+                  <SkeletonCard key={`loading-${index}`} />
+                ))}
+            </div>
+          )}
+
+          <div ref={sentryRef} />
+
+          {!hasNextPage && !isLoading && candidates.length > 0 && (
+            <p className="bm-list__end">Vous avez tout vu · {total} talents</p>
+          )}
         </div>
 
-        {/* Candidate Grid */}
-        <Row gutter={[24, 32]}>
-          {candidatesForCurrentPage.map((candidate) => 
-            {
-              const isCandidateInCampaign = campaignProfileIds.has(candidate._id);
-             
-              
-              return(<Col xs={24} sm={12} md={8} lg={6} xl={6} key={candidate._id} className="flex">
-              <CandidateCard
-                candidate={candidate}
-                fileLink={fileLinks[candidate._id]}
-                isFavorite={isCandidateInCampaign}
-                // onToggleFavorite={(args) => toggleFavorite(args)}
-                tagColors={tagColors}
-                campaigns={campaigns}
-                onCreateCampaign={handleCreateCampaign}
-              />
-            </Col>
-          )})}
-          {isFetchingNextPage &&
-            [...Array(pageSize)].map((_, index) => (
-              <Col xs={24} sm={12} md={8} lg={6} xl={6} key={`loading-${index}`}>
-                <div className="w-full h-full min-h-[400px] bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col">
-                   <div className="w-full aspect-[4/5] bg-gray-100 rounded-xl mb-4 animate-pulse"></div>
-                   <Skeleton active paragraph={{ rows: 2 }} title={{ width: '60%' }} />
-                </div>
-              </Col>
-            ))}
-        </Row>
-        <div ref={sentryRef}></div>
+        <BackToTopButton />
       </div>
-      <BackToTopButton />
-    </div >
+    </BmTheme>
   );
 };
 

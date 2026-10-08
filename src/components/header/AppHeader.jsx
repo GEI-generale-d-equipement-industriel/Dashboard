@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom'; // Add this
-import { Layout, Menu, Button, Avatar, Dropdown } from 'antd';
-import { MenuOutlined, UserOutlined } from '@ant-design/icons';
+import { Layout, Menu, Avatar, Dropdown } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import MessagesDropdown from '../DropDown/MessageDropdown';
@@ -23,7 +23,7 @@ const linkStyle = {
   transition: 'all 0.3s ease',
 };
 
-const AppHeader = ({ handleLogout, toggleDrawer, screens, conversations }) => {
+const AppHeader = ({ handleLogout, conversations }) => {
   const location = useLocation();
   const userRole = useSelector((state) => state.auth.role);
   
@@ -124,21 +124,6 @@ const AppHeader = ({ handleLogout, toggleDrawer, screens, conversations }) => {
             <UserOutlined style={{ fontSize: 18 }} />
           </Avatar>
         </Dropdown>
-
-        {/* Mobile Menu Toggle */}
-        {!screens.lg && userRole !== 'candidate' && (
-          <Button
-            type="text"
-            ghost
-            icon={<MenuOutlined style={{ color: '#ffffff', fontSize: 20 }} />}
-            onClick={toggleDrawer}
-            style={{
-              marginLeft: '16px',
-              borderColor: '#ffffff',
-              borderRadius: '20px',
-            }}
-          />
-        )}
       </div>
     </Header>
   );
